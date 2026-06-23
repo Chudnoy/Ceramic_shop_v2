@@ -1,8 +1,9 @@
 from flask import Flask, session, render_template, request, redirect, url_for, flash
-from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists, get_order_by_id, get_all_orders
+from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists, get_order_by_id, get_all_orders, create_order
 from helpers import render_flash
 from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
+import uuid
 
 init_db()
 
@@ -138,6 +139,7 @@ def show_cart():
         </div>
         """
     html += f"<h3>Итого: {total} руб.</h3>"
+    html += "<a href='/checkout'>Оформить заказ</a><br>"
     html += "<a href='/catalog'>Продолжить покупки</a>"
     return html
     
@@ -205,14 +207,94 @@ def checkout_form():
             </div>
             <div>
                 <label for='customer_email'>Ваш email:</label>
-                <input type='text' id='customer_email' name='customer_email' required>
+                <input type='email' id='customer_email' name='customer_email' required>
             </div>
             <div>
-                <label for='customer_phone>Телефон:</label>
-                <input typr='text' id='customer_phone' name='customer_phone'>
-            </div
+                <label for='customer_phone'>Телефон:</label>
+                <input type='text' id='customer_phone' name='customer_phone'>
+            </div>
+            <div>
+                <label for='customer_address'>Адрес:</label>
+                <textarea id='customer_address' name='customer_address' rows='3'></textarea>
+            </div>
+            <button type='submit'>Подтвердить заказ</button>
         </form>
     """
+    html += "<a href='/cart'>Вернуться в корзину</a>"
+    return html
+    
+    
+@app.route("/checkout", methods=["POST"])
+def checkout_process():
+    cart = get_cart(session)
+    
+    if not cart:
+        flash("Корзина пуста", "error")
+        return redirect(url_for("catalog"))
+        
+    customer_name = request.form.get("customer_name", "").strip()
+    customer_email = request.form.get("customer_email", "").strip()
+    customer_phone = request.form.get("customer_phone", "").strip()
+    customer_address = request.form.get("customer_address", "").strip()
+    
+    if not customer_name:
+        flash("Имя обязательно для заполнения", "error")
+        return redirect(url_for("checkout_form"))
+    if not customer_email or "@" not in customer_email:
+        flash("Введите корректный email", "error")
+        return redirect(url_for("checkout_form"))
+        
+    product_ids = list(cart.keys())
+    products = get_products_by_ids(product_ids)
+    
+    items_dict = {}
+    total = 0
+    
+    for product in products:
+        product_id = product["id"]
+        qty = cart[product_id]
+        price = product["price"]
+        subtotal = price * qty
+        total += subtotal
+        items_dict[product_id] = {
+                "name": product['name'],
+                "price": price,
+                "quantity": qty
+        }
+    
+    order_id = str(uuid.uuid4())
+    
+    create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total)
+    
+    clear_cart(session)
+    
+    flash(f"Заказ {order_id[:8]} оформлен!", "success")
+    
+    return redirect(url_for("order_success", order_id=order_id))
+    
+    
+@app.route("/order_success/<order_id>")
+def order_success(order_id):
+    order = get_order_by_id(order_id)
+    
+    if not order:
+        flash("Заказ не найден", "error")
+        return redirect(url_for("catalog"))
+    
+    html = render_flash()
+    html += f"<h1>Спасибо за заказ #{order_id[:8]}!</h1>"
+    html += f"<p>Имя: {order['customer_name']}</p>"
+    html += f"<p>Email: {order['customer_email']}"
+    if order['customer_phone']:
+        html += f"<p>Телефон: {order['customer_phone']}</p>"
+    if order['customer_address']:
+        html += f"<p>Адрес: {order['customer_address']}</p>"
+    html += "<h3>Состав заказа:</h3>"
+    
+    for product_id, item in order['items'].items():
+        html += f"<div>{item['name']} x{item['quantity']} = {item['price']*item['quantity']} руб.</div>"
+    html += f"<p><b>Итого: {order['total']} руб.</b></p>"
+    html += "<a href='/catalog'>Вернуться в каталог</a>"
     return html
     
     
