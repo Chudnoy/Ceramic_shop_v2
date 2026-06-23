@@ -1,5 +1,6 @@
 import sqlite3
 import uuid
+import json
 
 def get_db_connection():
     conn = sqlite3.connect("shop.db")
@@ -25,6 +26,17 @@ def init_db():
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
     )""")
+
+    conn.execute("""CREATE TABLE IF NOT EXISTS orders (
+                 id TEXT PRIMARY KEY,
+                 customer_name TEXT NOT NULL,
+                 customer_email TEXT NOT NULL,
+                 customer_phone TEXT,
+                 customer_address TEXT,
+                 items TEXT NOT NULL,
+                 total INTEGER NOT NULL,
+                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                 )""")
     
     cursor = conn.execute("SELECT COUNT(*) FROM products")
     
@@ -82,3 +94,39 @@ def product_exists(product_id):
     product = conn.execute("SELECT 1 FROM products WHERE id = ?", (product_id,)).fetchone()
     conn.close()
     return product is not None
+
+
+def create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total):
+    conn = get_db_connection()
+    items_json = json.dumps(items_dict, ensure_ascii=False)
+    conn.execute("""INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                 (order_id,customer_name, customer_email, customer_phone, customer_address, items_json, total))
+    conn.commit()
+    conn.close()
+
+
+def get_order_by_id(order_id):
+    conn = get_db_connection()
+    row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id)).fetchone()
+    conn.close()
+
+    if not row:
+        return None
+    
+    order = dict(row)
+    order['items'] = json.loads(order['items'])
+    return order
+
+
+def get_all_orders():
+    conn = get_db_connection()
+    rows = conn.execute("SELECT * FROM orders").fetchall()
+    conn.close()
+    orders = []
+
+    for row in rows:
+        order = dict(row)
+        order['items'] = json.loads(order['items'])
+        orders.append(order)
+    return orders

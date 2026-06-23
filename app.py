@@ -1,5 +1,5 @@
 from flask import Flask, session, render_template, request, redirect, url_for, flash
-from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists
+from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists, get_order_by_id, get_all_orders
 from helpers import render_flash
 from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
@@ -171,6 +171,49 @@ def add_review(product_id):
     flash("Спасибо за отзыв", "success")
     
     return redirect(url_for("product_page", product_id=product_id))
+
+
+@app.route('/checkout')
+def checkout_form():
+    cart = get_cart(session)
+    if not cart:
+        flash("Корзина пуста", "error")
+        return redirect(url_for("catalog"))
+    
+    product_ids = list(cart.keys())
+    products = get_products_by_ids(product_ids)
+    total = 0
+
+    for product in products:
+        total += product['price'] * cart[product['id']]
+
+    html = render_flash()
+    html += "<h1>Оформление заказа</h1>"
+    html += "<h3>Состав корзины</h3>"
+
+    for product in products:
+        qty = cart[product['id']]
+        html += f"<div>{product['name']} * {qty} = {product['price'] * qty} руб.</div>"
+    
+    html += f"<p><b>Итого: {total} руб.</b></p>"
+
+    html += """
+        <form method='post' action='/checkout'>
+            <div>
+                <label for='customer_name'>Ваше имя:</label>
+                <input type='text' id='customer_name' name='customer_name' required>
+            </div>
+            <div>
+                <label for='customer_email'>Ваш email:</label>
+                <input type='text' id='customer_email' name='customer_email' required>
+            </div>
+            <div>
+                <label for='customer_phone>Телефон:</label>
+                <input typr='text' id='customer_phone' name='customer_phone'>
+            </div
+        </form>
+    """
+    return html
     
     
 if __name__ == "__main__":
