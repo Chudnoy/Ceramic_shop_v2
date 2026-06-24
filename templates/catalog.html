@@ -1,21 +1,51 @@
 {% extends 'base.html' %}
 
-{% block title %}Каталог керамики{% endblock %}
+{% block title %}
+	{% if current_category %}
+		{{current_category.name}} - Керамическая мастерская
+	{% else %}
+		Каталог - Керамическая мастерская
+	{% endif %}
+{% endblock %}
 
 {% block content %}
-	<h1 class="page-title">Наши изделия</h1>
+	<div class="category-nav">
+		<a href="{{url_for('catalog')}}" class="category-link {% if not current_category %}active{% endif %}">Все товары</a>
+		{% for category in categories %}
+			<a href="{{url_for('catalog_by_category', slug=category.slug)}}" 
+				class="category-link {% if current_category and current_category.id == category.id %}active{% endif %}">
+				{{category.name}}
+			</a>
+		{% endfor %}
+	</div>
+
+	{% if current_category %}
+		<h1 class="page-title">{{current_category.name}}</h1>
+		{% if current_category.description %}
+			<p class="category-description">{{current_category.description}}</p>
+		{% endif %}
+	{% else %}
+		<h1 class="page-title">Все товары</h1>
+	{% endif %}
+
 	<div class="product-grid">
 		{% for product in products %}
 			<div class="product-card">
 				<h3 class="product-title">{{product.name}}</h3>
 				<p class="product-description">{{product.description}}</p>
 				<p class="product-price">{{product.price}} руб.</p>
+				{% if product.category_name %}
+					<p class="product-category">
+						Категория:
+						<a href="{{url_for('catalog_by_category', slug=product.category_slug)}}" class="category-link">
+							{{product.category_name}}
+						</a>
+					</p>
+				{% endif %}
 				<div class="product-actions">
-					<a href="{{url_for('product_page', product_id=product.id)}}" class="btn btm-secondary">
-						Подробнее
-					</a>
-					<form action="{{url_for('add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-card-form">
-						<input type="number" name="quantity" value="1" min="1" class="quantity-input">
+					<a href="{{url_for('product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
+					<form action="{{url_for('add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
+						<input type="number" name="quantity" min="1" value="1" class="quantity-input">
 						<button type="submit" class="btn btn-primary">В корзину</button>
 					</form>
 				</div>

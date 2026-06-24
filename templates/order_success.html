@@ -21,7 +21,7 @@
             
             <h3 class="order-items-title">Состав заказа</h3>
             <ul class="order-items">
-                {% for product_id, item in order.items.items() %}
+                {% for product_id, item in order_items.items() %}
                     <li class="order-item">
                         <span class="order-item-name">{{item.name}}</span>
                         <span class="order-item-qty">{{item.quantity}}</span>
@@ -34,7 +34,7 @@
             </div>
         </div>
         <div class="success-actions">
-            <a href="{{URL_for('catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+            <a href="{{url_for('catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
         </div>
     </div>
 {% endblock %}

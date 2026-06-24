@@ -183,13 +183,13 @@ def get_products_by_category(category_id):
 def get_product_with_category(product_id):
     conn = get_db_connection()
     product = conn.execute("""SELECT 
-    products.*, 
-    categories.name AS category_name,
-    categories.slug AS category_slug
-    FROM products
-    LEFT JOIN categories
-    ON products.category_id = categories.id
-    WHERE product.id = ?
-    """, (product_id,)).fetchone()
+        products.*, 
+        categories.name AS category_name,
+        categories.slug AS category_slug
+        FROM products
+        LEFT JOIN categories
+        ON products.category_id = categories.id
+        WHERE products.id = ?
+        """, (product_id,)).fetchone()
     conn.close()
     return product

@@ -1,5 +1,7 @@
 from flask import Flask, session, render_template, request, redirect, url_for, flash
-from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists, get_order_by_id, get_all_orders, create_order
+from db import (init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, 
+                get_products_by_ids, product_exists, get_order_by_id, get_all_orders, create_order, get_all_categories, 
+                get_category_by_slug, get_product_with_category, get_products_by_category)
 from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
 import uuid
@@ -25,12 +27,26 @@ def index():
 @app.route("/catalog")
 def catalog():
     products = get_all_products()
-    return render_template("catalog.html", products=products)
+    categories = get_all_categories()
+    return render_template("catalog.html", products=products, categories=categories, current_category=None)
+
+
+@app.route('/catalog/category/<slug>')
+def catalog_by_category(slug):
+    category = get_category_by_slug(slug)
+
+    if not category:
+        flash("Категория не найдена", "error")
+        return redirect(url_for('catalog'))
+    
+    products = get_products_by_category(category['id'])
+    categories = get_all_categories()
+    return render_template('catalog.html', products=products, categories=categories, current_category=category)
     
     
 @app.route('/product/<product_id>')
 def product_page(product_id):
-    product = get_product_by_id(product_id)
+    product = get_product_with_category(product_id)
     
     if not product:
         flash("Товар не найден", "error")
@@ -182,7 +198,9 @@ def order_success(order_id):
         flash("Заказ не найден", "error")
         return redirect(url_for("catalog"))
     
-    return render_template("order_success.html", order=order, order_id=order_id)
+    order_items = order.get('items', {})
+    
+    return render_template("order_success.html", order=order, order_id=order_id, order_items=order_items)
     
     
 if __name__ == "__main__":
