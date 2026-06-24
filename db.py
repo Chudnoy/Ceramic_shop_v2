@@ -9,12 +9,22 @@ def get_db_connection():
     
 def init_db():
     conn = get_db_connection()
+    
+    conn.execute("""CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL UNIQUE,
+    description TEXT
+    )""")
+    
     conn.execute("""CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
     price INTEGER NOT NULL,
-    img TEXT
+    img TEXT,
+    category_id INTEGER,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
     )""")
     
     conn.execute("""CREATE TABLE IF NOT EXISTS reviews (
@@ -38,14 +48,27 @@ def init_db():
                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                  )""")
     
+    cursor = conn.execute("SELECT COUNT(*) FROM categories")
+    if cursor.fetchone()[0] == 0:
+        categories = [
+        ("Вазы", "vases", "Красивые вазы ручной работы"),
+        ("Кружки", "mugs", "Уютные кружки для чая и кофе"),
+        ("Тарелки", "plates", "Авторские тарелки для сервировки"),
+        ("Чашки", "cups", "Изысканные чашки для особых моментов")
+        ]
+        conn.executemany("INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)", categories)
+    
     cursor = conn.execute("SELECT COUNT(*) FROM products")
     
     if cursor.fetchone()[0] == 0:
         products = [
-        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpg"),
-        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка", 2000, "/static/img/mug.jpg")
+        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpg", 1),
+        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpg", 1),
+        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpg", 2),
+        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpg", 2),
+        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpg", 3)
         ]
-        cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?)", products)
+        cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)", products)
     conn.commit()
     conn.close()
     
@@ -108,7 +131,7 @@ def create_order(order_id, customer_name, customer_email, customer_phone, custom
 
 def get_order_by_id(order_id):
     conn = get_db_connection()
-    row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id)).fetchone()
+    row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     conn.close()
 
     if not row:
@@ -130,3 +153,43 @@ def get_all_orders():
         order['items'] = json.loads(order['items'])
         orders.append(order)
     return orders
+    
+    
+def get_all_categories():
+    conn = get_db_connection()
+    categories = conn.execute("SELECT * FROM categories ORDER BY name").fetchall()
+    conn.close()
+    return categories
+    
+    
+def get_category_by_slug(slug):
+    conn = get_db_connection()
+    category = conn.execute("SELECT * FROM categories WHERE slug = ?", (slug,)).fetchone()
+    conn.close()
+    return category
+    
+    
+def get_products_by_category(category_id):
+    conn = get_db_connection()
+    products = conn.execute("""SELECT products.*, categories.name AS category_name
+    FROM products
+    JOIN categories
+    ON products.category_id = categories.id
+    WHERE products.category_id = ?""", (category_id,)).fetchall()
+    conn.close()
+    return products
+    
+    
+def get_product_with_category(product_id):
+    conn = get_db_connection()
+    product = conn.execute("""SELECT 
+    products.*, 
+    categories.name AS category_name,
+    categories.slug AS category_slug
+    FROM products
+    LEFT JOIN categories
+    ON products.category_id = categories.id
+    WHERE product.id = ?
+    """, (product_id,)).fetchone()
+    conn.close()
+    return product
