@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина - Керамическая мастерская{% endblock %}
+
+{% block content %}
+	<h1 class="page-title">Корзина</h1>
+	{% if products %}
+		<table class="cart-table">
+			<thead>
+				<tr>
+					<th>Товар</th>
+					<th>Количество</th>
+					<th>Сумма</th>
+					<th>Действие</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for product in products %}
+					<tr>
+						<td>{{product.name}}</td>
+						<td>{{cart[product.id]}}</td>
+						<td>{{product.price * cart[product.id]}} руб.</td>
+						<td>
+							<a href="{{url_for('remove_from_cart_route', product_id=product.id)}}" class="btn btn-danger btn-sm">Удалить</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<div class="cart-total">
+			Итого {{total}} руб.
+		</div>
+		<div class="cart-actions">
+			<a href="{{url_for('checkout_form')}}" class="btn btn-success">Оформить заказ</a>
+			<a href="{{url_for('catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
+		</div>
+	{% else %}
+		<div class="empty-cart">
+			<p>Корзина пуста</p>
+			<a href="{{url_for('catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+		</div>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %}Керамическая мастерская{% endblock %}</title>
+	<link rel="stylesheet" href="{{url_for('static', filename='css/stile.css')}}">
+</head>
+<body>
+	<header class="main-header">
+		<div class="container">
+			<div class="header-inner">
+				<a href="{{url_for('index')}}" class="logo">Керамика</a>
+				<nav class="main-nav">
+					<ul class="nav-list">
+						<li class="nav-item">
+							<a href="{{url_for('catalog')}}" class="nav-link">Каталог</a>
+						</li>
+						<li class="nav-item">
+							<a href="{{url_for('show_cart')}}" class="nav-link cart-link">
+								Корзина
+								{% if cart_count > 0 %}
+									<span class="cart-badge">{{cart_count}}</span>
+								{% endif %}
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</header>
+
+	<main class="main-content">
+		<div class="container">
+			{% with messages = get_flashed_messages(with_categories = True)%}
+				{% if messages %}
+					<div class="flash-messages">
+						{% for category, message in messages %}
+							<div class="flash-message flash-{{category}}">
+								{{message}}
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			{% endwith %}
+
+			{% block content %}
+			{% endblock %}
+		</div>
+	</main>
+
+	<footer class="main-footer">
+		<div class="container">
+			<p class="footer-text">&copy; 2026 Керамическая мастерская</p>
+		</div>
+	</footer>
+</body>
+</html>

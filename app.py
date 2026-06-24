@@ -1,9 +1,9 @@
 from flask import Flask, session, render_template, request, redirect, url_for, flash
 from db import init_db, get_db_connection, get_reviews_by_product, add_review_db, get_all_products, get_product_by_id, get_products_by_ids, product_exists, get_order_by_id, get_all_orders, create_order
-from helpers import render_flash
 from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
 import uuid
+from helpers import render_flash
 
 init_db()
 
@@ -12,33 +12,21 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 
+@app.context_processor
+def inject_cart_count():
+    cart = session.get('cart', {})
+    return {'cart_count': sum(cart.values())}
+
+
 @app.route("/")
 def index():
-    return "Hello ceramic shop"
+    return render_template('index.html')
     
     
 @app.route("/catalog")
 def catalog():
     products = get_all_products()
-    html = render_flash()
-    html += "<h1>Каталог товаров</h1>"
-    
-    for p in products:
-        html += f"""
-            <div>
-                    <h3>{p['name']}</h3>
-                    <p>{p['description']}</p>
-                    <p>Цена: {p['price']} руб.</p>
-                    <a href="/product/{p['id']}">Узнать подробнее</a>
-                    <form action="/add_to_cart/{p['id']}" method="POST" style="display: inline;">
-                            <input type="number" name="quantity" value="1" min="1" style="width: 50px;">
-                            <button type="submit">Добавить в корзину</button>
-                    </form>
-            </div>
-            <hr>
-        """
-    html += "<a href='/cart'>Перейти в корзину</a>"
-    return html
+    return render_template('catalog.html', products=products)
     
     
 @app.route('/product/<product_id>')

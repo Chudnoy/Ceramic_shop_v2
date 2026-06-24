@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{product.name}} - Керамическая мастерская{% endblock %}
+
+{% block content %}
+
+	<div class="product-detail">
+		<div class="product-info">
+			<h1 class="product-title">{{product.name}}</h1>
+			<p class="product-description">{{product.description}}</p>
+			<p class="product-price">{{product.price}} руб.</p>
+			<form action="{{ url_for('add_to_cart_route', product_id=product.id)}}" method="POST" class="add-to-cart-form">
+				<div class="form-group form-group-inline">
+					<label for="quantity">Количество:</label>
+					<input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-input">
+				</div>
+				<button type="submit" class="btn btn-primary">Добавить в корзину</button>
+			</form>
+		</div>
+
+		<div class="review-section">
+			<h2 class="section-title">Отзывы</h2>
+
+			{% if reviews %}
+				<div class="reviews-list">
+					{% for review in reviews %}
+						<div class="review-item">
+							<div class="review-header">
+								<span class="review-author">{{review.name}}</span>
+								<span class="review-rating">
+									{% for i in range(review.rating) %}⭐{% endfor %}
+								</span>
+							</div>
+							<p class="review-text">
+								{{ review.comment if review.comment else 'Без комментария'}}
+							</p>
+							<small class="review-date">{{review.created_at}}</small>
+						</div>
+					{% endfor %}
+				</div>
+			{% else %}
+				<p class="no-reviews">Пока нет отзывов. Будьте первым!</p>
+			{% endif %}
+		</div>
+
+		<div class="review-form-wrapper">
+			<h3 class="form-title">Оставить отзыв</h3>
+			<form action="{{url_for('add_review', product_id=product.id)}}" class="review-form">
+				<div class="form-group">
+					<label for="review_name">Ваше имя:</label>
+					<input type="text" id="review_name" name="name" class="form-control" required>
+				</div>
+				<div class="form-group">
+					<label for="review_rating">Оценка (1-5)</label>
+					<input type="number" id="review_rating" name="rating" class="form-control" min="1" max="5" required>
+				</div>
+				<div class="form-group">
+					<label for="review_comment">Комментарий</label>
+					<textarea id="review_comment" name="comment" class="form-control" rows="4"></textarea>
+				</div>
+				<button type="submit" class="btn btn-primary">Оставить отзыв</button>
+			</form>
+		</div>
+	</div>
+{% endblock %}
