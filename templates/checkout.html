@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление заказа - Керамическая мастерская{% endblock %}
+
+{% block content %}
+    <h1 class="page-title">Оформление заказа</h1>
+    <div class="checkout-wrapper">
+        <div class="checkout-summary">
+            <h2 class="section-title">Ваш заказ</h2>
+            {% if products %}
+                <ul class="checkout-items">
+                    {% for product in products %}
+                        <li class="checkout-item">
+                            <span class="checkout-item-name">{{product.name}}</span>
+                            <span class="checkout-item-qty">{{cart[product.id]}}</span>
+                            <span class="checkout-item-price">{{product.price * cart[product.id]}} руб.</span>
+                        </li>
+                    {% endfor %}
+                </ul
+                <div class="checkout-total">
+                    Итого {{total}} руб.
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="checkout-form-wrapper">
+            <h2 class="section-title">Контактные данные</h2>
+            <form action="" method="post" class="checkout-form">
+                <div class="form-group">
+                    <label for="customer_name">Ваше имя:</label>
+                    <input type="text" id="customer_name" name="customer_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_email">Email:</label>
+                    <input type="email" id="customer_email" name="customer_email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_phone">Телефон:</label>
+                    <input type="tel" id="customer_phone" name="customer_phone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Адрес доставки:</label>
+                    <textarea id="customer_address" name="customer_address" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Подтвердить заказ</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

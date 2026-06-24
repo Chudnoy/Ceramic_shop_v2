@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ оформлен - Керамическая мастерская{% endblock %}
+
+{% block content %}
+    <div class="success-page">
+        <h1 class="success-title">Спасибо за заказ!</h1>
+        <p class="success-subtitle">Ваш заказ #{{order_id[:8]}} успешно оформлен.</p>
+        <div class="order-details">
+            <h2 class="section-title">Детали заказа</h2>
+            <div class="order-customer">
+                <p><strong>Имя: </strong>{{order.customer_name}}</p>
+                <p><strong>Email: </strong>{{order.customer_email}}</p>
+                {% if order.customer_phone %}
+                    <p><strong>Телефон: </strong>{{order.customer_phone}}</p>
+                {% endif %}
+                {% if order.customer_address %}
+                    <p><strong>Адрес: </strong>{{order.customer_address}}</p>
+                {% endif %}
+            </div>
+            
+            <h3 class="order-items-title">Состав заказа</h3>
+            <ul class="order-items">
+                {% for product_id, item in order.items.items() %}
+                    <li class="order-item">
+                        <span class="order-item-name">{{item.name}}</span>
+                        <span class="order-item-qty">{{item.quantity}}</span>
+                        <span class="order-item-price">{{item.price * item.quantity}}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="order-total">
+                <strong>Итого: {{order.total}} руб.</strong>
+            </div>
+        </div>
+        <div class="success-actions">
+            <a href="{{URL_for('catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+        </div>
+    </div>
+{% endblock %}

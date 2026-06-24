@@ -488,6 +488,161 @@ textarea.form-control {
     max-width: 100%;
 }
 
+/* ============================================
+   ОФОРМЛЕНИЕ ЗАКАЗА
+   ============================================ */
+.checkout-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .checkout-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+.checkout-summary {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.checkout-items {
+    list-style: none;
+    padding: 0;
+}
+
+.checkout-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.checkout-item:last-child {
+    border-bottom: none;
+}
+
+.checkout-item-name {
+    flex-grow: 1;
+}
+
+.checkout-item-qty {
+    color: #777;
+    margin: 0 15px;
+}
+
+.checkout-item-price {
+    font-weight: 500;
+}
+
+.checkout-total {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: right;
+    padding-top: 15px;
+    margin-top: 10px;
+    border-top: 2px solid #e5e5e5;
+}
+
+.checkout-form-wrapper {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.checkout-form .form-control {
+    max-width: 100%;
+}
+
+/* ============================================
+   СТРАНИЦА УСПЕХА
+   ============================================ */
+.success-page {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.success-title {
+    font-size: 36px;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.success-subtitle {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.order-details {
+    text-align: left;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    margin-bottom: 30px;
+}
+
+.order-customer {
+    margin-bottom: 20px;
+}
+
+.order-customer p {
+    margin: 5px 0;
+}
+
+.order-items-title {
+    font-size: 18px;
+    margin: 20px 0 10px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.order-items {
+    list-style: none;
+    padding: 0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.order-item-name {
+    flex-grow: 1;
+}
+
+.order-item-qty {
+    color: #777;
+    margin: 0 15px;
+}
+
+.order-item-price {
+    font-weight: 500;
+}
+
+.order-total {
+    font-size: 20px;
+    text-align: right;
+    padding-top: 15px;
+    margin-top: 10px;
+    border-top: 2px solid #e5e5e5;
+}
+
+.success-actions {
+    margin-top: 20px;
+}
+
 /* АДАПТИВНОСТЬ (для телефона) */
 
 @media (max-width: 768px) {

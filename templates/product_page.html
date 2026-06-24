@@ -45,7 +45,7 @@
 
 		<div class="review-form-wrapper">
 			<h3 class="form-title">Оставить отзыв</h3>
-			<form action="{{url_for('add_review', product_id=product.id)}}" class="review-form">
+			<form action="{{url_for('add_review', product_id=product.id)}}" method="post" class="review-form">
 				<div class="form-group">
 					<label for="review_name">Ваше имя:</label>
 					<input type="text" id="review_name" name="name" class="form-control" required>
