@@ -26,22 +26,27 @@ def index():
     
 @app.route("/catalog")
 def catalog():
-    products = get_all_products()
+    category_slug = request.args.get('category')
+    sort_by = request.args.get('sort_by', 'products.name')
+    order = request.args.get('order', 'asc')
+    products = get_all_products(category_slug, sort_by, order)
     categories = get_all_categories()
-    return render_template("catalog.html", products=products, categories=categories, current_category=None)
 
+    current_category = None
 
-@app.route('/catalog/category/<slug>')
-def catalog_by_category(slug):
-    category = get_category_by_slug(slug)
-
-    if not category:
-        flash("Категория не найдена", "error")
-        return redirect(url_for('catalog'))
+    if category_slug:
+        current_category = get_category_by_slug(category_slug)
+        if not current_category:
+            flash("Категория не найдена", "error")
+            return redirect(url_for('catalog'))
     
-    products = get_products_by_category(category['id'])
-    categories = get_all_categories()
-    return render_template('catalog.html', products=products, categories=categories, current_category=category)
+    return render_template("catalog.html",
+                           products=products,
+                           categories=categories,
+                           current_category=current_category,
+                           current_sort=sort_by,
+                           current_order=order,
+                           category_slug=category_slug)
     
     
 @app.route('/product/<product_id>')

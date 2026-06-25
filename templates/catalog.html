@@ -12,13 +12,28 @@
 	<div class="category-nav">
 		<a href="{{url_for('catalog')}}" class="category-link {% if not current_category %}active{% endif %}">Все товары</a>
 		{% for category in categories %}
-			<a href="{{url_for('catalog_by_category', slug=category.slug)}}" 
+			<a href="{{url_for('catalog', category=category.slug, sort_by=current_sort, order=current_order)}}" 
 				class="category-link {% if current_category and current_category.id == category.id %}active{% endif %}">
 				{{category.name}}
 			</a>
 		{% endfor %}
 	</div>
 
+	<form action="{{url_for('catalog')}}" method="get">
+		{% if category_slug %}
+			<input type="hidden" name="category" value="{{category_clag}}">
+		{% endif %}
+		<select name="order" id="order">
+			<option value="ASC" {% if current_order == 'ASC' %}selected{% endif %}>От меньшего к большему</option>
+			<option value="DESC" {% if current_order == 'DESC' %}selected{% endif %}>От большего к меньшему</option>
+		</select>
+		<select name="sort_by" id="">
+			<option value="name" {% if current_sort == 'name' %}selected{% endif %}>По алфавиту</option>
+			<option value="price" {% if current_sort == 'price' %}selected{% endif %}>По цене</option>
+		</select>
+		<button type="submit">Подтвердить</button>
+	</form>
+		
 	{% if current_category %}
 		<h1 class="page-title">{{current_category.name}}</h1>
 		{% if current_category.description %}
@@ -37,7 +52,7 @@
 				{% if product.category_name %}
 					<p class="product-category">
 						Категория:
-						<a href="{{url_for('catalog_by_category', slug=product.category_slug)}}" class="category-link">
+						<a href="{{url_for('catalog', category=product.category_slug)}}" class="category-link">
 							{{product.category_name}}
 						</a>
 					</p>

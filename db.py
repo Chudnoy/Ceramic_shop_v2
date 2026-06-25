@@ -87,9 +87,25 @@ def add_review_db(product_id, name, rating, comment):
     conn.close()
     
     
-def get_all_products():
+def get_all_products(category_slug=None, sort_by='name', order='ASC'):
     conn = get_db_connection()
-    products = conn.execute("SELECT * FROM products").fetchall()
+    query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_clug
+            FROM products
+            LEFT JOIN categories
+            ON products.category_id = categories.id"""
+    
+    params = []
+    if category_slug:
+        query += " WHERE categories.slug = ?"
+        params.append(category_slug)
+    
+    allowed_sort_fields = {'name': 'products.name', 'price': 'products.price'}
+    sort_field = allowed_sort_fields.get(sort_by, 'products.name')
+    allowed_sort_orders = ('ASC', 'DESC')
+    order = order.upper() if order.upper() in allowed_sort_orders else 'ASC'
+
+    query += f" ORDER BY {sort_field} {order}"
+    products = conn.execute(query, params).fetchall()
     conn.close()
     return products
     
