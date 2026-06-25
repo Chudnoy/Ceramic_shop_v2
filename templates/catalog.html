@@ -21,7 +21,7 @@
 
 	<form action="{{url_for('catalog')}}" method="get">
 		{% if category_slug %}
-			<input type="hidden" name="category" value="{{category_clag}}">
+			<input type="hidden" name="category" value="{{category_slug}}">
 		{% endif %}
 		<select name="order" id="order">
 			<option value="ASC" {% if current_order == 'ASC' %}selected{% endif %}>От меньшего к большему</option>
