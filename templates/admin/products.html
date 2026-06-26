@@ -1,0 +1,37 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    <h1>Товары</h1>
+    <table>
+        <tr>
+            <th>Название</th>
+            <th>Цена</th>
+            <th>Категория</th>
+            <th>Действия</th>
+        </tr>
+        {% for product in products %}
+            <tr>
+                <td>{{product.name}}</td>
+                <td>{{product.price}}</td>
+                <td>
+                    {% if product.category_name %}
+                        {{product.category_name}}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{url_for('admin.delete_product_route', product_id=product.id)}}"
+                    onclick="return confirm('Удалить товар?')">
+                        Удалить
+                    </a>
+                </td>
+                <td>
+                    <a href="{{url_for('admin.edit_product', product_id=product.id)}}">
+                        Редактировать
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

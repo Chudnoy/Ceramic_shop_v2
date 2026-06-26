@@ -5,11 +5,13 @@ from db import (init_db, get_db_connection, get_reviews_by_product, add_review_d
 from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
 import uuid
+from routes.admin import admin_bp
 
 init_db()
 
 
 app = Flask(__name__)
+app.register_blueprint(admin_bp)
 app.secret_key = "supersecretkey"
 
 @app.context_processor

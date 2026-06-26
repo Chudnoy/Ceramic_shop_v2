@@ -89,7 +89,7 @@ def add_review_db(product_id, name, rating, comment):
     
 def get_all_products(category_slug=None, sort_by='name', order='ASC'):
     conn = get_db_connection()
-    query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_clug
+    query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
             FROM products
             LEFT JOIN categories
             ON products.category_id = categories.id"""
@@ -209,3 +209,21 @@ def get_product_with_category(product_id):
         """, (product_id,)).fetchone()
     conn.close()
     return product
+    
+    
+def delete_product(product_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    conn.commit()
+    conn.close()
+    
+    
+def update_product(product_id, name, description, price, category_id):
+    conn = get_db_connection()
+    conn.execute("""
+    UPDATE products
+    SET name = ?, description = ?, price = ?, category_id = ?
+    WHERE id = ?
+    """, (name, description, price, category_id, product_id))
+    conn.commit()
+    conn.close()
