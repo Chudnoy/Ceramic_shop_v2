@@ -1,19 +1,23 @@
 {% extends 'admin/base.html' %}
 
 {% block content %}
-    <h1>Редактирование товара</h1>
+    <h1>{{title}}</h1>
     <form method="post">
         <div>
-            <label for="name">Название</label><br>
+            <label for="name">Название:</label><br>
             <input type="text" name="name" id="name" value="{{product.name}}">
         </div>
         <div>
-            <label for="description">Описание</label><br>
-            <textarea name="description" id="description"rows="4">{{product.description}}</textarea>
+            <label for="description">Описание:</label><br>
+            <textarea name="description" id="description" rows="4">{{product.description}}</textarea>
         </div>
         <div>
-            <label for="price"></label><br>
+            <label for="price">Цена:</label><br>
             <input type="number" name="price" id="price" value="{{product.price}}">
+        </div>
+        <div>
+            <label for="img">Путь к изображению:</label>
+            <input type="text" name="img" id="img" value="{{product.img}}">
         </div>
         <div>
             <select name="category_id">
@@ -22,6 +26,6 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit">Подтвердить</button>
+        <button type="submit">{{submit_text}}</button>
     </form>
 {% endblock %}

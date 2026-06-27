@@ -16,3 +16,31 @@ def validate_review(name, rating_str, comment):
         return False, "Длина комментария не должна превышать 1000 символов", {}
         
     return True, "", {"name": name, "rating": rating, "comment": comment}
+    
+    
+def validate_product(name, price, description, img_path, category_id):
+    name = name.strip()
+    if not name:
+        return False, "Имя обязательно для заполнения", {}
+        
+    img_path = img_path.strip()
+    if not img_path or not img_path.startswith("/static/"):
+        return False, "Путь к изображению должен быть указан и начинаться со «/static»"
+        
+    description = description.strip()
+    if not description:
+        return False, "Описание обязательно для заполнения", {}
+    
+    try:
+        price = int(price)
+        if price < 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return False, "Цена должна быть положительным числом", {}
+    
+    try:
+        category_id = int(category_id)
+    except (TypeError, ValueError):
+        return False, "Некорректный ID категории", {}
+        
+    return True, "", {"name": name, "price": price, "description": description, "img_path": img_path, "category_id": category_id}

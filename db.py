@@ -54,7 +54,8 @@ def init_db():
         ("Вазы", "vases", "Красивые вазы ручной работы"),
         ("Кружки", "mugs", "Уютные кружки для чая и кофе"),
         ("Тарелки", "plates", "Авторские тарелки для сервировки"),
-        ("Чашки", "cups", "Изысканные чашки для особых моментов")
+        ("Чашки", "cups", "Изысканные чашки для особых моментов"),
+        ("Статуэтки", "figurines", "Интерьерные статуэтки разных размеров")
         ]
         conn.executemany("INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)", categories)
     
@@ -218,12 +219,22 @@ def delete_product(product_id):
     conn.close()
     
     
-def update_product(product_id, name, description, price, category_id):
+def update_product(product_id, name, price, description, img_path, category_id):
     conn = get_db_connection()
     conn.execute("""
     UPDATE products
-    SET name = ?, description = ?, price = ?, category_id = ?
+    SET name = ?, description = ?, price = ?, category_id = ?, img = ?
     WHERE id = ?
-    """, (name, description, price, category_id, product_id))
+    """, (name, description, price, category_id, img_path, product_id))
+    conn.commit()
+    conn.close()
+    
+    
+def create_product(name, price, description, img_path, category_id):
+    conn = get_db_connection()
+    conn.execute("""
+    INSERT INTO products (id, name, description, price, img, category_id)
+    VALUES (?, ?, ?, ?, ?, ?)""",
+    (str(uuid.uuid4()), name, description, price, img_path, category_id))
     conn.commit()
     conn.close()
