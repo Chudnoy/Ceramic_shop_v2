@@ -18,14 +18,10 @@ def validate_review(name, rating_str, comment):
     return True, "", {"name": name, "rating": rating, "comment": comment}
     
     
-def validate_product(name, price, description, img_path, category_id):
+def validate_product(name, price, description, category_id):
     name = name.strip()
     if not name:
         return False, "Имя обязательно для заполнения", {}
-        
-    img_path = img_path.strip()
-    if not img_path or not img_path.startswith("/static/"):
-        return False, "Путь к изображению должен быть указан и начинаться со «/static»"
         
     description = description.strip()
     if not description:
@@ -43,4 +39,4 @@ def validate_product(name, price, description, img_path, category_id):
     except (TypeError, ValueError):
         return False, "Некорректный ID категории", {}
         
-    return True, "", {"name": name, "price": price, "description": description, "img_path": img_path, "category_id": category_id}
+    return True, "", {"name": name, "price": price, "description": description, "category_id": category_id}

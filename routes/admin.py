@@ -2,7 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from db import (get_all_products, delete_product, update_product, get_product_by_id, get_all_categories, create_product)
 from validation import validate_product
 from services.product_service import process_product_form
+import os
+from werkzeug.utils import secure_filename
+import uuid
 admin_bp = Blueprint("admin", __name__)
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
 
 @admin_bp.route("/admin")
 def admin():
@@ -24,6 +29,7 @@ def delete_product_route(product_id):
     
 @admin_bp.route("/admin/products/edit/<product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
+    product = get_product_by_id(product_id)
     if request.method == "POST":
         is_valid, error_message, data = process_product_form(request.form)
         
@@ -31,12 +37,23 @@ def edit_product(product_id):
             flash(error_message, "error")
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
-        update_product(product_id, data["name"], data["price"], data["description"], data["img_path"], data["category_id"])
+        file = request.files.get('img')
+        filename = None
+
+        if file and file.filename:
+            filename = f'{uuid.uuid4().hex[:8]}_{secure_filename(file.filename)}'
+            disk_path = os.path.join(UPLOAD_FOLDER, filename)
+            db_path = f'/static/uploads/{filename}'
+            file.save(disk_path)
+            data['img'] = db_path
+        else:
+            data['img'] = ''
+        
+        update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"])
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))
         
-    product = get_product_by_id(product_id)
     categories = get_all_categories()
     return render_template("admin/product_form.html", product=product, categories=categories, title="Редактирование товара", submit_text="Сохранить")
     
@@ -51,8 +68,20 @@ def new_product():
         if not is_valid:
             flash(error_message, "error")
             return redirect(url_for("admin.new_product"))
+        
+        file = request.files.get('img')
+        filename = None
+
+        if file and file.filename:
+            filename = f'{uuid.uuid4().hex[:8]}_{secure_filename(file.filename)}'
+            disk_path = os.path.join(UPLOAD_FOLDER, filename)
+            db_path = f'/static/uploads/{filename}'
+            file.save(disk_path)
+            data['img'] = db_path
+        else:
+            data['img'] = ''
             
-        create_product(data["name"], data["price"], data["description"], data["img_path"], data["category_id"])
+        create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"])
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))

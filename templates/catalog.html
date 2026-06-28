@@ -46,6 +46,9 @@
 	<div class="product-grid">
 		{% for product in products %}
 			<div class="product-card">
+				{% if product.img %}
+					<img src="{{product.img}}" alt="{{product.name}}" class="product-image">
+				{% endif %}
 				<h3 class="product-title">{{product.name}}</h3>
 				<p class="product-description">{{product.description}}</p>
 				<p class="product-price">{{product.price}} руб.</p>

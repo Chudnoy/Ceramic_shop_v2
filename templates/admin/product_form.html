@@ -2,7 +2,7 @@
 
 {% block content %}
     <h1>{{title}}</h1>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <div>
             <label for="name">Название:</label><br>
             <input type="text" name="name" id="name" value="{{product.name}}">
@@ -16,8 +16,8 @@
             <input type="number" name="price" id="price" value="{{product.price}}">
         </div>
         <div>
-            <label for="img">Путь к изображению:</label>
-            <input type="text" name="img" id="img" value="{{product.img}}">
+            <label for="img">Изображение:</label>
+            <input type="file" name="img" id="img">
         </div>
         <div>
             <select name="category_id">
