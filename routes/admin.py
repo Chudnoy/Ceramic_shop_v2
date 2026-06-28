@@ -2,12 +2,8 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from db import (get_all_products, delete_product, update_product, get_product_by_id, get_all_categories, create_product)
 from validation import validate_product
 from services.product_service import process_product_form
-import os
-from werkzeug.utils import secure_filename
-import uuid
+from services.image_service import save_uploaded_image
 admin_bp = Blueprint("admin", __name__)
-
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
 
 @admin_bp.route("/admin")
 def admin():
@@ -38,16 +34,12 @@ def edit_product(product_id):
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
         file = request.files.get('img')
-        filename = None
+        new_img = save_uploaded_image(file)
 
-        if file and file.filename:
-            filename = f'{uuid.uuid4().hex[:8]}_{secure_filename(file.filename)}'
-            disk_path = os.path.join(UPLOAD_FOLDER, filename)
-            db_path = f'/static/uploads/{filename}'
-            file.save(disk_path)
-            data['img'] = db_path
+        if new_img:
+            data['img'] = new_img
         else:
-            data['img'] = ''
+            data['img'] = product['img']
         
         update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"])
         
@@ -70,16 +62,7 @@ def new_product():
             return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
-        filename = None
-
-        if file and file.filename:
-            filename = f'{uuid.uuid4().hex[:8]}_{secure_filename(file.filename)}'
-            disk_path = os.path.join(UPLOAD_FOLDER, filename)
-            db_path = f'/static/uploads/{filename}'
-            file.save(disk_path)
-            data['img'] = db_path
-        else:
-            data['img'] = ''
+        data['img'] = save_uploaded_image(file)
             
         create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"])
         

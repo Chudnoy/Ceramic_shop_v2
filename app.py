@@ -29,8 +29,8 @@ def index():
 @app.route("/catalog")
 def catalog():
     category_slug = request.args.get('category')
-    sort_by = request.args.get('sort_by', 'products.name')
-    order = request.args.get('order', 'asc')
+    sort_by = request.args.get("sort_by", "name")
+    order = request.args.get("order", "ASC").upper()
     products = get_all_products(category_slug, sort_by, order)
     categories = get_all_categories()
 
