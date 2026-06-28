@@ -1,19 +1,50 @@
 {% extends 'admin/base.html' %}
 
 {% block content %}
-    <h1>Заказ #{{order.id}}</h1>
-    <hr>
-    <p>Имя: {{order.customer_name}}</p>
-    <p>email: {{order.customer_email}}</p>
-    <p>Телефон: {{order.customer_phone}}</p>
-    <p>Адрес: {% if order.customer_address %}{{order.customer_address}}{% else %}— {% endif %}</p>
-    <div>
-        <h3>Состав заказа</h3>
+<h1 class="admin-page-title">Заказ #{{ order.id[:8] }}</h1>
+
+<div class="admin-detail-card">
+    <h2>Клиент</h2>
+
+    <p><strong>Имя:</strong> {{ order.customer_name }}</p>
+    <p><strong>Email:</strong> {{ order.customer_email }}</p>
+    <p><strong>Телефон:</strong> {{ order.customer_phone if order.customer_phone else '—' }}</p>
+    <p><strong>Адрес:</strong> {{ order.customer_address if order.customer_address else '—' }}</p>
+    <p><strong>Дата оформления:</strong> {{ order.created_at }}</p>
+</div>
+
+<div class="admin-detail-card">
+    <h2>Состав заказа</h2>
+
+    <table class="admin-table">
+        <tr>
+            <th>Товар</th>
+            <th>Цена</th>
+            <th>Количество</th>
+            <th>Сумма</th>
+        </tr>
+
         {% for product in order['items'].values() %}
-            <p>Название: {{product['name']}}, цена: {{product['price']}}, количество: {{product['quantity']}}</p>
+        <tr>
+            <td>{{ product['name'] }}</td>
+            <td>{{ product['price'] }} руб.</td>
+            <td>{{ product['quantity'] }}</td>
+            <td>{{ product['price'] * product['quantity'] }} руб.</td>
+        </tr>
         {% endfor %}
-    </div>
-    <p>Итого: {{order.total}}</p>
-    <p>Дата оформления: {{order.created_at}}</p>
-    <a href="{{url_for('admin.edit_order', order_id=order.id)}}">Редактировать</a>
+    </table>
+
+    <p class="admin-total">
+        Итого: {{ order.total }} руб.
+    </p>
+</div>
+
+<div class="admin-actions">
+    <a href="{{ url_for('admin.edit_order', order_id=order.id) }}" class="admin-button">
+        Редактировать
+    </a>
+    <a href="{{ url_for('admin.admin_orders') }}" class="admin-button admin-button-secondary">
+        Назад к заказам
+    </a>
+</div>
 {% endblock %}

@@ -249,10 +249,11 @@ def delete_order(order_id):
     
 def update_order(order_id, name, email, phone, address, items, total):
     conn = get_db_connection()
+    items_json = json.dumps(items, ensure_ascii=False)
     conn.execute("""
     UPDATE orders
     SET customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, items = ?, total = ?
     WHERE id = ?""",
-    (name, email, phone, address, items, total, order_id))
+    (name, email, phone, address, items_json, total, order_id))
     conn.commit()
     conn.close()

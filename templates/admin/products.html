@@ -1,38 +1,46 @@
-{% extends 'admin/base.html' %}
+{% extends "admin/base.html" %}
 
 {% block content %}
-    <a href="{{url_for('admin.new_product')}}">➕ Добавить товар</a>
-    <h1>Товары</h1>
-    <table>
+<h1 class="admin-page-title">Товары</h1>
+
+<div class="admin-actions">
+    <a href="{{ url_for('admin.new_product') }}" class="admin-button">
+        Добавить товар
+    </a>
+</div>
+
+<div class="admin-table-wrapper">
+    <table class="admin-table">
         <tr>
+            <th>Изображение</th>
             <th>Название</th>
-            <th>Цена</th>
             <th>Категория</th>
+            <th>Цена</th>
             <th>Действия</th>
         </tr>
+
         {% for product in products %}
-            <tr>
-                <td>{{product.name}}</td>
-                <td>{{product.price}}</td>
-                <td>
-                    {% if product.category_name %}
-                        {{product.category_name}}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{{url_for('admin.delete_product_route', product_id=product.id)}}"
-                    onclick="return confirm('Удалить товар?')">
-                        Удалить
-                    </a>
-                </td>
-                <td>
-                    <a href="{{url_for('admin.edit_product', product_id=product.id)}}">
-                        Редактировать
-                    </a>
-                </td>
-            </tr>
+        <tr>
+            <td>
+                {% if product.img %}
+                    <img src="{{ product.img }}" alt="{{ product.name }}" class="admin-product-thumb">
+                {% else %}
+                    <span class="admin-muted">Нет фото</span>
+                {% endif %}
+            </td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.category_name if product.category_name else '—' }}</td>
+            <td>{{ product.price }} руб.</td>
+            <td>
+                <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
+                |
+                <a href="{{ url_for('admin.delete_product_route', product_id=product.id) }}"
+                   onclick="return confirm('Удалить товар?')">
+                    Удалить
+                </a>
+            </td>
+        </tr>
         {% endfor %}
     </table>
+</div>
 {% endblock %}

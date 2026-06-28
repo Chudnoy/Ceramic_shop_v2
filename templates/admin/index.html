@@ -1,6 +1,22 @@
 {% extends 'admin/base.html' %}
 
 {% block content %}
-<h1>Админ-панель</h1>
-<p>Добро пожаловать</p>
+<h1 class="admin-page-title">Админ-панель</h1>
+
+<div class="admin-dashboard">
+    <a href="{{ url_for('admin.admin_products') }}" class="admin-dashboard-card">
+        <h2>Товары</h2>
+        <p>Добавление, редактирование и удаление товаров.</p>
+    </a>
+
+    <a href="{{ url_for('admin.admin_orders') }}" class="admin-dashboard-card">
+        <h2>Заказы</h2>
+        <p>Просмотр заказов, редактирование данных и состава.</p>
+    </a>
+
+    <a href="{{ url_for('catalog') }}" class="admin-dashboard-card">
+        <h2>На сайт</h2>
+        <p>Открыть клиентскую часть магазина.</p>
+    </a>
+</div>
 {% endblock %}

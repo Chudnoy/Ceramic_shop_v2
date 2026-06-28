@@ -1,10 +1,54 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, create_product, delete_order, get_order_by_id, update_order)
 from validation import validate_product
 from services.product_service import process_product_form
 from services.image_service import save_image, delete_image
+from services.order_service import process_order_form
 import json
 admin_bp = Blueprint("admin", __name__)
+
+ADMIN_LOGIN = 'admin'
+ADMIN_PASSWORD = '12345'
+
+
+@admin_bp.before_request
+def require_admin_login():
+    allowed_endpoints = {
+        'admin.login'
+    }
+
+    if request.endpoint in allowed_endpoints:
+        return
+    
+    if session.get('is_admin'):
+        return
+    
+    flash('Сначала войдите в админку', 'error')
+    return redirect(url_for('admin.login'))
+
+
+@admin_bp.route('/admin/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        login_value = request.form.get('login', '').strip()
+        password = request.form.get('password', '')
+
+        if login_value == ADMIN_LOGIN and password == ADMIN_PASSWORD:
+            session.permanent = True
+            session['is_admin'] = True
+            flash('Вы вошли в админку', 'success')
+            return redirect(url_for('admin.admin'))
+        
+        flash('Неверный логин или пароль', 'error')
+    return render_template('admin/login.html')
+
+
+@admin_bp.route('/admin/logout')
+def logout():
+    session.pop('is_admin', None)
+    flash('Вы вышли из админки', 'info')
+    return redirect(url_for('admin.login'))
+
 
 @admin_bp.route("/admin")
 def admin():
@@ -17,6 +61,15 @@ def admin_products():
     return render_template("admin/products.html", products=products)
     
     
+@admin_bp.route("/admin/orders/order_details/<order_id>")
+def order_details(order_id):
+    order = get_order_by_id(order_id)
+    if not order:
+        flash('Заказ не найден', 'error')
+        return redirect(url_for('admin.admin_orders'))
+    return render_template("admin/order_details.html", order=order)
+
+
 @admin_bp.route("/admin/orders")
 def admin_orders():
     orders = get_all_orders()
@@ -30,32 +83,20 @@ def delete_order_route(order_id):
     return redirect(url_for("admin.admin_orders"))
     
     
-@admin_bp.route("/admin/orders/order_details/<order_id>")
-def order_details(order_id):
-    order = get_order_by_id(order_id)
-    return render_template("admin/order_details.html", order=order)
-    
-    
 @admin_bp.route("/admin/orders/edit/<order_id>", methods=["GET", "POST"])
 def edit_order(order_id):
     order = get_order_by_id(order_id)
-    order = dict(order)
+    if not order:
+        flash('Заказ не найден', 'error')
+        return redirect(url_for('admin.admin_orders'))
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip()
-        phone = request.form.get("phone", "").strip()
-        address = request.form.get("address", "").strip()
-        items = {}
-        for id, product in order["items"].items():
-            items[id] ={'name': product['name'], 'price': product['price'], 'quantity': request.form.get(f'quantity_{id}')}
-        total = 0
-        for product in items.values():
-            subtotal = 0
-            subtotal += int(product['price']) * int(product['quantity'])
-            total += subtotal
-        items = json.dumps(items)
+        is_valid, error_message, data = process_order_form(request.form, order['items'])
+
+        if not is_valid:
+            flash(error_message, 'error')
+            return redirect(url_for('admin.edit_order', order_id=order_id))
         
-        update_order(order_id, name, email, phone, address, items, total)
+        update_order(order_id, data['name'], data['email'], data['phone'], data['address'], data['items'], data['total'])
         flash("Заказ обновлён", "success")
         return redirect(url_for("admin.admin_orders"))
     

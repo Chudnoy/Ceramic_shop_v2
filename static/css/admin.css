@@ -1,0 +1,251 @@
+* {
+    box-sizing: border-box;
+}
+
+.admin-body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f3ef;
+    color: #2d2a26;
+}
+
+.admin-header {
+    background: #2f2a25;
+    color: #fff;
+}
+
+.admin-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-logo {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 16px;
+}
+
+.admin-nav a {
+    color: #f2e8dc;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.admin-nav a:hover {
+    text-decoration: underline;
+}
+
+.admin-main {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 24px;
+}
+
+.admin-flashes {
+    margin-bottom: 20px;
+}
+
+.admin-flash {
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #e8e1d8;
+}
+
+.admin-flash-success {
+    background: #dcebdc;
+}
+
+.admin-flash-error {
+    background: #f1d6d2;
+}
+
+.admin-flash-info {
+    background: #dce4ef;
+}
+
+.admin-page-title {
+    margin: 0 0 20px;
+    font-size: 28px;
+}
+
+.admin-actions {
+    margin-bottom: 20px;
+}
+
+.admin-table-wrapper {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5ded6;
+    text-align: left;
+    vertical-align: top;
+}
+
+.admin-table th {
+    background: #efe7dd;
+    font-weight: 700;
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table a {
+    color: #6b4f36;
+    font-weight: 600;
+}
+
+.admin-button {
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #6b4f36;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.admin-button:hover {
+    background: #4f3926;
+}
+
+.admin-button-secondary {
+    background: #8d7b68;
+}
+
+.admin-button-danger {
+    background: #9f3d35;
+}
+
+.admin-form {
+    max-width: 640px;
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.admin-form-group {
+    margin-bottom: 16px;
+}
+
+.admin-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d6cbbf;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.admin-form input[type="file"] {
+    padding: 8px;
+}
+
+.admin-muted {
+    color: #7a6f66;
+}
+
+.admin-product-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e0d6cc;
+}
+
+.admin-current-image {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-product-preview {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e0d6cc;
+}
+
+.admin-detail-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.admin-detail-card h2 {
+    margin-top: 0;
+}
+
+.admin-total {
+    margin-top: 18px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.admin-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.admin-dashboard-card {
+    display: block;
+    background: #fff;
+    padding: 22px;
+    border-radius: 12px;
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.admin-dashboard-card h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.admin-dashboard-card p {
+    margin: 0;
+    color: #7a6f66;
+}

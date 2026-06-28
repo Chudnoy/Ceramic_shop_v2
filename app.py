@@ -6,12 +6,14 @@ from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
 import uuid
 from routes.admin import admin_bp
+from datetime import timedelta
 
 init_db()
 
 
 app = Flask(__name__)
 app.register_blueprint(admin_bp)
+app.permanent_session_lifetime = timedelta(minutes=30)
 app.secret_key = "supersecretkey"
 
 @app.context_processor

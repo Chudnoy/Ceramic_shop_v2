@@ -1,31 +1,49 @@
 {% extends 'admin/base.html' %}
 
 {% block content %}
-    <h1>{{title}}</h1>
-    <form method="post" enctype="multipart/form-data">
-        <div>
-            <label for="name">Название:</label><br>
-            <input type="text" name="name" id="name" value="{{product.name}}">
-        </div>
-        <div>
-            <label for="description">Описание:</label><br>
-            <textarea name="description" id="description" rows="4">{{product.description}}</textarea>
-        </div>
-        <div>
-            <label for="price">Цена:</label><br>
-            <input type="number" name="price" id="price" value="{{product.price}}">
-        </div>
-        <div>
-            <label for="img">Изображение:</label>
-            <input type="file" name="img" id="img">
-        </div>
-        <div>
-            <select name="category_id">
-                {% for category in categories %}
-                    <option value="{{category.id}}" {% if product.category_id == category.id %}selected{% endif %}>{{category.name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit">{{submit_text}}</button>
-    </form>
+<h1 class="admin-page-title">{{ title }}</h1>
+
+<form method="post" enctype="multipart/form-data" class="admin-form">
+    <div class="admin-form-group">
+        <label for="name">Название</label>
+        <input type="text" name="name" id="name" value="{{ product.name }}">
+    </div>
+
+    <div class="admin-form-group">
+        <label for="description">Описание</label>
+        <textarea name="description" id="description" rows="4">{{ product.description }}</textarea>
+    </div>
+
+    <div class="admin-form-group">
+        <label for="price">Цена</label>
+        <input type="number" name="price" id="price" value="{{ product.price }}">
+    </div>
+
+    <div class="admin-form-group">
+        <label for="img">Изображение</label>
+
+        {% if product.img %}
+            <div class="admin-current-image">
+                <img src="{{ product.img }}" alt="{{ product.name }}" class="admin-product-preview">
+                <span class="admin-muted">Текущее изображение</span>
+            </div>
+        {% endif %}
+
+        <input type="file" name="img" id="img">
+    </div>
+
+    <div class="admin-form-group">
+        <label for="category_id">Категория</label>
+        <select name="category_id" id="category_id">
+            {% for category in categories %}
+                <option value="{{ category.id }}"
+                    {% if product.category_id == category.id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="admin-button">{{ submit_text }}</button>
+</form>
 {% endblock %}
