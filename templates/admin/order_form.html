@@ -1,0 +1,29 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    <form action="" method="POST">
+        <div>
+            <label for="name">Имя: </label>
+            <input type="text" name="name" id="name" value="{{order.customer_name}}">
+        </div>
+        <div>
+            <label for="email">Email: </label>
+            <input type="email" name="email" id="email" value="{{order.customer_email}}">
+        </div>
+        <div>
+            <label for="phone">Телефон: </label>
+            <input type="text" name="phone" id="phone" value="{{order.customer_phone}}">
+        </div>
+        <div>
+            <label for="address">Адрес: </label>
+            <textarea name="address" id="address" rows="4" placeholder="Введите адрес:">{% if order.customer_address %}{{order.customer_address}}{% endif %}</textarea>
+        </div>
+        <h3>Редактировать количество товаров</h3>
+        {% for id, product in order['items'].items() %}
+            <label for="quantity">{{product['name']}}</label>
+            <input type="number" name="quantity_{{id}}" id="quantity" value="{{product['quantity']}}">
+            <br>
+        {% endfor %}
+        <button type="submit">Подтвердить</button>
+    </form>
+{% endblock %}

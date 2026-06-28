@@ -1,0 +1,19 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    <h1>Заказ #{{order.id}}</h1>
+    <hr>
+    <p>Имя: {{order.customer_name}}</p>
+    <p>email: {{order.customer_email}}</p>
+    <p>Телефон: {{order.customer_phone}}</p>
+    <p>Адрес: {% if order.customer_address %}{{order.customer_address}}{% else %}— {% endif %}</p>
+    <div>
+        <h3>Состав заказа</h3>
+        {% for product in order['items'].values() %}
+            <p>Название: {{product['name']}}, цена: {{product['price']}}, количество: {{product['quantity']}}</p>
+        {% endfor %}
+    </div>
+    <p>Итого: {{order.total}}</p>
+    <p>Дата оформления: {{order.created_at}}</p>
+    <a href="{{url_for('admin.edit_order', order_id=order.id)}}">Редактировать</a>
+{% endblock %}

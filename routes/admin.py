@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from db import (get_all_products, delete_product, update_product, get_product_by_id, get_all_categories, create_product)
+from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, create_product, delete_order, get_order_by_id, update_order)
 from validation import validate_product
 from services.product_service import process_product_form
-from services.image_service import save_uploaded_image
+from services.image_service import save_image, delete_image
+import json
 admin_bp = Blueprint("admin", __name__)
 
 @admin_bp.route("/admin")
@@ -16,9 +17,57 @@ def admin_products():
     return render_template("admin/products.html", products=products)
     
     
+@admin_bp.route("/admin/orders")
+def admin_orders():
+    orders = get_all_orders()
+    return render_template("admin/orders.html", orders=orders)
+    
+    
+@admin_bp.route("/admin/orders/delete/<order_id>")
+def delete_order_route(order_id):
+    delete_order(order_id)
+    flash("Заказ удалён", "info")
+    return redirect(url_for("admin.admin_orders"))
+    
+    
+@admin_bp.route("/admin/orders/order_details/<order_id>")
+def order_details(order_id):
+    order = get_order_by_id(order_id)
+    return render_template("admin/order_details.html", order=order)
+    
+    
+@admin_bp.route("/admin/orders/edit/<order_id>", methods=["GET", "POST"])
+def edit_order(order_id):
+    order = get_order_by_id(order_id)
+    order = dict(order)
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        address = request.form.get("address", "").strip()
+        items = {}
+        for id, product in order["items"].items():
+            items[id] ={'name': product['name'], 'price': product['price'], 'quantity': request.form.get(f'quantity_{id}')}
+        total = 0
+        for product in items.values():
+            subtotal = 0
+            subtotal += int(product['price']) * int(product['quantity'])
+            total += subtotal
+        items = json.dumps(items)
+        
+        update_order(order_id, name, email, phone, address, items, total)
+        flash("Заказ обновлён", "success")
+        return redirect(url_for("admin.admin_orders"))
+    
+    return render_template("admin/order_form.html", order=order)
+
+    
 @admin_bp.route("/admin/products/delete/<product_id>")
 def delete_product_route(product_id):
-    delete_product(product_id)
+    product = get_product_by_id(product_id)
+    if product:
+        delete_image(product["img"])
+        delete_product(product_id)
     flash("Товар удалён", "info")
     return redirect(url_for("admin.admin_products"))
     
@@ -34,7 +83,7 @@ def edit_product(product_id):
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
         file = request.files.get('img')
-        new_img = save_uploaded_image(file)
+        new_img = save_image(file)
 
         if new_img:
             data['img'] = new_img
@@ -62,7 +111,7 @@ def new_product():
             return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
-        data['img'] = save_uploaded_image(file)
+        data['img'] = save_image(file)
             
         create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"])
         

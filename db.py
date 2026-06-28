@@ -238,3 +238,21 @@ def create_product(name, price, description, img_path, category_id):
     (str(uuid.uuid4()), name, description, price, img_path, category_id))
     conn.commit()
     conn.close()
+    
+    
+def delete_order(order_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+    conn.commit()
+    conn.close()
+    
+    
+def update_order(order_id, name, email, phone, address, items, total):
+    conn = get_db_connection()
+    conn.execute("""
+    UPDATE orders
+    SET customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, items = ?, total = ?
+    WHERE id = ?""",
+    (name, email, phone, address, items, total, order_id))
+    conn.commit()
+    conn.close()
