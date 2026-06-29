@@ -18,7 +18,7 @@ init_db()
 app = Flask(__name__)
 app.register_blueprint(admin_bp)
 app.permanent_session_lifetime = timedelta(minutes=30)
-app.secret_key = os.environ.get('SECRET-KEY', 'def-secret-key')
+app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
 
 @app.context_processor
 def inject_cart_count():
