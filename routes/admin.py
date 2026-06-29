@@ -4,11 +4,13 @@ from validation import validate_product
 from services.product_service import process_product_form
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
 import json
 admin_bp = Blueprint("admin", __name__)
 
-ADMIN_LOGIN = 'admin'
-ADMIN_PASSWORD = '12345'
+ADMIN_LOGIN = os.environ.get('ADMIN_LOGIN', 'admin')
+ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', '')
 
 
 @admin_bp.before_request
@@ -33,7 +35,7 @@ def login():
         login_value = request.form.get('login', '').strip()
         password = request.form.get('password', '')
 
-        if login_value == ADMIN_LOGIN and password == ADMIN_PASSWORD:
+        if login_value == ADMIN_LOGIN and ADMIN_PASSWORD_HASH and check_password_hash(ADMIN_PASSWORD_HASH, password):
             session.permanent = True
             session['is_admin'] = True
             flash('Вы вошли в админку', 'success')

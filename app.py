@@ -7,6 +7,10 @@ from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_s
 import uuid
 from routes.admin import admin_bp
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 init_db()
 
@@ -14,7 +18,7 @@ init_db()
 app = Flask(__name__)
 app.register_blueprint(admin_bp)
 app.permanent_session_lifetime = timedelta(minutes=30)
-app.secret_key = "supersecretkey"
+app.secret_key = os.environ.get('SECRET-KEY', 'def-secret-key')
 
 @app.context_processor
 def inject_cart_count():
