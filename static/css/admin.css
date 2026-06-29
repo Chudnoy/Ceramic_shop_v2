@@ -249,3 +249,18 @@
     margin: 0;
     color: #7a6f66;
 }
+
+.admin-inline-form {
+    display: inline;
+}
+
+.admin-link-button {
+    border: none;
+    background: none;
+    padding: 0;
+    color: #6b4f36;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}

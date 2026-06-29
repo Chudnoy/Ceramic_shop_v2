@@ -78,7 +78,7 @@ def admin_orders():
     return render_template("admin/orders.html", orders=orders)
     
     
-@admin_bp.route("/admin/orders/delete/<order_id>")
+@admin_bp.route("/admin/orders/delete/<order_id>", methods=["POST"])
 def delete_order_route(order_id):
     delete_order(order_id)
     flash("Заказ удалён", "info")
@@ -105,7 +105,7 @@ def edit_order(order_id):
     return render_template("admin/order_form.html", order=order)
 
     
-@admin_bp.route("/admin/products/delete/<product_id>")
+@admin_bp.route("/admin/products/delete/<product_id>", methods=['POST'])
 def delete_product_route(product_id):
     product = get_product_by_id(product_id)
     if product:

@@ -26,10 +26,9 @@
             <td>
                 <a href="{{ url_for('admin.order_details', order_id=order.id) }}">Подробнее</a>
                 |
-                <a href="{{ url_for('admin.delete_order_route', order_id=order.id) }}"
-                   onclick="return confirm('Удалить заказ?')">
-                    Удалить
-                </a>
+                <form action="{{url_for('admin.delete_order_route', order_id=order.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить заказ?')">
+                    <button type="submit" class="admin-link-button">Удалить</button>
+                </form>
             </td>
         </tr>
         {% endfor %}
