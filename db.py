@@ -64,11 +64,11 @@ def init_db():
     
     if cursor.fetchone()[0] == 0:
         products = [
-        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpg", 1),
-        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpg", 1),
-        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpg", 2),
-        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpg", 2),
-        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpg", 3)
+        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpeg", 1),
+        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpeg", 1),
+        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpeg", 2),
+        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpeg", 2),
+        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpeg", 3)
         ]
         cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)", products)
     conn.commit()

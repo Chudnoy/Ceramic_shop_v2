@@ -61,6 +61,8 @@ def admin():
 @admin_bp.route("/admin/products")
 def admin_products():
     products = get_all_products()
+    for product in products:
+        print(product["name"], product["img"])
     return render_template("admin/products.html", products=products)
 
 
@@ -81,6 +83,10 @@ def order_details(order_id):
     
 @admin_bp.route("/admin/orders/delete/<order_id>", methods=["POST"])
 def delete_order_route(order_id):
+    order = get_order_by_id(order_id)
+    if not order:
+        flash('Заказ не найден', 'error')
+        return redirect(url_for('admin.admin_orders'))
     delete_order(order_id)
     flash("Заказ удалён", "info")
     return redirect(url_for("admin.admin_orders"))
@@ -89,7 +95,10 @@ def delete_order_route(order_id):
 @admin_bp.route("/admin/orders/<order_id>/status", methods=["POST"])
 def update_order_status_route(order_id):
     status = request.form.get("status", "new")
-
+    order = get_order_by_id(order_id)
+    if not order:
+        flash('Заказ не найден', 'error')
+        return redirect(url_for('admin.admin_orders'))
     if status not in ORDER_STATUSES:
         flash("Некорректный статус заказа", "error")
         return redirect(url_for("admin.admin_orders"))

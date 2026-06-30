@@ -6,6 +6,7 @@ from validation import validate_review
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
 import uuid
 from routes.admin import admin_bp
+from routes.main import main_bp
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
@@ -17,6 +18,7 @@ init_db()
 
 app = Flask(__name__)
 app.register_blueprint(admin_bp)
+app.register_blueprint(main_bp)
 app.permanent_session_lifetime = timedelta(minutes=30)
 app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
 
@@ -26,35 +28,7 @@ def inject_cart_count():
     return {"cart_count": sum(cart.values())}
     
     
-    
-@app.route("/")
-def index():
-    return render_template("index.html")
-    
-    
-@app.route("/catalog")
-def catalog():
-    category_slug = request.args.get('category')
-    sort_by = request.args.get("sort_by", "name")
-    order = request.args.get("order", "ASC").upper()
-    products = get_all_products(category_slug, sort_by, order)
-    categories = get_all_categories()
 
-    current_category = None
-
-    if category_slug:
-        current_category = get_category_by_slug(category_slug)
-        if not current_category:
-            flash("Категория не найдена", "error")
-            return redirect(url_for('catalog'))
-    
-    return render_template("catalog.html",
-                           products=products,
-                           categories=categories,
-                           current_category=current_category,
-                           current_sort=sort_by,
-                           current_order=order,
-                           category_slug=category_slug)
     
     
 @app.route('/product/<product_id>')
