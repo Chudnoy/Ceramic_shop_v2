@@ -1,4 +1,4 @@
-from flask import Flask, session, 
+from flask import Flask, session 
 from db import init_db
 from routes.admin import admin_bp
 from routes.main import main_bp
