@@ -18,7 +18,9 @@ def catalog():
     category_slug = request.args.get('category')
     sort_by = request.args.get("sort_by", "name")
     order = request.args.get("order", "ASC").upper()
-    products = get_all_products(category_slug, sort_by, order)
+    search_query = request.args.get("q", "").strip()
+    
+    products = get_all_products(category_slug, sort_by, order, search_query)
     categories = get_all_categories()
 
     current_category = None
@@ -35,7 +37,8 @@ def catalog():
                            current_category=current_category,
                            current_sort=sort_by,
                            current_order=order,
-                           category_slug=category_slug)
+                           category_slug=category_slug,
+                           search_query=search_query)
                            
                            
 @main_bp.route('/product/<product_id>')

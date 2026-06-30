@@ -89,7 +89,7 @@ def add_review_db(product_id, name, rating, comment):
     conn.close()
     
     
-def get_all_products(category_slug=None, sort_by='name', order='ASC'):
+def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query=""):
     conn = get_db_connection()
     query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
             FROM products
@@ -97,9 +97,17 @@ def get_all_products(category_slug=None, sort_by='name', order='ASC'):
             ON products.category_id = categories.id"""
     
     params = []
+    condition = []
     if category_slug:
-        query += " WHERE categories.slug = ?"
+        condition.append("categories.slug = ?")
         params.append(category_slug)
+        
+    if search_query:
+        condition.append("(products.name LIKE ? OR products.description LIKE ?)")
+        params.extend([f"%{search_query}%", f"%{search_query}%"])
+        
+    if condition:
+        query += "WHERE " + " AND ".join(condition)
     
     allowed_sort_fields = {'name': 'products.name', 'price': 'products.price'}
     sort_field = allowed_sort_fields.get(sort_by, 'products.name')
