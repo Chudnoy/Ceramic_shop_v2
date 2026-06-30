@@ -39,6 +39,14 @@
         </div>
     {% endfor %}
 
+    <div class="admin-form-group">
+        <select name="status" id="status">
+        {% for eng_status, rus_status in order_statuses.items() %}
+            <option value="{{eng_status}}" {% if order.status == eng_status %}selected{% endif %}>{{rus_status}}</option>
+        {% endfor %}
+    </select>
+    </div>
+
     <button type="submit" class="admin-button">Сохранить</button>
 </form>
 {% endblock %}

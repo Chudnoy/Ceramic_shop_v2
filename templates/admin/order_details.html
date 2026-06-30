@@ -11,6 +11,11 @@
     <p><strong>Телефон:</strong> {{ order.customer_phone if order.customer_phone else '—' }}</p>
     <p><strong>Адрес:</strong> {{ order.customer_address if order.customer_address else '—' }}</p>
     <p><strong>Дата оформления:</strong> {{ order.created_at }}</p>
+    <p><strong>Статус заказа:</strong>
+        <span class="admin-status admin-status-{{ order.status }}">
+        {{ order_statuses.get(order.status, order.status) }}
+        </span>
+    </p>
 </div>
 
 <div class="admin-detail-card">

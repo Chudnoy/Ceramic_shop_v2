@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, create_product, delete_order, get_order_by_id, update_order)
+from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, 
+                create_product, delete_order, get_order_by_id, update_order, update_order_status)
 from validation import validate_product
 from services.product_service import process_product_form
 from services.image_service import save_image, delete_image
-from services.order_service import process_order_form
+from services.order_service import process_order_form, ORDER_STATUSES
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
@@ -45,7 +46,7 @@ def login():
     return render_template('admin/login.html')
 
 
-@admin_bp.route('/admin/logout')
+@admin_bp.route('/admin/logout', methods=['POST'])
 def logout():
     session.pop('is_admin', None)
     flash('Вы вышли из админки', 'info')
@@ -61,27 +62,41 @@ def admin():
 def admin_products():
     products = get_all_products()
     return render_template("admin/products.html", products=products)
-    
-    
+
+
+@admin_bp.route("/admin/orders")
+def admin_orders():
+    orders = get_all_orders()
+    return render_template("admin/orders.html", orders=orders, order_statuses=ORDER_STATUSES)
+
+
 @admin_bp.route("/admin/orders/order_details/<order_id>")
 def order_details(order_id):
     order = get_order_by_id(order_id)
     if not order:
         flash('Заказ не найден', 'error')
         return redirect(url_for('admin.admin_orders'))
-    return render_template("admin/order_details.html", order=order)
-
-
-@admin_bp.route("/admin/orders")
-def admin_orders():
-    orders = get_all_orders()
-    return render_template("admin/orders.html", orders=orders)
+    return render_template("admin/order_details.html", order=order, order_statuses=ORDER_STATUSES)
     
     
 @admin_bp.route("/admin/orders/delete/<order_id>", methods=["POST"])
 def delete_order_route(order_id):
     delete_order(order_id)
     flash("Заказ удалён", "info")
+    return redirect(url_for("admin.admin_orders"))
+
+
+@admin_bp.route("/admin/orders/<order_id>/status", methods=["POST"])
+def update_order_status_route(order_id):
+    status = request.form.get("status", "new")
+
+    if status not in ORDER_STATUSES:
+        flash("Некорректный статус заказа", "error")
+        return redirect(url_for("admin.admin_orders"))
+
+    update_order_status(order_id, status)
+
+    flash("Статус заказа обновлён", "success")
     return redirect(url_for("admin.admin_orders"))
     
     
@@ -98,11 +113,11 @@ def edit_order(order_id):
             flash(error_message, 'error')
             return redirect(url_for('admin.edit_order', order_id=order_id))
         
-        update_order(order_id, data['name'], data['email'], data['phone'], data['address'], data['items'], data['total'])
+        update_order(order_id, data['name'], data['email'], data['phone'], data['address'], data['items'], data['total'], data['status'])
         flash("Заказ обновлён", "success")
         return redirect(url_for("admin.admin_orders"))
     
-    return render_template("admin/order_form.html", order=order)
+    return render_template("admin/order_form.html", order=order, order_statuses=ORDER_STATUSES)
 
     
 @admin_bp.route("/admin/products/delete/<product_id>", methods=['POST'])
@@ -118,6 +133,10 @@ def delete_product_route(product_id):
 @admin_bp.route("/admin/products/edit/<product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
     product = get_product_by_id(product_id)
+
+    if not product:
+        flash('Товар не найден', 'error')
+        return redirect(url_for('admin.admin_products'))
     if request.method == "POST":
         is_valid, error_message, data = process_product_form(request.form)
         

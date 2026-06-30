@@ -106,7 +106,7 @@ def show_cart():
     return render_template("cart.html", products=products, total=total, cart=cart)
     
     
-@app.route("/remove_from_cart/<product_id>")
+@app.route("/remove_from_cart/<product_id>", methods=['POST'])
 def remove_from_cart_route(product_id):
     if remove_from_cart_serv(session, product_id):
         flash("Товар удалён из корзины", "info")

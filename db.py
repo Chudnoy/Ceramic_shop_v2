@@ -45,6 +45,7 @@ def init_db():
                  customer_address TEXT,
                  items TEXT NOT NULL,
                  total INTEGER NOT NULL,
+                 status TEXT NOT NULL DEFAULT 'new',
                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                  )""")
     
@@ -139,9 +140,9 @@ def product_exists(product_id):
 def create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total):
     conn = get_db_connection()
     items_json = json.dumps(items_dict, ensure_ascii=False)
-    conn.execute("""INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                 (order_id,customer_name, customer_email, customer_phone, customer_address, items_json, total))
+    conn.execute("""INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                 (order_id,customer_name, customer_email, customer_phone, customer_address, items_json, total, 'new'))
     conn.commit()
     conn.close()
 
@@ -161,7 +162,7 @@ def get_order_by_id(order_id):
 
 def get_all_orders():
     conn = get_db_connection()
-    rows = conn.execute("SELECT * FROM orders").fetchall()
+    rows = conn.execute("SELECT * FROM orders ORDER BY created_at DESC").fetchall()
     conn.close()
     orders = []
 
@@ -247,13 +248,20 @@ def delete_order(order_id):
     conn.close()
     
     
-def update_order(order_id, name, email, phone, address, items, total):
+def update_order(order_id, name, email, phone, address, items, total, status):
     conn = get_db_connection()
     items_json = json.dumps(items, ensure_ascii=False)
     conn.execute("""
     UPDATE orders
-    SET customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, items = ?, total = ?
+    SET customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, items = ?, total = ?, status = ?
     WHERE id = ?""",
-    (name, email, phone, address, items_json, total, order_id))
+    (name, email, phone, address, items_json, total, status, order_id))
+    conn.commit()
+    conn.close()
+
+
+def update_order_status(order_id, status):
+    conn = get_db_connection()
+    conn.execute('UPDATE orders SET status = ? WHERE id = ?', (status, order_id))
     conn.commit()
     conn.close()

@@ -18,7 +18,9 @@
                 <a href="{{ url_for('admin.admin_products') }}">Товары</a>
                 <a href="{{ url_for('admin.admin_orders') }}">Заказы</a>
                 {% if session.get('is_admin') %}
-                    <a href="{{url_for('admin.logout')}}">Выйти</a>
+                    <form action="{{ url_for('admin.logout') }}" method="post" class="admin-inline-form">
+                        <button type="submit" class="admin-nav-button">Выйти</button>
+                    </form>
                 {% endif %}
             </nav>
         </div>
