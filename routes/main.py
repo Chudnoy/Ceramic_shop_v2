@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, get_products_by_ids, add_review_db, create_order, get_order_by_id
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
+from services.order_service import process_checkout_form, build_order_items
 from validation import validate_review
 import uuid
 
@@ -142,39 +143,24 @@ def checkout_process():
         flash("Корзина пуста", "error")
         return redirect(url_for("main.catalog"))
         
-    customer_name = request.form.get("customer_name", "").strip()
-    customer_email = request.form.get("customer_email", "").strip()
-    customer_phone = request.form.get("customer_phone", "").strip()
-    customer_address = request.form.get("customer_address", "").strip()
-    
-    if not customer_name:
-        flash("Имя обязательно для заполнения", "error")
-        return redirect(url_for("main.checkout_form"))
-    if not customer_email or "@" not in customer_email:
-        flash("Введите корректный email", "error")
-        return redirect(url_for("main.checkout_form"))
-        
     product_ids = list(cart.keys())
     products = get_products_by_ids(product_ids)
     
-    items_dict = {}
-    total = 0
+    if len(products) != len(product_ids):
+        flash("Некоторые товары в корзине больше недоступны", "error")
+        return redirect(url_for("main.show_cart"))
     
-    for product in products:
-        product_id = product["id"]
-        qty = cart[product_id]
-        price = product["price"]
-        subtotal = price * qty
-        total += subtotal
-        items_dict[product_id] = {
-                "name": product['name'],
-                "price": price,
-                "quantity": qty
-        }
+    is_valid, error_message, data = process_checkout_form(request.form)
+    
+    if not is_valid:
+        flash(error_message, "error")
+        return redirect(url_for("main.checkout_form"))
+        
+    items_dict, total = build_order_items(cart, products)
     
     order_id = str(uuid.uuid4())
     
-    create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total)
+    create_order(order_id, data["customer_name"], data["customer_email"], data["customer_phone"], data["customer_address"], items_dict, total)
     
     clear_cart(session)
     
