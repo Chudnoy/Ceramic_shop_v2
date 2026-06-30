@@ -61,8 +61,8 @@
 					</p>
 				{% endif %}
 				<div class="product-actions">
-					<a href="{{url_for('product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
-					<form action="{{url_for('add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
+					<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
+					<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
 						<input type="number" name="quantity" min="1" value="1" class="quantity-input">
 						<button type="submit" class="btn btn-primary">В корзину</button>
 					</form>
@@ -71,6 +71,6 @@
 		{% endfor %}
 	</div>
 	<div class="catalog-footer">
-		<a href="{{url_for('show_cart')}}" class="btn btn-success">Перейти в корзину</a>
+		<a href="{{url_for('main.show_cart')}}" class="btn btn-success">Перейти в корзину</a>
 	</div>
 {% endblock %}

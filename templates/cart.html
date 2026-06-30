@@ -21,7 +21,7 @@
 						<td>{{cart[product.id]}}</td>
 						<td>{{product.price * cart[product.id]}} руб.</td>
 						<td>
-							<form action="{{ url_for('remove_from_cart_route', product_id=product.id) }}" method="post">
+							<form action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}" method="post">
     							<button type="submit" class="btn btn-danger btn-sm">Удалить</button>
 							</form>
 						</td>
@@ -34,13 +34,13 @@
 			Итого {{total}} руб.
 		</div>
 		<div class="cart-actions">
-			<a href="{{url_for('checkout_form')}}" class="btn btn-success">Оформить заказ</a>
-			<a href="{{url_for('catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
+			<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>
+			<a href="{{url_for('main.catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
 		</div>
 	{% else %}
 		<div class="empty-cart">
 			<p>Корзина пуста</p>
-			<a href="{{url_for('catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+			<a href="{{url_for('main.catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
 		</div>
 	{% endif %}
 {% endblock %}

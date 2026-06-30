@@ -14,12 +14,12 @@
 			<p class="product-price">{{product.price}} руб.</p>
 			{% if product.category_name %}
 				<p class="product-category">Категория
-					<a href="{{ url_for('catalog', category=product.category_slug) }}" class="category-link">
+					<a href="{{ url_for('main.catalog', category=product.category_slug) }}" class="category-link">
 						{{product.category_name}}
 					</a>
 				</p>
 			{% endif %}
-			<form action="{{ url_for('add_to_cart_route', product_id=product.id)}}" method="POST" class="add-to-cart-form">
+			<form action="{{ url_for('main.add_to_cart_route', product_id=product.id)}}" method="POST" class="add-to-cart-form">
 				<div class="form-group form-group-inline">
 					<label for="quantity">Количество:</label>
 					<input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-input">
@@ -55,7 +55,7 @@
 
 		<div class="review-form-wrapper">
 			<h3 class="form-title">Оставить отзыв</h3>
-			<form action="{{url_for('add_review', product_id=product.id)}}" method="post" class="review-form">
+			<form action="{{url_for('main.add_review', product_id=product.id)}}" method="post" class="review-form">
 				<div class="form-group">
 					<label for="review_name">Ваше имя:</label>
 					<input type="text" id="review_name" name="name" class="form-control" required>
