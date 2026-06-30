@@ -3,51 +3,76 @@
 {% block content %}
 <h1 class="admin-page-title">Заказы</h1>
 
-<div class="admin-table-wrapper">
-    <table class="admin-table">
-        <tr>
-            <th>ID</th>
-            <th>Клиент</th>
-            <th>Email</th>
-            <th>Телефон</th>
-            <th>Итого</th>
-            <th>Статус</th>
-            <th>Дата</th>
-            <th>Действия</th>
-        </tr>
-
-        {% for order in orders %}
-        <tr>
-            <td>{{ order.id[:8] }}</td>
-            <td>{{ order.customer_name }}</td>
-            <td>{{ order.customer_email }}</td>
-            <td>{{ order.customer_phone if order.customer_phone else '—' }}</td>
-            <td>{{ order.total }} руб.</td>
-            <td>
-                <form action="{{ url_for('admin.update_order_status_route', order_id=order.id) }}"
-                    method="post"
-                    class="admin-status-form">
-                    <select name="status" class="admin-status-select">
-                        {% for eng_status, rus_status in order_statuses.items() %}
-                            <option value="{{ eng_status }}"
-                                {% if order.status == eng_status %}selected{% endif %}>
-                                {{ rus_status }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="admin-link-button">OK</button>
-                </form>
-            </td>
-            <td>{{ order.created_at }}</td>
-            <td>
-                <a href="{{ url_for('admin.order_details', order_id=order.id) }}">Подробнее</a>
-                |
-                <form action="{{url_for('admin.delete_order_route', order_id=order.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить заказ?')">
-                    <button type="submit" class="admin-link-button">Удалить</button>
-                </form>
-            </td>
-        </tr>
+<form action="" method="get" class="admin-filters">
+    <input type="text" name="q" value="{{ search_query}}" placeholder="Поиск по заказам" class="admin-search-input">
+    <select name="status" class="admin-status-filter">
+        <option value="">Все заказы</option>
+        {% for status_key, status_label in order_statuses.items() %}
+            <option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>
+                {{ status_label }}
+            </option>
         {% endfor %}
-    </table>
-</div>
+    </select>
+    <button type="submit" class="admin-link-button">Применить</button>
+    {% if search_query or current_status %}
+        <a href="{{url_for('admin.admin_orders')}}">Сбросить</a>
+    {% endif %}
+</form>
+{% if orders %}
+    <div class="admin-table-wrapper">
+        <table class="admin-table">
+            <tr>
+                <th>ID</th>
+                <th>Клиент</th>
+                <th>Email</th>
+                <th>Телефон</th>
+                <th>Итого</th>
+                <th>Статус</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id[:8] }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.customer_email }}</td>
+                <td>{{ order.customer_phone if order.customer_phone else '—' }}</td>
+                <td>{{ order.total }} руб.</td>
+                <td>
+                    <form action="{{ url_for('admin.update_order_status_route', order_id=order.id) }}"
+                        method="post"
+                        class="admin-status-form">
+                        <select name="status" class="admin-status-select">
+                            {% for eng_status, rus_status in order_statuses.items() %}
+                                <option value="{{ eng_status }}"
+                                    {% if order.status == eng_status %}selected{% endif %}>
+                                    {{ rus_status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="admin-link-button">OK</button>
+                    </form>
+                </td>
+                <td>{{ order.created_at }}</td>
+                <td>
+                    <a href="{{ url_for('admin.order_details', order_id=order.id) }}">Подробнее</a>
+                    |
+                    <form action="{{url_for('admin.delete_order_route', order_id=order.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить заказ?')">
+                        <button type="submit" class="admin-link-button">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <p class="empty-message">
+        {% if search_filter or current_status %}
+            По выбранным фильтрам заказов не найдено
+        {% else %}
+            Заказов пока нет
+        {% endif %}
+    </p>
+{% endif %}
 {% endblock %}

@@ -10,28 +10,34 @@
 
 {% block content %}
 	<div class="category-nav">
-		<a href="{{url_for('main.catalog')}}" class="category-link {% if not current_category %}active{% endif %}">Все товары</a>
+		<a href="{{url_for('main.catalog', sort_by=current_sort, order=current_order, q=search_query)}}" class="category-link {% if not current_category %}active{% endif %}">Все товары</a>
 		{% for category in categories %}
-			<a href="{{url_for('main.catalog', category=category.slug, sort_by=current_sort, order=current_order)}}" 
+			<a href="{{url_for('main.catalog', category=category.slug, sort_by=current_sort, order=current_order, q=search_query)}}" 
 				class="category-link {% if current_category and current_category.id == category.id %}active{% endif %}">
 				{{category.name}}
 			</a>
 		{% endfor %}
 	</div>
 
-	<form action="{{url_for('main.catalog')}}" method="get">
+	<form action="{{url_for('main.catalog')}}" method="get" class="catalog-controls">
 		{% if category_slug %}
 			<input type="hidden" name="category" value="{{category_slug}}">
 		{% endif %}
+		<input type="text" name="q" value="{{ search_query}}" placeholder="Поиск по каталогу" class="search-input">
+		<select name="sort_by" id="sort_by">
+			<option value="name" {% if current_sort == 'name' %}selected{% endif %}>По алфавиту</option>
+			<option value="price" {% if current_sort == 'price' %}selected{% endif %}>По цене</option>
+		</select>
 		<select name="order" id="order">
 			<option value="ASC" {% if current_order == 'ASC' %}selected{% endif %}>От меньшего к большему</option>
 			<option value="DESC" {% if current_order == 'DESC' %}selected{% endif %}>От большего к меньшему</option>
 		</select>
-		<select name="sort_by" id="">
-			<option value="name" {% if current_sort == 'name' %}selected{% endif %}>По алфавиту</option>
-			<option value="price" {% if current_sort == 'price' %}selected{% endif %}>По цене</option>
-		</select>
 		<button type="submit">Подтвердить</button>
+		{% if search_query %}
+			<a href="{{ url_for('main.catalog', category=category_slug, sort_by=current_sort, order=current_order) }}">
+				Сбросить поиск
+			</a>
+		{% endif %}
 	</form>
 		
 	{% if current_category %}
@@ -42,34 +48,51 @@
 	{% else %}
 		<h1 class="page-title">Все товары</h1>
 	{% endif %}
+	{% if search_query %}
+		<p class="search-info">
+			Результаты поиска по запросу {{ search_query }}
+		</p>
+	{% endif %}
 
-	<div class="product-grid">
-		{% for product in products %}
-			<div class="product-card">
-				{% if product.img %}
-					<img src="{{product.img}}" alt="{{product.name}}" class="product-image">
-				{% endif %}
-				<h3 class="product-title">{{product.name}}</h3>
-				<p class="product-description">{{product.description}}</p>
-				<p class="product-price">{{product.price}} руб.</p>
-				{% if product.category_name %}
-					<p class="product-category">
-						Категория:
-						<a href="{{url_for('main.catalog', category=product.category_slug)}}" class="category-link">
-							{{product.category_name}}
-						</a>
-					</p>
-				{% endif %}
-				<div class="product-actions">
-					<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
-					<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
-						<input type="number" name="quantity" min="1" value="1" class="quantity-input">
-						<button type="submit" class="btn btn-primary">В корзину</button>
-					</form>
+	{% if products %}
+		<div class="product-grid">
+			{% for product in products %}
+				<div class="product-card">
+					{% if product.img %}
+						<img src="{{product.img}}" alt="{{product.name}}" class="product-image">
+					{% endif %}
+					<h3 class="product-title">{{product.name}}</h3>
+					<p class="product-description">{{product.description}}</p>
+					<p class="product-price">{{product.price}} руб.</p>
+					{% if product.category_name %}
+						<p class="product-category">
+							Категория:
+							<a href="{{url_for('main.catalog', category=product.category_slug, sort_by=current_sort, order=current_order, q=search_query)}}" class="category-link">
+								{{product.category_name}}
+							</a>
+						</p>
+					{% endif %}
+					<div class="product-actions">
+						<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
+						<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
+							<input type="number" name="quantity" min="1" value="1" class="quantity-input">
+							<button type="submit" class="btn btn-primary">В корзину</button>
+						</form>
+					</div>
 				</div>
-			</div>
-		{% endfor %}
-	</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<p class="empty-message">
+			{% if search_query %}
+				По запросу {{ search_query }} ничего не найдено
+			{% elif current_category %}
+				В этой категории пока нет товаров
+			{% else %}
+				Товаров пока нет
+			{% endif %}
+		</p>
+	{% endif %}
 	<div class="catalog-footer">
 		<a href="{{url_for('main.show_cart')}}" class="btn btn-success">Перейти в корзину</a>
 	</div>

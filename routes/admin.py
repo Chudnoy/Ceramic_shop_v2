@@ -61,15 +61,15 @@ def admin():
 @admin_bp.route("/admin/products")
 def admin_products():
     products = get_all_products()
-    for product in products:
-        print(product["name"], product["img"])
     return render_template("admin/products.html", products=products)
 
 
 @admin_bp.route("/admin/orders")
 def admin_orders():
-    orders = get_all_orders()
-    return render_template("admin/orders.html", orders=orders, order_statuses=ORDER_STATUSES)
+    search_query = request.args.get('q', '').strip()
+    status = request.args.get('status', '')
+    orders = get_all_orders(search_query, status)
+    return render_template("admin/orders.html", orders=orders, order_statuses=ORDER_STATUSES, search_query=search_query, current_status=status)
 
 
 @admin_bp.route("/admin/orders/order_details/<order_id>")

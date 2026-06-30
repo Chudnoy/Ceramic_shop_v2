@@ -107,7 +107,7 @@ def get_all_products(category_slug=None, sort_by='name', order='ASC', search_que
         params.extend([f"%{search_query}%", f"%{search_query}%"])
         
     if condition:
-        query += "WHERE " + " AND ".join(condition)
+        query += " WHERE " + " AND ".join(condition)
     
     allowed_sort_fields = {'name': 'products.name', 'price': 'products.price'}
     sort_field = allowed_sort_fields.get(sort_by, 'products.name')
@@ -168,10 +168,29 @@ def get_order_by_id(order_id):
     return order
 
 
-def get_all_orders():
+def get_all_orders(search_query='', status=''):
     conn = get_db_connection()
-    rows = conn.execute("SELECT * FROM orders ORDER BY created_at DESC").fetchall()
+    query = 'SELECT * FROM orders'
+    params = []
+    condition = []
+
+    if search_query:
+        condition.append('(id LIKE ? OR customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ? OR customer_address LIKE ?)')
+        search_pattern = f'%{search_query}%'
+        params.extend([search_pattern, search_pattern, search_pattern, search_pattern, search_pattern])
+
+    if status:
+        condition.append('status = ?')
+        params.append(status)
+
+    if condition:
+        query += ' WHERE ' + ' AND '.join(condition)
+    
+    query += ' ORDER BY created_at DESC'
+
+    rows = conn.execute(query, params).fetchall()
     conn.close()
+
     orders = []
 
     for row in rows:
