@@ -5,6 +5,7 @@ from routes.main import main_bp
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+from services.cart_service import get_cart_count
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
 @app.context_processor
 def inject_cart_count():
     cart = session.get("cart", {})
-    return {"cart_count": sum(cart.values())}
+    return {"cart_count": get_cart_count(session)}
     
     
 if __name__ == "__main__":

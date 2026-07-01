@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, get_products_by_ids, add_review_db, create_order, get_order_by_id
-from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart
+from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id
+from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count
 from services.order_service import process_checkout_form, build_order_items
 from validation import validate_review
 import uuid
@@ -81,7 +81,7 @@ def add_to_cart_route(product_id):
         return redirect(url_for("main.catalog"))
         
     new_qty = add_to_cart_serv(session, product_id, quantity)
-    cart_count = sum(get_cart(session).values())
+    cart_count = get_cart_count(session)
 
     if is_ajax:
         return jsonify({
@@ -97,18 +97,9 @@ def add_to_cart_route(product_id):
     
 @main_bp.route("/cart")
 def show_cart():
-    cart = get_cart(session)
-    if not cart:
-        return render_template("cart.html", products=[], total=0, cart={})
-    product_ids = list(cart.keys())
-    products = get_products_by_ids(product_ids)
-    
-    total = 0
-    
-    for product in products:
-        total += product["price"] * cart[product["id"]]
+    cart_sammary = build_cart_summary(session)
         
-    return render_template("cart.html", products=products, total=total, cart=cart)
+    return render_template("cart.html", products=cart_sammary['products'], total=cart_sammary['total'], cart=cart_sammary['cart'])
     
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])
@@ -116,26 +107,21 @@ def remove_from_cart_route(product_id):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     removed = remove_from_cart_serv(session, product_id)
 
-    cart = get_cart(session)
-    cart_count = sum(cart.values())
-    
-    product_ids = list(cart.keys())
-    products = get_products_by_ids(product_ids)
-    total = sum(product['price'] * cart[product['id']] for product in products)
+    cart_summary = build_cart_summary(session)
 
     if is_ajax:
         if removed:
             return jsonify({
                 'success': True,
                 'message': 'Товар удалён из корзины',
-                'cart_count': cart_count,
-                'total': total
+                'cart_count': cart_summary['cart_count'],
+                'total': cart_summary['total']
             })
         return jsonify({
             'success': False,
             'message': 'Товар не найден в корзине',
-            'cart_count': cart_count,
-            'total': total
+            'cart_count': cart_summary["cart_count"],
+            'total': cart_summary["total"]
         }), 404
 
     if removed:
@@ -169,33 +155,26 @@ def add_review(product_id):
     
 @main_bp.route('/checkout')
 def checkout_form():
-    cart = get_cart(session)
-    if not cart:
+    cart_summary = build_cart_summary(session)
+
+    if not cart_summary['cart']:
         flash("Корзина пуста", "error")
         return redirect(url_for("main.catalog"))
-    
-    product_ids = list(cart.keys())
-    products = get_products_by_ids(product_ids)
-    total = 0
 
-    for product in products:
-        total += product['price'] * cart[product['id']]
-
-    return render_template("checkout.html", products=products, total=total, cart=cart)
+    return render_template("checkout.html", products=cart_summary['products'], total=cart_summary['total'], cart=cart_summary['cart'])
     
     
 @main_bp.route("/checkout", methods=["POST"])
 def checkout_process():
-    cart = get_cart(session)
+    cart_summary = build_cart_summary(session)
+    cart = cart_summary['cart']
+    products = cart_summary['products']
     
     if not cart:
         flash("Корзина пуста", "error")
         return redirect(url_for("main.catalog"))
-        
-    product_ids = list(cart.keys())
-    products = get_products_by_ids(product_ids)
     
-    if len(products) != len(product_ids):
+    if len(products) != len(cart):
         flash("Некоторые товары в корзине больше недоступны", "error")
         return redirect(url_for("main.show_cart"))
     
