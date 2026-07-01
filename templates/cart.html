@@ -4,43 +4,45 @@
 
 {% block content %}
 	<h1 class="page-title">Корзина</h1>
-	{% if products %}
-		<table class="cart-table">
-			<thead>
-				<tr>
-					<th>Товар</th>
-					<th>Количество</th>
-					<th>Сумма</th>
-					<th>Действие</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for product in products %}
+	<div class="cart-content">
+		{% if products %}
+			<table class="cart-table">
+				<thead>
 					<tr>
-						<td>{{product.name}}</td>
-						<td>{{cart[product.id]}}</td>
-						<td>{{product.price * cart[product.id]}} руб.</td>
-						<td>
-							<form action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}" method="post">
-    							<button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-							</form>
-						</td>
+						<th>Товар</th>
+						<th>Количество</th>
+						<th>Сумма</th>
+						<th>Действие</th>
 					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{% for product in products %}
+						<tr>
+							<td>{{product.name}}</td>
+							<td>{{cart[product.id]}}</td>
+							<td>{{product.price * cart[product.id]}} руб.</td>
+							<td>
+								<form action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}" method="post" class="remove-from-cart-form">
+									<button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+								</form>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
 
-		<div class="cart-total">
-			Итого {{total}} руб.
-		</div>
-		<div class="cart-actions">
-			<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>
-			<a href="{{url_for('main.catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
-		</div>
-	{% else %}
-		<div class="empty-cart">
-			<p>Корзина пуста</p>
-			<a href="{{url_for('main.catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
-		</div>
-	{% endif %}
+			<div class="cart-total">
+				Итого {{total}} руб.
+			</div>
+			<div class="cart-actions">
+				<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>
+				<a href="{{url_for('main.catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
+			</div>
+		{% else %}
+			<div class="empty-cart">
+				<p>Корзина пуста</p>
+				<a href="{{url_for('main.catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+			</div>
+		{% endif %}
+	</div>
 {% endblock %}

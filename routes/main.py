@@ -113,7 +113,32 @@ def show_cart():
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])
 def remove_from_cart_route(product_id):
-    if remove_from_cart_serv(session, product_id):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    removed = remove_from_cart_serv(session, product_id)
+
+    cart = get_cart(session)
+    cart_count = sum(cart.values())
+    
+    product_ids = list(cart.keys())
+    products = get_products_by_ids(product_ids)
+    total = sum(product['price'] * cart[product['id']] for product in products)
+
+    if is_ajax:
+        if removed:
+            return jsonify({
+                'success': True,
+                'message': 'Товар удалён из корзины',
+                'cart_count': cart_count,
+                'total': total
+            })
+        return jsonify({
+            'success': False,
+            'message': 'Товар не найден в корзине',
+            'cart_count': cart_count,
+            'total': total
+        }), 404
+
+    if removed:
         flash("Товар удалён из корзины", "info")
     else:
         flash("Товар не найден в корзине", "error")
