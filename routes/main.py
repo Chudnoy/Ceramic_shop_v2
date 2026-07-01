@@ -97,9 +97,9 @@ def add_to_cart_route(product_id):
     
 @main_bp.route("/cart")
 def show_cart():
-    cart_sammary = build_cart_summary(session)
+    cart_summary = build_cart_summary(session)
         
-    return render_template("cart.html", products=cart_sammary['products'], total=cart_sammary['total'], cart=cart_sammary['cart'])
+    return render_template("cart.html", products=cart_summary['products'], total=cart_summary['total'], cart=cart_summary['cart'])
     
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])

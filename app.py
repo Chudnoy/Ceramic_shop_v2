@@ -20,7 +20,6 @@ app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
 
 @app.context_processor
 def inject_cart_count():
-    cart = session.get("cart", {})
     return {"cart_count": get_cart_count(session)}
     
     
