@@ -83,6 +83,77 @@
     margin-bottom: 20px;
 }
 
+/* ============================================
+   ФИЛЬТРЫ В АДМИНКЕ
+   ============================================ */
+
+.admin-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fff;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.admin-filters input,
+.admin-filters select {
+    height: 40px;
+    padding: 8px 10px;
+    border: 1px solid #d6cbbf;
+    border-radius: 8px;
+    background: #fff;
+    color: #2d2a26;
+    font: inherit;
+}
+
+.admin-filters input:focus,
+.admin-filters select:focus {
+    outline: none;
+    border-color: #6b4f36;
+    box-shadow: 0 0 0 3px rgba(107, 79, 54, 0.14);
+}
+
+.admin-search-input {
+    min-width: 260px;
+    flex: 1;
+}
+
+.admin-filters button {
+    height: 40px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 8px;
+    background: #6b4f36;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.admin-filters button:hover {
+    background: #4f3926;
+}
+
+.admin-filters button:active {
+    transform: scale(0.97);
+}
+
+.admin-reset-link {
+    color: #6b4f36;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-reset-link:hover {
+    text-decoration: underline;
+}
+
 .admin-table-wrapper {
     overflow-x: auto;
     background: #fff;
@@ -319,4 +390,25 @@
     border-radius: 8px;
     background: #fff;
     font: inherit;
+}
+
+@media (max-width: 768px) {
+    .admin-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-filters input,
+    .admin-filters select,
+    .admin-filters button {
+        width: 100%;
+    }
+
+    .admin-search-input {
+        min-width: 0;
+    }
+
+    .admin-reset-link {
+        text-align: center;
+    }
 }

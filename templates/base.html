@@ -19,9 +19,7 @@
 						<li class="nav-item">
 							<a href="{{url_for('main.show_cart')}}" class="nav-link cart-link">
 								Корзина
-								{% if cart_count > 0 %}
-									<span class="cart-badge">{{cart_count}}</span>
-								{% endif %}
+								<span class="cart-bange {% if cart_count == 0%}hidden{% endif %}">{{ cart_count}}</span>
 							</a>
 						</li>
 					</ul>
@@ -44,6 +42,8 @@
 				{% endif %}
 			{% endwith %}
 
+			<div id="js-messages" class="js-messages"></div>
+
 			{% block content %}
 			{% endblock %}
 		</div>
@@ -54,5 +54,8 @@
 			<p class="footer-text">&copy; 2026 Керамическая мастерская</p>
 		</div>
 	</footer>
+
+	<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+	{% block scripts %}{% endblock %}
 </body>
 </html>

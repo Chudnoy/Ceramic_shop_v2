@@ -13,9 +13,9 @@
             </option>
         {% endfor %}
     </select>
-    <button type="submit" class="admin-link-button">Применить</button>
+    <button type="submit">Применить</button>
     {% if search_query or current_status %}
-        <a href="{{url_for('admin.admin_orders')}}">Сбросить</a>
+        <a href="{{url_for('admin.admin_orders')}}" class="admin-reset-link">Сбросить</a>
     {% endif %}
 </form>
 {% if orders %}

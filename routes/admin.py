@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, 
-                create_product, delete_order, get_order_by_id, update_order, update_order_status)
+                create_product, delete_order, get_order_by_id, update_order, update_order_status, get_category_by_slug)
 from validation import validate_product
 from services.product_service import process_product_form
 from services.image_service import save_image, delete_image
@@ -60,8 +60,31 @@ def admin():
     
 @admin_bp.route("/admin/products")
 def admin_products():
-    products = get_all_products()
-    return render_template("admin/products.html", products=products)
+    category_slug = request.args.get('category')
+    sort_by = request.args.get('sort_by', 'name')
+    order = request.args.get('order', 'ASC').upper()
+    search_query = request.args.get('q', '').strip()
+
+    categories = get_all_categories()
+
+    current_category = None
+
+    if category_slug:
+        current_category = get_category_by_slug(category_slug)
+        if not current_category:
+            flash('Категория не найдена', 'error')
+            return redirect(url_for('admin.admin_products'))
+        
+    products = get_all_products(category_slug, sort_by, order, search_query)
+        
+    return render_template("admin/products.html",
+                           products=products,
+                           categories=categories,
+                           category_slug=category_slug,
+                           current_category=current_category,
+                           current_sort=sort_by,
+                           current_order=order,
+                           search_query=search_query)
 
 
 @admin_bp.route("/admin/orders")

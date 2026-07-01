@@ -34,7 +34,7 @@
 		</select>
 		<button type="submit">Подтвердить</button>
 		{% if search_query %}
-			<a href="{{ url_for('main.catalog', category=category_slug, sort_by=current_sort, order=current_order) }}">
+			<a href="{{ url_for('main.catalog', category=category_slug, sort_by=current_sort, order=current_order) }}" class="catalog-reset-link">
 				Сбросить поиск
 			</a>
 		{% endif %}

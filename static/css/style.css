@@ -97,6 +97,10 @@ body {
 	margin-left: 2px;
 }
 
+.hidden {
+    display: none;
+}
+
 /* FLASH СООБЩЕНИЯ */
 
 .flash-messages {
@@ -682,6 +686,96 @@ textarea.form-control {
 }
 
 /* ============================================
+   ФИЛЬТРЫ И ПОИСК В КАТАЛОГЕ
+   ============================================ */
+
+.catalog-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fff;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.catalog-controls input,
+.catalog-controls select {
+    height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font: inherit;
+}
+
+.catalog-controls input:focus,
+.catalog-controls select:focus {
+    outline: none;
+    border-color: #8B4513;
+    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.12);
+}
+
+.catalog-controls .search-input {
+    min-width: 260px;
+    flex: 1;
+}
+
+.catalog-controls button {
+    height: 42px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 8px;
+    background: #8B4513;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.catalog-controls button:hover {
+    background: #6d3410;
+}
+
+.catalog-controls button:active {
+    transform: scale(0.97);
+}
+
+.catalog-reset-link {
+    color: #8B4513;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.catalog-reset-link:hover {
+    text-decoration: underline;
+}
+
+.search-info {
+    display: inline-block;
+    margin-bottom: 18px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #f3ece5;
+    color: #6d3410;
+    font-size: 14px;
+}
+
+.empty-message {
+    background: #fff;
+    padding: 28px;
+    border-radius: 12px;
+    color: #777;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================
    КАТЕГОРИЯ В КАРТОЧКЕ ТОВАРА (дополнительно)
    ============================================ */
 .product-category {
@@ -726,4 +820,20 @@ textarea.form-control {
 	.cart-table td {
 		padding: 8px 10px;
 	}
+
+        .catalog-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .catalog-controls .search-input,
+    .catalog-controls input,
+    .catalog-controls select,
+    .catalog-controls button {
+        width: 100%;
+    }
+
+    .catalog-reset-link {
+        text-align: center;
+    }
 }

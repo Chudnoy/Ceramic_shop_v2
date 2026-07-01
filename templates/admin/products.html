@@ -9,37 +9,75 @@
     </a>
 </div>
 
-<div class="admin-table-wrapper">
-    <table class="admin-table">
-        <tr>
-            <th>Изображение</th>
-            <th>Название</th>
-            <th>Категория</th>
-            <th>Цена</th>
-            <th>Действия</th>
-        </tr>
 
-        {% for product in products %}
-        <tr>
-            <td>
-                {% if product.img %}
-                    <img src="{{ product.img }}" alt="{{ product.name }}" class="admin-product-thumb">
-                {% else %}
-                    <span class="admin-muted">Нет фото</span>
-                {% endif %}
-            </td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.category_name if product.category_name else '—' }}</td>
-            <td>{{ product.price }} руб.</td>
-            <td>
-                <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
-                |
-                <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар')">
-                    <button type="submit" class="admin-link-button">Удалить</button>
-                </form>
-            </td>
-        </tr>
+<form action="{{ url_for('admin.admin_products') }}" method="get" class='admin-filters'>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Поиск по товарам" class="admin-search-input">
+    <select name="sort_by" id="sort_by">
+        <option value="name" {% if current_sort == 'name'%}selected{% endif %}>По алфавиту</option>
+        <option value="price" {% if current_sort == 'price' %}selected{% endif %}>По цене</option>
+    </select>
+    <select name="order" id="order">
+        <option value="ASC" {% if current_order == 'ASC'%}selected{% endif %}>От меньшего к большему</option>
+        <option value="DESC" {% if current_order == 'DESC'%}selected{% endif %}>От большего к меньшему</option>
+    </select>
+    <select name="category" id="category">
+        <option value="">Все категории</option>
+        {% for category in categories %}
+            <option value="{{category.slug}}" {% if category_slug == category.id %}selected{% endif %}>{{category.name}}</option>
         {% endfor %}
-    </table>
-</div>
+    </select>
+    <button type="submit">Подтвердить</button>
+    {% if search_query %}
+            <a href="{{ url_for('admin.admin_products', category=category_slug, 
+        sort_by=current_sort, order=current_order)}}" class="admin-reset-link">
+            Сбросить поиск
+            </a>
+    {% endif %}
+</form>
+
+{% if products %}
+    <div class="admin-table-wrapper">
+        <table class="admin-table">
+            <tr>
+                <th>Изображение</th>
+                <th>Название</th>
+                <th>Категория</th>
+                <th>Цена</th>
+                <th>Действия</th>
+            </tr>
+
+            {% for product in products %}
+            <tr>
+                <td>
+                    {% if product.img %}
+                        <img src="{{ product.img }}" alt="{{ product.name }}" class="admin-product-thumb">
+                    {% else %}
+                        <span class="admin-muted">Нет фото</span>
+                    {% endif %}
+                </td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category_name if product.category_name else '—' }}</td>
+                <td>{{ product.price }} руб.</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
+                    |
+                    <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар')">
+                        <button type="submit" class="admin-link-button">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <p class="empty-message">
+        {% if search_query %}
+            По запросу {{ search_query }} ничего не найдено
+        {% elif current_category %}
+            В этой категории пока нет товаров
+        {% else %}
+            Товаров пока нет
+        {% endif %}
+    </p>
+{% endif %}
 {% endblock %}
