@@ -63,9 +63,20 @@ def add_to_cart_route(product_id):
         if quantity <= 0:
             raise ValueError
     except ValueError:
+        if is_ajax:
+            return jsonify({
+            "success": False,
+            "message": "Количество должно быть положительным числом"}), 400
+            
         return "Количество должно быть положительным числом", 400
         
     if not product_exists(product_id):
+        if is_ajax:
+            return jsonify({
+            "success": False,
+            "message": "Товар не найден"
+            }), 404
+        
         flash("Товар не найден", "error")
         return redirect(url_for("main.catalog"))
         
