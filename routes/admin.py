@@ -12,7 +12,7 @@ from db import (get_all_products,
                 update_order_status,
                 get_category_by_slug,
                 get_admin_stats)
-from services.product_service import process_product_form
+from services.product_service import process_product_form, PRODUCT_STATUSES
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -85,7 +85,7 @@ def admin_products():
             flash('Категория не найдена', 'error')
             return redirect(url_for('admin.admin_products'))
         
-    products = get_all_products(category_slug, sort_by, order, search_query)
+    products = get_all_products(category_slug, sort_by, order, search_query, include_hidden=True)
         
     return render_template("admin/products.html",
                            products=products,
@@ -94,7 +94,8 @@ def admin_products():
                            current_category=current_category,
                            current_sort=sort_by,
                            current_order=order,
-                           search_query=search_query)
+                           search_query=search_query,
+                           product_statuses=PRODUCT_STATUSES)
 
 
 @admin_bp.route("/admin/orders")
@@ -194,13 +195,13 @@ def edit_product(product_id):
         else:
             data['img'] = product['img']
         
-        update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"])
+        update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"])
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))
         
     categories = get_all_categories()
-    return render_template("admin/product_form.html", product=product, categories=categories, title="Редактирование товара", submit_text="Сохранить")
+    return render_template("admin/product_form.html", product=product, categories=categories, title="Редактирование товара", submit_text="Сохранить", product_statuses=PRODUCT_STATUSES)
     
     
 @admin_bp.route("/admin/products/new", methods=["GET", "POST"])
@@ -217,11 +218,11 @@ def new_product():
         file = request.files.get('img')
         data['img'] = save_image(file)
             
-        create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"])
+        create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"])
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))
         
-    empty_product = {"name": "", "description": "", "price": "", "category_id": None, "img": ""}
+    empty_product = {"name": "", "description": "", "price": "", "category_id": None, "img": "", "status": "available"}
     
-    return render_template("admin/product_form.html", product=empty_product, categories=categories, title="Новый товар", submit_text="Создать")
+    return render_template("admin/product_form.html", product=empty_product, categories=categories, title="Новый товар", submit_text="Создать", product_statuses=PRODUCT_STATUSES)

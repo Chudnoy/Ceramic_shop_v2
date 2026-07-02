@@ -43,6 +43,7 @@
                 <th>Название</th>
                 <th>Категория</th>
                 <th>Цена</th>
+                <th>Статус</th>
                 <th>Действия</th>
             </tr>
 
@@ -58,6 +59,11 @@
                 <td>{{ product.name }}</td>
                 <td>{{ product.category_name if product.category_name else '—' }}</td>
                 <td>{{ product.price }} руб.</td>
+                <td>
+                    <span class="product-status product-status-{{product.status}}">
+                        {{ product_statuses.get(product.status, product.status) }}
+                    </span>
+                </td>
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count
 from services.order_service import process_checkout_form, build_order_items
+from services.product_service import PRODUCT_STATUSES
 from validation import validate_review
 import uuid
 
@@ -38,7 +39,7 @@ def catalog():
                            current_sort=sort_by,
                            current_order=order,
                            category_slug=category_slug,
-                           search_query=search_query)
+                           search_query=search_query, product_statuses=PRODUCT_STATUSES)
                            
                            
 @main_bp.route('/product/<product_id>')
@@ -49,8 +50,12 @@ def product_page(product_id):
         flash("Товар не найден", "error")
         return redirect(url_for("main.catalog"))
         
+    if product["status"] == "hidden":
+        flash("Товар не найден", "error")
+        return redirect(url_for("main.catalog"))
+        
     reviews = get_reviews_by_product(product_id)
-    return render_template("product_page.html", product=product, reviews=reviews)
+    return render_template("product_page.html", product=product, reviews=reviews, product_statuses=PRODUCT_STATUSES)
     
     
 @main_bp.route("/add_to_cart/<product_id>", methods=["POST"])
@@ -70,7 +75,9 @@ def add_to_cart_route(product_id):
             
         return "Количество должно быть положительным числом", 400
         
-    if not product_exists(product_id):
+    product = get_product_by_id(product_id)
+        
+    if not product:
         if is_ajax:
             return jsonify({
             "success": False,
@@ -78,6 +85,22 @@ def add_to_cart_route(product_id):
             }), 404
         
         flash("Товар не найден", "error")
+        return redirect(url_for("main.catalog"))
+        
+    if product["status"] != "available":
+        unavailable_messages = {
+        "reserved": "Этот товар уже зарезервирован",
+        "sold": "Этот товар уже продан",
+        "hidden": "Товар не найден"
+        }
+        message = unavailable_messages.get(product["status"], "Этот товар сейчас недоступен для покупки")
+        if is_ajax:
+            return jsonify({
+            "success": False,
+            "message": message
+            })
+            
+        flash("Этот товар сейчас недоступен для покупки", "error")
         return redirect(url_for("main.catalog"))
         
     new_qty = add_to_cart_serv(session, product_id, quantity)
@@ -89,8 +112,7 @@ def add_to_cart_route(product_id):
             'message': 'Товар добавлен в корзину',
             'cart_count': cart_count
         })
-
-    product = get_product_by_id(product_id)
+    
     flash(f"Товар «{product['name']}» добавлен в корзину (количество: {new_qty})", "success")
     return redirect(url_for("main.catalog"))
     
@@ -99,7 +121,11 @@ def add_to_cart_route(product_id):
 def show_cart():
     cart_summary = build_cart_summary(session)
         
-    return render_template("cart.html", products=cart_summary['products'], total=cart_summary['total'], cart=cart_summary['cart'])
+    return render_template("cart.html",
+    products=cart_summary['products'],
+    total=cart_summary['total'],
+    cart=cart_summary['cart'],
+    has_unavailable_items = cart_summary["has_unavailable_items"], product_statuses=PRODUCT_STATUSES)
     
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])
@@ -156,26 +182,34 @@ def add_review(product_id):
 @main_bp.route('/checkout')
 def checkout_form():
     cart_summary = build_cart_summary(session)
+    available_products = cart_summary["available_products"]
 
     if not cart_summary['cart']:
         flash("Корзина пуста", "error")
         return redirect(url_for("main.catalog"))
+        
+    if not available_products:
+        flash("В корзине нет товаров, доступных для оформления", "error")
+        return redirect(url_for("main.show_cart"))
+        
+    if cart_summary["has_unavailable_items"]:
+        flash("Некоторые товары больше недоступны и не будут включены в заказ", "info")
 
-    return render_template("checkout.html", products=cart_summary['products'], total=cart_summary['total'], cart=cart_summary['cart'])
+    return render_template("checkout.html", products=available_products, total=cart_summary['total'], cart=cart_summary['cart'])
     
     
 @main_bp.route("/checkout", methods=["POST"])
 def checkout_process():
     cart_summary = build_cart_summary(session)
     cart = cart_summary['cart']
-    products = cart_summary['products']
+    available_products = cart_summary["available_products"]
     
     if not cart:
         flash("Корзина пуста", "error")
         return redirect(url_for("main.catalog"))
     
-    if len(products) != len(cart):
-        flash("Некоторые товары в корзине больше недоступны", "error")
+    if not available_products:
+        flash("В корзине нет товаров, доступных для оформления", "error")
         return redirect(url_for("main.show_cart"))
     
     is_valid, error_message, data = process_checkout_form(request.form)
@@ -184,7 +218,7 @@ def checkout_process():
         flash(error_message, "error")
         return redirect(url_for("main.checkout_form"))
         
-    items_dict, total = build_order_items(cart, products)
+    items_dict, total = build_order_items(cart, available_products)
     
     order_id = str(uuid.uuid4())
     

@@ -43,6 +43,17 @@
             {% endfor %}
         </select>
     </div>
+    
+    <div class="admin-form-group">
+        <label for="status">Статус товара</label>
+        <select name="status" id="status" class="form-control" required>
+            {% for status_key, status_label in product_statuses.items() %}
+                <option value="{{ status_key }}" {% if product['status'] == status_key %}selected{% endif %}>
+                    {{ status_label }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
     <button type="submit" class="admin-button">{{ submit_text }}</button>
 </form>

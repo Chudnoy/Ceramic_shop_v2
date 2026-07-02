@@ -6,6 +6,11 @@
 	<h1 class="page-title">Корзина</h1>
 	<div class="cart-content">
 		{% if products %}
+			{% if has_unavailable_items %}
+				<div class="cart-warning">
+					Некоторые товары в корзине больше недоступны для покупки и не будут включены в заказ
+				</div>
+			{% endif %}
 			<table class="cart-table">
 				<thead>
 					<tr>
@@ -17,10 +22,23 @@
 				</thead>
 				<tbody>
 					{% for product in products %}
-						<tr>
-							<td>{{product.name}}</td>
-							<td>{{cart[product.id]}}</td>
-							<td>{{product.price * cart[product.id]}} руб.</td>
+						<tr class="{% if not product.is_available_for_order %}cart_unavailable{% endif %}">
+							<td>
+								<span class="cart-product-name">{{ product.name}}</span>
+								{% if not product.is_available_for_order %}
+									<span class="product-status product-status-{{product.status}}">
+										{{ product_statuses.get(product.status, product.status) }}
+									</span>
+								{% endif %}
+							</td>
+							<td>{{ product.cart_quantity }}</td>
+							<td>
+								{% if product.is_available_for_order %}
+									{{ product.cart_item_total }} руб.
+								{% else %}
+									<span class="cart-item-excluded">Не входит в заказ</span>
+								{% endif %}
+							</td>
 							<td>
 								<form action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}" method="post" class="remove-from-cart-form">
 									<button type="submit" class="btn btn-danger btn-sm">Удалить</button>
@@ -32,7 +50,7 @@
 			</table>
 
 			<div class="cart-total">
-				Итого {{total}} руб.
+				Итого к оформлению: {{total}} руб.
 			</div>
 			<div class="cart-actions">
 				<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>

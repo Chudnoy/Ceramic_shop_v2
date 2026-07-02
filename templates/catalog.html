@@ -64,6 +64,11 @@
 					<h3 class="product-title">{{product.name}}</h3>
 					<p class="product-description">{{product.description}}</p>
 					<p class="product-price">{{product.price}} руб.</p>
+					{% if product.status != 'available' %}
+						<p class="product-status product-status{{ product.status }}">
+							{{product_statuses.get(product.status, product.status)}}
+						</p>
+					{% endif %}
 					{% if product.category_name %}
 						<p class="product-category">
 							Категория:
@@ -74,10 +79,16 @@
 					{% endif %}
 					<div class="product-actions">
 						<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
-						<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
-							<input type="number" name="quantity" min="1" value="1" class="quantity-input">
-							<button type="submit" class="btn btn-primary">В корзину</button>
-						</form>
+						{% if product.status == 'available' %}
+							<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
+								<input type="number" name="quantity" min="1" value="1" class="quantity-input">
+								<button type="submit" class="btn btn-primary">В корзину</button>
+							</form>
+						{% else %}
+							<span class="btn btn-secondary product-unavailable-button">
+								Недоступно
+							</span>
+						{% endif %}
 					</div>
 				</div>
 			{% endfor %}

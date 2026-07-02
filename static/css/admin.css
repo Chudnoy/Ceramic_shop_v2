@@ -501,6 +501,38 @@
     line-height: 1.5;
 }
 
+.product-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.product-status-available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.product-status-reserved {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.product-status-sold {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.product-status-hidden {
+    background: #f8d7da;
+    color: #721c24;
+}
+
 /* Адаптив */
 
 @media (max-width: 1100px) {

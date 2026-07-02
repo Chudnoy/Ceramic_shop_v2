@@ -452,6 +452,45 @@ textarea {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
+.product-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 26px;
+    padding: 4px 10px;
+    margin: 10px 0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.product-status-available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.product-status-reserved {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.product-status-sold {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.product-status-hidden {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.product-unavailable-button {
+    pointer-events: none;
+    opacity: 0.75;
+}
+
 /* ============================================
    КАТАЛОГ И КАРТОЧКИ ТОВАРОВ
    ============================================ */
@@ -604,6 +643,16 @@ textarea {
 
 .form-group-inline label {
     margin-bottom: 0;
+}
+
+.product-unavailable-note {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    background: #f5f1ed;
+    border-left: 4px solid #8b4513;
+    border-radius: 8px;
+    color: #5e554d;
+    font-weight: 600;
 }
 
 /* ============================================
@@ -783,6 +832,36 @@ textarea.form-control {
     font-size: 22px;
     color: #777;
     margin-bottom: 20px;
+}
+
+.cart-warning {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
+    color: #856404;
+    font-weight: 600;
+}
+
+.cart-row-unavailable {
+    background: #faf7f4;
+    color: #777;
+}
+
+.cart-row-unavailable .cart-product-name {
+    opacity: 0.75;
+}
+
+.cart-item-excluded {
+    color: #777;
+    font-style: italic;
+    white-space: nowrap;
+}
+
+.cart-product-name {
+    display: inline-block;
+    margin-right: 8px;
 }
 
 /* ============================================

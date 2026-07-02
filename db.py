@@ -7,6 +7,20 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
     
+    
+def ensure_product_status_column():
+    conn = get_db_connection()
+    
+    columns = conn.execute("PRAGMA table_info(products)").fetchall()
+    column_names = [column['name'] for column in columns]
+    
+    if "status" not in column_names:
+        conn.execute("ALTER TABLE products ADD COLUMN status TEXT NOT NULL DEFAULT 'available'")
+        conn.commit()
+    
+    conn.close()
+    
+    
 def init_db():
     conn = get_db_connection()
     
@@ -22,6 +36,7 @@ def init_db():
     name TEXT NOT NULL,
     description TEXT,
     price INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'available',
     img TEXT,
     category_id INTEGER,
     FOREIGN KEY (category_id) REFERENCES categories(id)
@@ -70,9 +85,11 @@ def init_db():
         (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpeg", 2),
         (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpeg", 3)
         ]
-        cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)", products)
+        cursor.executemany("INSERT INTO products (id, name, description, price, img, category_id) VALUES (?, ?, ?, ?, ?, ?)", products)
     conn.commit()
     conn.close()
+    
+    ensure_product_status_column()
     
     
 def get_reviews_by_product(product_id):
@@ -89,7 +106,7 @@ def add_review_db(product_id, name, rating, comment):
     conn.close()
     
     
-def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query=""):
+def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query="", include_hidden=False):
     conn = get_db_connection()
     query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
             FROM products
@@ -98,6 +115,11 @@ def get_all_products(category_slug=None, sort_by='name', order='ASC', search_que
     
     params = []
     condition = []
+    
+    if not include_hidden:
+        condition.append("products.status != ?")
+        params.append("hidden")
+    
     if category_slug:
         condition.append("categories.slug = ?")
         params.append(category_slug)
@@ -132,7 +154,7 @@ def get_products_by_ids(product_ids):
         return []
     conn = get_db_connection()
     placeholders = ", ".join("?" * len(product_ids))
-    query = f"SELECT id, name, price FROM products WHERE id IN ({placeholders})"
+    query = f"SELECT id, name, description, price, status, img, category_id FROM products WHERE id IN ({placeholders})"
     products = conn.execute(query, product_ids).fetchall()
     conn.close()
     return products
@@ -247,23 +269,23 @@ def delete_product(product_id):
     conn.close()
     
     
-def update_product(product_id, name, price, description, img_path, category_id):
+def update_product(product_id, name, price, description, img_path, category_id, status):
     conn = get_db_connection()
     conn.execute("""
     UPDATE products
-    SET name = ?, description = ?, price = ?, category_id = ?, img = ?
+    SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?
     WHERE id = ?
-    """, (name, description, price, category_id, img_path, product_id))
+    """, (name, description, price, category_id, img_path, status, product_id))
     conn.commit()
     conn.close()
     
     
-def create_product(name, price, description, img_path, category_id):
+def create_product(name, price, description, img_path, category_id, status):
     conn = get_db_connection()
     conn.execute("""
-    INSERT INTO products (id, name, description, price, img, category_id)
-    VALUES (?, ?, ?, ?, ?, ?)""",
-    (str(uuid.uuid4()), name, description, price, img_path, category_id))
+    INSERT INTO products (id, name, description, price, img, category_id, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+    (str(uuid.uuid4()), name, description, price, img_path, category_id, status))
     conn.commit()
     conn.close()
     
