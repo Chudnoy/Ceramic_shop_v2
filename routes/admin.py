@@ -1,6 +1,17 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from db import (get_all_products, get_all_orders, delete_product, update_product, get_product_by_id, get_all_categories, 
-                create_product, delete_order, get_order_by_id, update_order, update_order_status, get_category_by_slug)
+from db import (get_all_products,
+                get_all_orders,
+                delete_product,
+                update_product,
+                get_product_by_id,
+                get_all_categories, 
+                create_product,
+                delete_order,
+                get_order_by_id,
+                update_order,
+                update_order_status,
+                get_category_by_slug,
+                get_admin_stats)
 from services.product_service import process_product_form
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
@@ -53,7 +64,8 @@ def logout():
 
 @admin_bp.route("/admin")
 def admin():
-    return render_template("admin/index.html")
+    stats = get_admin_stats()
+    return render_template("admin/index.html", stats=stats)
     
     
 @admin_bp.route("/admin/products")
