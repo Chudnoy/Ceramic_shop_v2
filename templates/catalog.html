@@ -65,7 +65,7 @@
 					<p class="product-description">{{product.description}}</p>
 					<p class="product-price">{{product.price}} руб.</p>
 					{% if product.status != 'available' %}
-						<p class="product-status product-status{{ product.status }}">
+						<p class="product-status product-status-{{ product.status }}">
 							{{product_statuses.get(product.status, product.status)}}
 						</p>
 					{% endif %}

@@ -12,9 +12,16 @@ function showJsMessage(message, type) {
 
 function updateCartBadge(cartCount) {
     const cartBadge = document.querySelector(".cart-badge");
+    if (!cartBadge) {
+    	return;
+    }
     cartBadge.textContent = cartCount;
-    cartBadge.classList.remove("hidden");
-};
+    if (cartCount === 0) {
+    	cartBadge.classList.add("hidden");
+    } else {
+    	cartBadge.classList.remove("hidden");
+    }
+}
 
 function updateCartTotal(total) {
 	const cartTotal = document.querySelector('.cart-total');

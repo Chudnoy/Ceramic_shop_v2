@@ -20,7 +20,7 @@
 				</p>
 			{% endif %}
 			{% if product.status != 'available' %}
-				<p class="product-status product-status{{ product.status }}">
+				<p class="product-status product-status-{{ product.status }}">
 					{{product_statuses.get(product.status, product.status)}}
 				</p>
 			{% endif %}

@@ -98,7 +98,7 @@ def add_to_cart_route(product_id):
             return jsonify({
             "success": False,
             "message": message
-            })
+            }), 409
             
         flash("Этот товар сейчас недоступен для покупки", "error")
         return redirect(url_for("main.catalog"))
