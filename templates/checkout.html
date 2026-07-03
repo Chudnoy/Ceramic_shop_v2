@@ -12,8 +12,8 @@
                     {% for product in products %}
                         <li class="checkout-item">
                             <span class="checkout-item-name">{{product.name}}</span>
-                            <span class="checkout-item-qty">{{cart[product.id]}}</span>
-                            <span class="checkout-item-price">{{product.price * cart[product.id]}} руб.</span>
+                            <span class="checkout-item-qty">{{product.cart_quantity}}</span>
+                            <span class="checkout-item-price">{{product.cart_item_total}} руб.</span>
                         </li>
                     {% endfor %}
                 </ul>
