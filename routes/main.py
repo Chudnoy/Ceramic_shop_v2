@@ -11,11 +11,24 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route("/")
 def index():
+    """
+Показывает главную страницу сайта.
+
+Рендерит шаблон index.html без дополнительной бизнес-логики.
+"""
     return render_template("index.html")
 
 
 @main_bp.route("/catalog")
 def catalog():
+    """
+Показывает клиентский каталог товаров.
+
+Считывает параметры категории, сортировки и поиска из query string. Получает
+товары через get_all_products без include_hidden, поэтому скрытые товары не
+показываются клиентам. Проверяет существование выбранной категории и передаёт
+товары, категории, текущие фильтры и статусы товаров в шаблон каталога.
+"""
     category_slug = request.args.get('category')
     sort_by = request.args.get("sort_by", "name")
     order = request.args.get("order", "ASC").upper()
@@ -44,6 +57,14 @@ def catalog():
                            
 @main_bp.route('/product/<product_id>')
 def product_page(product_id):
+    """
+Показывает страницу отдельного товара.
+
+Загружает товар вместе с категорией и отзывами. Если товар не найден или имеет
+статус "hidden", перенаправляет пользователя в каталог с сообщением об ошибке.
+Для доступных к просмотру товаров передаёт данные товара, отзывы и словарь
+статусов в шаблон страницы товара.
+"""
     product = get_product_with_category(product_id)
     
     if not product:
@@ -60,6 +81,14 @@ def product_page(product_id):
     
 @main_bp.route("/add_to_cart/<product_id>", methods=["POST"])
 def add_to_cart_route(product_id):
+    """
+Обрабатывает добавление товара в корзину.
+
+Проверяет количество из формы, существование товара и его статус. Добавлять в
+корзину можно только товары со статусом "available". Поддерживает обычный POST
+с redirect и AJAX-запросы с JSON-ответом, чтобы корзина могла обновляться без
+перезагрузки страницы.
+"""
     quantity_str = request.form.get("quantity", "1")
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
@@ -119,6 +148,13 @@ def add_to_cart_route(product_id):
     
 @main_bp.route("/cart")
 def show_cart():
+    """
+Показывает страницу корзины.
+
+Получает подробную сводку корзины через build_cart_summary, включая список товаров,
+итоговую сумму только по доступным товарам и флаг наличия недоступных товаров.
+Передаёт эти данные в шаблон корзины вместе со словарём статусов товаров.
+"""
     cart_summary = build_cart_summary(session)
         
     return render_template("cart.html",
@@ -130,6 +166,13 @@ def show_cart():
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])
 def remove_from_cart_route(product_id):
+    """
+Обрабатывает удаление товара из корзины.
+
+Удаляет товар из session-корзины через cart_service и заново собирает сводку
+корзины. Поддерживает как обычный POST с redirect, так и AJAX-ответ с обновлённым
+количеством товаров и итоговой суммой.
+"""
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     removed = remove_from_cart_serv(session, product_id)
 
@@ -159,6 +202,13 @@ def remove_from_cart_route(product_id):
     
 @main_bp.route("/product/<product_id>/review", methods=["POST"])
 def add_review(product_id):
+    """
+Обрабатывает добавление отзыва к товару.
+
+Проверяет существование товара, получает имя, оценку и комментарий из формы,
+валидирует данные через validate_review и сохраняет отзыв в базу. После успешного
+добавления возвращает пользователя на страницу товара.
+"""
     if not product_exists(product_id):
         flash("Товар не найден", "error")
         return redirect(url_for("main.catalog"))
@@ -181,6 +231,14 @@ def add_review(product_id):
     
 @main_bp.route('/checkout')
 def checkout_form():
+    """
+Показывает форму оформления заказа.
+
+Собирает актуальную сводку корзины и пропускает к оформлению только если в корзине
+есть товары, доступные для заказа. Недоступные товары не передаются в checkout.
+Если часть товаров стала недоступна, показывает предупреждение, что они не будут
+включены в заказ.
+"""
     cart_summary = build_cart_summary(session)
     available_products = cart_summary["available_products"]
 
@@ -200,6 +258,14 @@ def checkout_form():
     
 @main_bp.route("/checkout", methods=["POST"])
 def checkout_process():
+    """
+Обрабатывает отправку формы оформления заказа.
+
+Повторно собирает актуальную сводку корзины перед созданием заказа, чтобы не
+оформить товары, которые стали недоступны после открытия страницы checkout.
+Валидирует данные покупателя, формирует состав заказа только из доступных товаров,
+создаёт заказ в базе данных, очищает корзину и перенаправляет на страницу успеха.
+"""
     cart_summary = build_cart_summary(session)
     cart = cart_summary['cart']
     available_products = cart_summary["available_products"]
@@ -233,6 +299,12 @@ def checkout_process():
     
 @main_bp.route("/order_success/<order_id>")
 def order_success(order_id):
+    """
+Показывает страницу успешного оформления заказа.
+
+Ищет заказ по order_id. Если заказ не найден, возвращает пользователя в каталог.
+Если найден, передаёт заказ и его товары в шаблон страницы успешного оформления.
+"""
     order = get_order_by_id(order_id)
     
     if not order:

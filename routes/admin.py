@@ -25,6 +25,13 @@ ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', '')
 
 @admin_bp.before_request
 def require_admin_login():
+    """
+Проверяет доступ к админским маршрутам перед каждым запросом.
+
+Разрешает открывать страницу логина без авторизации. Для остальных admin routes
+проверяет наличие session["is_admin"]. Если пользователь не авторизован как админ,
+показывает flash-сообщение и перенаправляет на страницу входа.
+"""
     allowed_endpoints = {
         'admin.login'
     }
@@ -41,6 +48,13 @@ def require_admin_login():
 
 @admin_bp.route('/admin/login', methods=['GET', 'POST'])
 def login():
+    """
+Обрабатывает вход в админку.
+
+При GET-запросе показывает форму входа. При POST-запросе проверяет логин и пароль
+по значениям из переменных окружения. Если данные верны, сохраняет признак
+администратора в session и перенаправляет на главную страницу админки.
+"""
     if request.method == 'POST':
         login_value = request.form.get('login', '').strip()
         password = request.form.get('password', '')
@@ -57,6 +71,12 @@ def login():
 
 @admin_bp.route('/admin/logout', methods=['POST'])
 def logout():
+    """
+Выводит пользователя из админки.
+
+Удаляет флаг is_admin из session, показывает flash-сообщение и перенаправляет
+пользователя на страницу входа в админку.
+"""
     session.pop('is_admin', None)
     flash('Вы вышли из админки', 'info')
     return redirect(url_for('admin.login'))
@@ -64,12 +84,25 @@ def logout():
 
 @admin_bp.route("/admin")
 def admin():
+    """
+Показывает главную страницу админки.
+
+Получает статистику через get_admin_stats и передаёт её в шаблон admin/index.html.
+Используется как стартовая панель управления магазином.
+"""
     stats = get_admin_stats()
     return render_template("admin/index.html", stats=stats)
     
     
 @admin_bp.route("/admin/products")
 def admin_products():
+    """
+Показывает список товаров в админке с фильтрацией, поиском и сортировкой.
+
+Считывает параметры category, sort_by, order и q из query string. Проверяет
+существование выбранной категории, получает список товаров с include_hidden=True,
+чтобы админ видел все товары, включая скрытые, и передаёт данные в шаблон.
+"""
     category_slug = request.args.get('category')
     sort_by = request.args.get('sort_by', 'name')
     order = request.args.get('order', 'ASC').upper()
@@ -100,6 +133,12 @@ def admin_products():
 
 @admin_bp.route("/admin/orders")
 def admin_orders():
+    """
+Показывает список заказов в админке.
+
+Считывает поисковый запрос и выбранный статус из query string, получает подходящие
+заказы из базы и передаёт их в шаблон вместе со словарём доступных статусов заказа.
+"""
     search_query = request.args.get('q', '').strip()
     status = request.args.get('status', '')
     orders = get_all_orders(search_query, status)
@@ -108,6 +147,13 @@ def admin_orders():
 
 @admin_bp.route("/admin/orders/order_details/<order_id>")
 def order_details(order_id):
+    """
+Показывает подробную страницу одного заказа.
+
+Ищет заказ по order_id. Если заказ не найден, показывает ошибку и возвращает
+пользователя к списку заказов. Если найден, передаёт заказ и доступные статусы
+в шаблон деталей заказа.
+"""
     order = get_order_by_id(order_id)
     if not order:
         flash('Заказ не найден', 'error')
@@ -117,6 +163,13 @@ def order_details(order_id):
     
 @admin_bp.route("/admin/orders/delete/<order_id>", methods=["POST"])
 def delete_order_route(order_id):
+    """
+Обрабатывает удаление заказа из админки.
+
+Перед удалением проверяет, существует ли заказ. Если заказ найден, удаляет его
+из базы данных, показывает flash-сообщение и возвращает пользователя к списку
+заказов.
+"""
     order = get_order_by_id(order_id)
     if not order:
         flash('Заказ не найден', 'error')
@@ -128,6 +181,13 @@ def delete_order_route(order_id):
 
 @admin_bp.route("/admin/orders/<order_id>/status", methods=["POST"])
 def update_order_status_route(order_id):
+    """
+Обрабатывает быстрое изменение статуса заказа.
+
+Получает новый статус из формы, проверяет существование заказа и допустимость
+статуса. Если всё корректно, обновляет статус заказа и возвращает пользователя
+к списку заказов.
+"""
     status = request.form.get("status", "new")
     order = get_order_by_id(order_id)
     if not order:
@@ -145,6 +205,13 @@ def update_order_status_route(order_id):
     
 @admin_bp.route("/admin/orders/edit/<order_id>", methods=["GET", "POST"])
 def edit_order(order_id):
+    """
+Обрабатывает просмотр и редактирование заказа в админке.
+
+При GET-запросе показывает форму редактирования заказа. При POST-запросе
+проверяет данные формы через process_order_form, пересчитывает состав и сумму
+заказа, обновляет заказ в базе и возвращает пользователя к списку заказов.
+"""
     order = get_order_by_id(order_id)
     if not order:
         flash('Заказ не найден', 'error')
@@ -165,6 +232,13 @@ def edit_order(order_id):
     
 @admin_bp.route("/admin/products/delete/<product_id>", methods=['POST'])
 def delete_product_route(product_id):
+    """
+Обрабатывает удаление товара из админки.
+
+Если товар найден, сначала удаляет связанное изображение через image_service,
+затем удаляет запись товара из базы данных. После операции возвращает пользователя
+к списку товаров.
+"""
     product = get_product_by_id(product_id)
     if product:
         delete_image(product["img"])
@@ -175,6 +249,14 @@ def delete_product_route(product_id):
     
 @admin_bp.route("/admin/products/edit/<product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
+    """
+Обрабатывает редактирование товара в админке.
+
+При GET-запросе показывает форму с текущими данными товара. При POST-запросе
+валидирует данные формы, сохраняет новое изображение при его наличии, сохраняет
+старое изображение при отсутствии нового файла и обновляет товар в базе данных,
+включая его статус.
+"""
     product = get_product_by_id(product_id)
 
     if not product:
@@ -206,6 +288,13 @@ def edit_product(product_id):
     
 @admin_bp.route("/admin/products/new", methods=["GET", "POST"])
 def new_product():
+    """
+Обрабатывает создание нового товара в админке.
+
+При GET-запросе показывает пустую форму создания товара со статусом "available"
+по умолчанию. При POST-запросе валидирует данные формы, сохраняет изображение,
+создаёт новый товар в базе данных и возвращает пользователя к списку товаров.
+"""
     categories = get_all_categories()
     
     if request.method == "POST":

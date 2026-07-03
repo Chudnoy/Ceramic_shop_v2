@@ -3,12 +3,26 @@ import uuid
 import json
 
 def get_db_connection():
+    """
+Создаёт и возвращает подключение к SQLite-базе данных shop.db.
+
+Настраивает row_factory на sqlite3.Row, чтобы строки результата можно было читать
+как словари: row["name"], row["price"], row["status"]. Это упрощает работу с
+данными в routes, services и шаблонах.
+"""
     conn = sqlite3.connect("shop.db")
     conn.row_factory = sqlite3.Row
     return conn
     
     
 def ensure_product_status_column():
+    """
+Проверяет, есть ли в таблице products колонка status, и добавляет её при необходимости.
+
+Функция нужна как простая миграция для уже существующей базы данных. Если проект
+запускается со старой таблицей products, где ещё нет статуса товара, функция
+добавляет колонку status со значением по умолчанию "available".
+"""
     conn = get_db_connection()
     
     columns = conn.execute("PRAGMA table_info(products)").fetchall()
@@ -22,6 +36,14 @@ def ensure_product_status_column():
     
     
 def init_db():
+    """
+Создаёт основные таблицы приложения и заполняет базу стартовыми данными.
+
+Создаёт таблицы categories, products, reviews и orders, если они ещё не существуют.
+Если таблицы категорий или товаров пустые, добавляет начальные категории и товары.
+После основной инициализации запускает миграцию ensure_product_status_column(),
+чтобы существующая база тоже получила колонку статуса товара.
+"""
     conn = get_db_connection()
     
     conn.execute("""CREATE TABLE IF NOT EXISTS categories (
@@ -93,6 +115,13 @@ def init_db():
     
     
 def get_reviews_by_product(product_id):
+    """
+Возвращает все отзывы для указанного товара.
+
+Принимает product_id, ищет связанные с ним записи в таблице reviews и возвращает
+их в порядке от новых к старым. Используется на странице товара для вывода блока
+отзывов.
+"""
     conn = get_db_connection()
     reviews = conn.execute("SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC", (product_id,)).fetchall()
     conn.close()
@@ -100,6 +129,12 @@ def get_reviews_by_product(product_id):
     
     
 def add_review_db(product_id, name, rating, comment):
+    """
+Добавляет новый отзыв к товару в таблицу reviews.
+
+Принимает id товара, имя автора, оценку и текст комментария. Функция предполагает,
+что данные уже прошли валидацию до вызова, и только сохраняет их в базу данных.
+"""
     conn = get_db_connection()
     conn.execute("INSERT INTO reviews (product_id, name, rating, comment) VALUES (?, ?, ?, ?)", (product_id, name, rating, comment))
     conn.commit()
@@ -107,6 +142,15 @@ def add_review_db(product_id, name, rating, comment):
     
     
 def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query="", include_hidden=False):
+    """
+Возвращает список товаров с учётом категории, поиска, сортировки и видимости.
+
+Подгружает данные категории через LEFT JOIN, чтобы у каждого товара были доступны
+category_name и category_slug. Может фильтровать товары по slug категории и
+поисковой строке, сортировать по разрешённым полям и скрывать товары со статусом
+"hidden" для клиентской части сайта. Если include_hidden=True, возвращает все
+товары, что используется в админке.
+"""
     conn = get_db_connection()
     query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
             FROM products
@@ -143,6 +187,12 @@ def get_all_products(category_slug=None, sort_by='name', order='ASC', search_que
     
     
 def get_product_by_id(product_id):
+    """
+Возвращает товар по его id.
+
+Ищет одну запись в таблице products. Если товар найден, возвращает sqlite3.Row
+с данными товара. Если товара нет, возвращает None.
+"""
     conn = get_db_connection()
     product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
     conn.close()
@@ -150,6 +200,13 @@ def get_product_by_id(product_id):
     
     
 def get_products_by_ids(product_ids):
+    """
+Возвращает список товаров по набору id.
+
+Используется для восстановления товаров из корзины, где в session хранятся только
+id товаров и количество. Если список id пустой, сразу возвращает пустой список
+без обращения к базе данных.
+"""
     if not product_ids:
         return []
     conn = get_db_connection()
@@ -161,6 +218,13 @@ def get_products_by_ids(product_ids):
     
     
 def product_exists(product_id):
+    """
+Проверяет, существует ли товар с указанным id.
+
+Возвращает True, если в таблице products есть запись с таким id, иначе False.
+Используется там, где нужно быстро проверить существование товара без загрузки
+всех его данных.
+"""
     conn = get_db_connection()
     product = conn.execute("SELECT 1 FROM products WHERE id = ?", (product_id,)).fetchone()
     conn.close()
@@ -168,6 +232,13 @@ def product_exists(product_id):
 
 
 def create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total):
+    """
+Создаёт новый заказ в таблице orders.
+
+Принимает данные покупателя, словарь товаров заказа и итоговую сумму. Словарь
+товаров преобразуется в JSON перед сохранением в базу. Новый заказ создаётся
+со статусом "new".
+"""
     conn = get_db_connection()
     items_json = json.dumps(items_dict, ensure_ascii=False)
     conn.execute("""INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
@@ -178,6 +249,13 @@ def create_order(order_id, customer_name, customer_email, customer_phone, custom
 
 
 def get_order_by_id(order_id):
+    """
+Возвращает заказ по его id.
+
+Загружает заказ из таблицы orders, преобразует строку в обычный словарь и
+декодирует поле items из JSON обратно в Python-словарь. Если заказ не найден,
+возвращает None.
+"""
     conn = get_db_connection()
     row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     conn.close()
@@ -191,6 +269,13 @@ def get_order_by_id(order_id):
 
 
 def get_all_orders(search_query='', status=''):
+    """
+Возвращает список заказов с возможной фильтрацией по поиску и статусу.
+
+Позволяет искать заказы по id, имени покупателя, email, телефону и адресу.
+Также может фильтровать заказы по статусу. Поле items каждого заказа декодируется
+из JSON в Python-словарь перед возвратом.
+"""
     conn = get_db_connection()
     query = 'SELECT * FROM orders'
     params = []
@@ -223,6 +308,12 @@ def get_all_orders(search_query='', status=''):
     
     
 def get_all_categories():
+    """
+Возвращает все категории товаров.
+
+Загружает категории из таблицы categories и сортирует их по названию. Используется
+в каталоге, админских фильтрах и формах создания или редактирования товара.
+"""
     conn = get_db_connection()
     categories = conn.execute("SELECT * FROM categories ORDER BY name").fetchall()
     conn.close()
@@ -230,6 +321,12 @@ def get_all_categories():
     
     
 def get_category_by_slug(slug):
+    """
+Возвращает категорию по её slug.
+
+Используется при фильтрации каталога или админского списка товаров по категории.
+Если категория с таким slug не найдена, возвращает None.
+"""
     conn = get_db_connection()
     category = conn.execute("SELECT * FROM categories WHERE slug = ?", (slug,)).fetchone()
     conn.close()
@@ -237,6 +334,13 @@ def get_category_by_slug(slug):
     
     
 def get_products_by_category(category_id):
+    """
+Возвращает товары указанной категории.
+
+Принимает category_id и возвращает товары, связанные с этой категорией, вместе
+с названием категории. Это более прямой вариант выборки по category_id, в отличие
+от get_all_products, где фильтрация идёт через slug.
+"""
     conn = get_db_connection()
     products = conn.execute("""SELECT products.*, categories.name AS category_name
     FROM products
@@ -248,6 +352,12 @@ def get_products_by_category(category_id):
     
     
 def get_product_with_category(product_id):
+    """
+Возвращает товар вместе с данными его категории.
+
+Используется на странице отдельного товара, где помимо данных самого товара нужно
+показать название и slug категории. Если товар не найден, возвращает None.
+"""
     conn = get_db_connection()
     product = conn.execute("""SELECT 
         products.*, 
@@ -263,6 +373,12 @@ def get_product_with_category(product_id):
     
     
 def delete_product(product_id):
+    """
+Удаляет товар из таблицы products по его id.
+
+Функция удаляет только запись товара из базы данных. Удаление связанного файла
+изображения выполняется отдельно на уровне admin route через image_service.
+"""
     conn = get_db_connection()
     conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
     conn.commit()
@@ -270,6 +386,12 @@ def delete_product(product_id):
     
     
 def update_product(product_id, name, price, description, img_path, category_id, status):
+    """
+Обновляет данные существующего товара.
+
+Сохраняет новое название, описание, цену, категорию, путь к изображению и статус
+товара. Используется в админке после успешной обработки формы редактирования.
+"""
     conn = get_db_connection()
     conn.execute("""
     UPDATE products
@@ -281,6 +403,13 @@ def update_product(product_id, name, price, description, img_path, category_id, 
     
     
 def create_product(name, price, description, img_path, category_id, status):
+    """
+Создаёт новый товар в таблице products.
+
+Генерирует UUID для нового товара и сохраняет название, описание, цену, путь к
+изображению, категорию и статус. Используется в админке после успешной обработки
+формы создания товара.
+"""
     conn = get_db_connection()
     conn.execute("""
     INSERT INTO products (id, name, description, price, img, category_id, status)
@@ -291,6 +420,12 @@ def create_product(name, price, description, img_path, category_id, status):
     
     
 def delete_order(order_id):
+    """
+Удаляет заказ из таблицы orders по его id.
+
+Используется в админке для удаления заказа. Функция удаляет только запись заказа
+из базы данных и не изменяет товары, которые входили в заказ.
+"""
     conn = get_db_connection()
     conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
     conn.commit()
@@ -298,6 +433,12 @@ def delete_order(order_id):
     
     
 def update_order(order_id, name, email, phone, address, items, total, status):
+    """
+Обновляет данные существующего заказа.
+
+Принимает обновлённые данные покупателя, состав заказа, итоговую сумму и статус.
+Словарь товаров преобразуется в JSON перед сохранением в базу данных.
+"""
     conn = get_db_connection()
     items_json = json.dumps(items, ensure_ascii=False)
     conn.execute("""
@@ -310,6 +451,12 @@ def update_order(order_id, name, email, phone, address, items, total, status):
 
 
 def update_order_status(order_id, status):
+    """
+Обновляет только статус заказа.
+
+Используется для быстрого изменения статуса заказа из админского списка без
+редактирования остальных данных заказа.
+"""
     conn = get_db_connection()
     conn.execute('UPDATE orders SET status = ? WHERE id = ?', (status, order_id))
     conn.commit()
@@ -317,6 +464,13 @@ def update_order_status(order_id, status):
 
 
 def get_admin_stats():
+    """
+Собирает основные статистические показатели для главной страницы админки.
+
+Возвращает количество товаров, общее количество заказов, количество новых заказов,
+количество заказов в работе, выручку по выполненным заказам и общую сумму всех
+заказов. Использует COALESCE, чтобы при отсутствии заказов сумма возвращалась как 0.
+"""
     conn = get_db_connection()
 
     products_count = conn.execute('SELECT COUNT(*) FROM products').fetchone()[0]

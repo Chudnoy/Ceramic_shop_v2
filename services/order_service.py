@@ -7,6 +7,13 @@ ORDER_STATUSES = {
 
 
 def process_order_form(form, old_items):
+	"""
+Обрабатывает и валидирует форму редактирования заказа в админке.
+
+Проверяет имя, email, статус заказа и количество каждого товара. На основе старого
+состава заказа собирает обновлённый словарь товаров, пересчитывает итоговую сумму
+и возвращает cleaned_data для сохранения заказа в базе данных.
+"""
 	name = form.get("name", "").strip()
 	email = form.get("email", "").strip()
 	phone = form.get("phone", "").strip()
@@ -44,6 +51,13 @@ def process_order_form(form, old_items):
 
 
 def process_checkout_form(form):
+	"""
+Обрабатывает и валидирует форму оформления заказа клиентом.
+
+Получает имя, email, телефон и адрес покупателя из формы. Проверяет обязательное
+имя и корректность email. Возвращает очищенные данные покупателя, готовые для
+создания заказа.
+"""
 	customer_name = form.get("customer_name", "").strip()
 	customer_email = form.get("customer_email", "").strip()
 	customer_phone = form.get("customer_phone", "").strip()
@@ -65,6 +79,13 @@ def process_checkout_form(form):
     
     
 def build_order_items(cart, products):
+	"""
+Формирует состав заказа и итоговую сумму на основе корзины и списка товаров.
+
+Принимает session-корзину и список товаров, которые должны попасть в заказ.
+Для каждого товара берёт количество из корзины, считает subtotal и собирает
+словарь items_dict для сохранения в поле orders.items.
+"""
 	items_dict = {}
 	total = 0
 

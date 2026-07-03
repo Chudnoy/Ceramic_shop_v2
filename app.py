@@ -20,6 +20,14 @@ app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
 
 @app.context_processor
 def inject_cart_count():
+    """
+Добавляет количество товаров в корзине во все шаблоны приложения.
+
+Функция вызывается Flask автоматически перед рендерингом шаблонов благодаря
+декоратору context_processor. Возвращает словарь с cart_count, чтобы в базовом
+шаблоне можно было показывать актуальное количество товаров в корзине независимо
+от того, какая страница открыта.
+"""
     return {"cart_count": get_cart_count(session)}
     
     

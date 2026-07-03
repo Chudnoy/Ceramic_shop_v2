@@ -1,10 +1,23 @@
 from db import get_products_by_ids
 
 def get_cart(session):
+    """
+Возвращает текущую корзину из session.
+
+Если корзина ещё не создана, возвращает пустой словарь. Корзина хранит id товаров
+как ключи и количество выбранных единиц как значения.
+"""
     return session.get("cart", {})
     
     
 def add_to_cart_serv(session, product_id, quantity):
+    """
+Добавляет товар в корзину или увеличивает его количество.
+
+Получает текущую корзину из session, увеличивает количество товара на переданное
+значение, сохраняет обновлённую корзину обратно в session и помечает session как
+изменённую. Возвращает новое количество этого товара в корзине.
+"""
     cart = session.get("cart", {})
     cart[product_id] = cart.get(product_id, 0) + quantity
     session["cart"] = cart
@@ -13,6 +26,12 @@ def add_to_cart_serv(session, product_id, quantity):
     
     
 def remove_from_cart_serv(session, product_id):
+    """
+Удаляет товар из корзины по его id.
+
+Если товар есть в session-корзине, удаляет его, сохраняет обновлённую корзину
+и возвращает True. Если товара в корзине нет, ничего не меняет и возвращает False.
+"""
     cart = session.get("cart", {})
     if product_id in cart:
         del cart[product_id]
@@ -23,11 +42,26 @@ def remove_from_cart_serv(session, product_id):
     
     
 def clear_cart(session):
+    """
+Полностью очищает корзину пользователя.
+
+Заменяет session["cart"] на пустой словарь и помечает session как изменённую.
+Используется после успешного оформления заказа.
+"""
     session["cart"] = {}
     session.modified = True
 
 
 def build_cart_summary(session):
+    """
+Собирает подробную сводку текущей корзины.
+
+Загружает товары из базы по id, сохранённым в session, добавляет к каждому товару
+служебные поля cart_quantity, cart_item_total и is_available_for_order. Итоговая
+сумма считается только по товарам со статусом "available". Недоступные товары
+остаются в общем списке корзины, но не попадают в available_products и не входят
+в total.
+"""
     cart = get_cart(session)
     cart_count = sum(cart.values())
 
@@ -69,5 +103,11 @@ def build_cart_summary(session):
 
 
 def get_cart_count(session):
+    """
+Возвращает общее количество единиц товаров в корзине.
+
+Суммирует значения из session-корзины. Используется для отображения счётчика
+корзины в шапке сайта через context_processor.
+"""
     cart = get_cart(session)
     return sum(cart.values())
