@@ -20,6 +20,7 @@
 	</div>
 
 	<form action="{{url_for('main.catalog')}}" method="get" class="catalog-controls">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 		{% if category_slug %}
 			<input type="hidden" name="category" value="{{category_slug}}">
 		{% endif %}
@@ -81,6 +82,7 @@
 						<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
 						{% if product.status == 'available' %}
 							<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
+								<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 								<input type="number" name="quantity" min="1" value="1" class="quantity-input">
 								<button type="submit" class="btn btn-primary">В корзину</button>
 							</form>

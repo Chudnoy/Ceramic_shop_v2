@@ -15,6 +15,7 @@ from db import (get_all_products,
 from services.product_service import process_product_form, PRODUCT_STATUSES
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
+from services.csrf_service import validate_csrf_from_form
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 admin_bp = Blueprint("admin", __name__)

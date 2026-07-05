@@ -4,6 +4,7 @@
 <h1 class="admin-page-title">{{ title }}</h1>
 
 <form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="admin-form-group">
         <label for="name">Название</label>
         <input type="text" name="name" id="name" value="{{ product.name }}">

@@ -26,6 +26,7 @@
         <div class="checkout-form-wrapper">
             <h2 class="section-title">Контактные данные</h2>
             <form action="" method="post" class="checkout-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="customer_name">Ваше имя:</label>
                     <input type="text" id="customer_name" name="customer_name" class="form-control" required>

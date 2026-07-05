@@ -43,6 +43,7 @@
                     <form action="{{ url_for('admin.update_order_status_route', order_id=order.id) }}"
                         method="post"
                         class="admin-status-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <select name="status" class="admin-status-select">
                             {% for eng_status, rus_status in order_statuses.items() %}
                                 <option value="{{ eng_status }}"
@@ -59,6 +60,7 @@
                     <a href="{{ url_for('admin.order_details', order_id=order.id) }}">Подробнее</a>
                     |
                     <form action="{{url_for('admin.delete_order_route', order_id=order.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить заказ?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="admin-link-button">Удалить</button>
                     </form>
                 </td>
