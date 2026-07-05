@@ -91,7 +91,8 @@ const removeCartForms = document.querySelectorAll('.remove-from-cart-form');
 removeCartForms.forEach(function (form) {
 	form.addEventListener('submit', function (event) {
 		event.preventDefault();
-
+        
+        const formData = new FormData(form);
 		const submitButton = form.querySelector("button[type='submit']");
 		const originalButtonText = submitButton.textContent;
 
@@ -100,6 +101,7 @@ removeCartForms.forEach(function (form) {
 
 		fetch(form.action, {
 			method: 'POST',
+			body: formData,
 			headers: {
 				'X-Requested-With': 'XMLHttpRequest'
 			}

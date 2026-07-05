@@ -100,7 +100,42 @@ def build_cart_summary(session):
         "has_unavailable_items": has_unavailable_items,
         "available_products": available_products
     }
+    
+    
+def remove_unavailable_items(session):
+    """
+Удаляет из корзины товары, которые больше нельзя оформить.
 
+Оставляет в session["cart"] только товары, которые существуют в базе данных
+и имеют статус "available". Удаляет товары со статусами "reserved", "sold",
+"hidden", а также id товаров, которых уже нет в базе. Возвращает True, если
+из корзины был удалён хотя бы один товар, иначе False.
+"""
+    cart = session.get("cart", {})
+    
+    if not cart:
+        return False
+        
+    cart_products = get_products_by_ids(list(cart.keys()))
+    
+    available_product_ids = set()
+    removed = False
+    
+    for product in cart_products:
+        if product["status"] == "available":
+            available_product_ids.add(product["id"])
+            
+    for product_id in list(cart.keys()):
+        if product_id not in available_product_ids:
+            del cart[product_id]
+            removed = True
+            
+    if removed:
+        session["cart"] = cart
+        session.modified = True
+        
+    return removed
+    
 
 def get_cart_count(session):
     """

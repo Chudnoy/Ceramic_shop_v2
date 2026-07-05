@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id
-from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count
+from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
 from services.order_service import process_checkout_form, build_order_items
 from services.product_service import PRODUCT_STATUSES
 from validation import validate_review
@@ -162,6 +162,24 @@ def show_cart():
     total=cart_summary['total'],
     cart=cart_summary['cart'],
     has_unavailable_items = cart_summary["has_unavailable_items"], product_statuses=PRODUCT_STATUSES)
+    
+
+@main_bp.route("/cart/remove_unavailable", methods=["POST"])
+def remove_unavailable_route():
+    """
+Обрабатывает удаление недоступных товаров из корзины.
+
+Вызывает cart_service.remove_unavailable_items, показывает пользователю сообщение
+о результате операции и возвращает его на страницу корзины.
+"""
+    removed = remove_unavailable_items(session)
+    
+    if removed:
+        flash("Недоступные товары удалены", "success")
+    else:
+        flash("Нет недоступных товаров", "error")
+    
+    return redirect(url_for("main.show_cart"))
     
     
 @main_bp.route("/remove_from_cart/<product_id>", methods=['POST'])
