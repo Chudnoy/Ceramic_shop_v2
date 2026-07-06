@@ -1,3 +1,6 @@
+import re
+
+
 def validate_review(name, rating_str, comment):
     """
 Валидирует данные формы отзыва.
@@ -54,3 +57,38 @@ def validate_product(name, price, description, category_id):
         return False, "Некорректный ID категории", {}
         
     return True, "", {"name": name, "price": price, "description": description, "category_id": category_id}
+
+
+def is_valid_slug(s):
+    """
+	Проверяет, что slug состоит только из разрешённых символов.
+
+	Разрешены латинские буквы, цифры и дефис.
+	Возвращает True, если slug соответствует правилу, иначе False.
+	"""
+    return re.fullmatch(r'^[A-Za-z0-9-]+$', s) is not None
+
+
+def validate_category(name, slug, description):
+    """
+	Валидирует данные формы категории.
+
+	Очищает название, slug и описание от лишних пробелов.
+	Проверяет, что название заполнено, а slug заполнен и состоит только
+	из латинских букв, цифр и дефисов. Описание может быть пустым.
+
+	Возвращает кортеж:
+	- True, "", cleaned_data — если данные корректны;
+	- False, error_message, None — если данные не прошли проверку.
+	"""
+    name = name.strip()
+    if not name:
+        return False, 'Имя обязательно для заполнения', None
+    
+    slug = slug.strip().lower()
+    if not slug or not is_valid_slug(slug):
+        return False, 'Slug обязателен и может содержать только латинские буквы, цифры и дефис', None
+    
+    description = description.strip()
+    
+    return True, '', {'name': name, 'slug': slug, 'description': description}

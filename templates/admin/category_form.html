@@ -1,0 +1,21 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<h1 class="admin-page-title">{{ title }}</h1>
+<form action="" method="post" class="admin-form">
+	<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+	<div class="admin-form-group">
+		<label for="name">Название</label>
+		<input type="text" id="name" name="name" value="{{ category.name }}">
+	</div>
+	<div class="admin-form-group">
+		<label for="slug">Slug</label>
+		<input type="text" id="slug" name="slug" value="{{ category.slug }}">
+	</div>
+	<div class="admin-form-group">
+		<label for="description">Описание</label>
+		<textarea id="description" name="description" rows="4">{{ category.description }}</textarea>
+	</div>
+	<button type="submit" class="admin-button">{{ submit_text }}</button>
+</form>
+{% endblock %}

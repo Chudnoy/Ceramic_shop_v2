@@ -20,7 +20,6 @@
 	</div>
 
 	<form action="{{url_for('main.catalog')}}" method="get" class="catalog-controls">
-		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 		{% if category_slug %}
 			<input type="hidden" name="category" value="{{category_slug}}">
 		{% endif %}

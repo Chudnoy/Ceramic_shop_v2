@@ -3,33 +3,46 @@
 {% block title %}Категории{% endblock %}
 
 {% block content %}
-<h1>Категории</h1>
-<a href="#" class="admin-button">Добавить категорию</a>
+<h1 class="admin-page-title">Категории</h1>
+
+<div class="admin-actions">
+    <a href="{{ url_for('admin.new_category_route') }}" class="admin-button">
+        Добавить категорию
+    </a>
+</div>
+
 {% if categories %}
-	<table class="admin-table">
-		<thead>
-			<tr>
-				<th>Название</th>
-				<th>Slug</th>
-				<th>Описание</th>
-				<th>Действия</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for category in categories %}
-				<tr>
-					<td>{{ category.name }}</td>
-					<td>{{ category.slug }}</td>
-					<td>{{ category.description }}</td>
-					<td>
-						<a href="#" class="btn btn-sm">Редактировать</a>
-						<button class="admin-link-button" disabled>Удалить</button>
-					</td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+    <div class="admin-table-wrapper">
+        <table class="admin-table">
+            <tr>
+                <th>Название</th>
+                <th>Slug</th>
+                <th>Описание</th>
+                <th>Товаров</th>
+                <th>Действия</th>
+            </tr>
+
+            {% for category in categories %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.slug }}</td>
+                    <td>
+                        {{ category.description if category.description else '—' }}
+                    </td>
+                    <td>{{ category.products_count}}</td>
+                    <td>
+                        <a href="{{url_for('admin.edit_category_route', slug=category.slug)}}">Редактировать</a>
+                        |
+                        <form action="{{url_for('admin.delete_category_route', slug=category.slug)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить категорию?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="admin-link-button">Удалить</button>
+                        </form>	
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 {% else %}
-	<p>Категорий пока нет</p>
+    <p class="empty-message">Категорий пока нет</p>
 {% endif %}
 {% endblock %}
