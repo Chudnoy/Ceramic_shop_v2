@@ -279,7 +279,7 @@ def edit_product(product_id):
         
         if not image_success:
             flash(image_error, 'error')
-            redirect(url_for('admin.edit_product', product_id=product_id))
+            return redirect(url_for('admin.edit_product', product_id=product_id))
 
         if image_path:
             data['img'] = image_path
@@ -323,7 +323,7 @@ def new_product():
         
         if not image_success:
             flash(image_error, 'error')
-            redirect(url_for('admin.new_product'))
+            return redirect(url_for('admin.new_product'))
 
         data['img'] = image_path
             
