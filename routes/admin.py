@@ -143,7 +143,11 @@ def admin_orders():
     search_query = request.args.get('q', '').strip()
     status = request.args.get('status', '')
     orders = get_all_orders(search_query, status)
-    return render_template("admin/orders.html", orders=orders, order_statuses=ORDER_STATUSES, search_query=search_query, current_status=status)
+    return render_template("admin/orders.html",
+                           orders=orders,
+                           order_statuses=ORDER_STATUSES,
+                           search_query=search_query,
+                           current_status=status)
 
 
 @admin_bp.route("/admin/orders/order_details/<order_id>")
@@ -271,10 +275,14 @@ def edit_product(product_id):
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
         file = request.files.get('img')
-        new_img = save_image(file)
+        image_success, image_error, image_path = save_image(file)
+        
+        if not image_success:
+            flash(image_error, 'error')
+            redirect(url_for('admin.edit_product', product_id=product_id))
 
-        if new_img:
-            data['img'] = new_img
+        if image_path:
+            data['img'] = image_path
         else:
             data['img'] = product['img']
         
@@ -284,7 +292,12 @@ def edit_product(product_id):
         return redirect(url_for("admin.admin_products"))
         
     categories = get_all_categories()
-    return render_template("admin/product_form.html", product=product, categories=categories, title="Редактирование товара", submit_text="Сохранить", product_statuses=PRODUCT_STATUSES)
+    return render_template("admin/product_form.html",
+                           product=product,
+                           categories=categories,
+                           title="Редактирование товара",
+                           submit_text="Сохранить",
+                           product_statuses=PRODUCT_STATUSES)
     
     
 @admin_bp.route("/admin/products/new", methods=["GET", "POST"])
@@ -306,7 +319,13 @@ def new_product():
             return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
-        data['img'] = save_image(file)
+        image_success, image_error, image_path = save_image(file)
+        
+        if not image_success:
+            flash(image_error, 'error')
+            redirect(url_for('admin.new_product'))
+
+        data['img'] = image_path
             
         create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"])
         
@@ -315,4 +334,21 @@ def new_product():
         
     empty_product = {"name": "", "description": "", "price": "", "category_id": None, "img": "", "status": "available"}
     
-    return render_template("admin/product_form.html", product=empty_product, categories=categories, title="Новый товар", submit_text="Создать", product_statuses=PRODUCT_STATUSES)
+    return render_template("admin/product_form.html",
+                           product=empty_product,
+                           categories=categories,
+                           title="Новый товар",
+                           submit_text="Создать",
+                           product_statuses=PRODUCT_STATUSES)
+
+
+@admin_bp.route('/admin/categories')
+def admin_categories():
+    '''
+    Показывает список всех категорий в админке.
+    
+    Загружает список всех категорий из базы данных и передаёт их в шаблон
+    для отображения администратору
+    '''
+    categories = get_all_categories()
+    return render_template('admin/categories.html', categories=categories)
