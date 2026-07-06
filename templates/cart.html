@@ -60,6 +60,12 @@
 			<div class="cart-actions">
 				<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>
 				<a href="{{url_for('main.catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
+				{% if products %}
+					<form action="{{ url_for('main.clear_cart_route') }}" method="post" onsubmit="return confirm('Очистить корзину?')">
+						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+						<button type="submit" class="btn btn-danger">Очистить корзину</button>
+					</form>
+				{% endif %}
 			</div>
 		{% else %}
 			<div class="empty-cart">

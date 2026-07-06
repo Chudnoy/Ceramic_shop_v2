@@ -216,6 +216,24 @@ def remove_from_cart_route(product_id):
     else:
         flash("Товар не найден в корзине", "error")
     return redirect(url_for("main.show_cart"))
+
+
+@main_bp.route('/cart/clear_cart', methods=['POST'])
+def clear_cart_route():
+    """
+    Очищает корзину пользователя.
+
+    Если в корзине есть товары, удаляет все позиции из session["cart"].
+    После действия возвращает пользователя на страницу корзины.
+    """
+    
+    if get_cart_count(session) > 0:
+        clear_cart(session)
+        flash('Корзина очищена', 'success')
+    else:
+        flash('В корзине нет товаров', 'error')
+        
+    return redirect(url_for('main.show_cart'))
     
     
 @main_bp.route("/product/<product_id>/review", methods=["POST"])

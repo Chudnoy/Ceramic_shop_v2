@@ -141,16 +141,16 @@ def add_review_db(product_id, name, rating, comment):
     conn.close()
     
     
-def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query="", include_hidden=False):
+def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query="", status='', include_hidden=False):
     """
-Возвращает список товаров с учётом категории, поиска, сортировки и видимости.
+    Возвращает список товаров с учётом категории, поиска, сортировки и видимости.
 
-Подгружает данные категории через LEFT JOIN, чтобы у каждого товара были доступны
-category_name и category_slug. Может фильтровать товары по slug категории и
-поисковой строке, сортировать по разрешённым полям и скрывать товары со статусом
-"hidden" для клиентской части сайта. Если include_hidden=True, возвращает все
-товары, что используется в админке.
-"""
+    Подгружает данные категории через LEFT JOIN, чтобы у каждого товара были доступны
+    category_name и category_slug. Может фильтровать товары по slug категории и
+    поисковой строке, сортировать по разрешённым полям и скрывать товары со статусом
+    "hidden" для клиентской части сайта. Если include_hidden=True, возвращает все
+    товары, что используется в админке.
+    """
     conn = get_db_connection()
     query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
             FROM products
@@ -171,6 +171,15 @@ category_name и category_slug. Может фильтровать товары �
     if search_query:
         condition.append("(products.name LIKE ? OR products.description LIKE ?)")
         params.extend([f"%{search_query}%", f"%{search_query}%"])
+        
+    allowed_statuses = {'available', 'reserved', 'sold', 'hidden'}
+    status = status.strip().lower()
+    if status not in allowed_statuses:
+        status = ''
+        
+    if status:
+        condition.append('products.status = ?')
+        params.append(status)
         
     if condition:
         query += " WHERE " + " AND ".join(condition)
@@ -370,7 +379,7 @@ def get_product_with_category(product_id):
         """, (product_id,)).fetchone()
     conn.close()
     return product
-    
+
     
 def delete_product(product_id):
     """
@@ -499,11 +508,11 @@ def get_admin_stats():
 
 def create_category(name, slug, description):
     """
-	Создаёт новую категорию в базе данных.
+    Создаёт новую категорию в базе данных.
 
-	Принимает название, slug и описание категории, добавляет новую запись
-	в таблицу categories и сохраняет изменения.
-	"""
+    Принимает название, slug и описание категории, добавляет новую запись
+    в таблицу categories и сохраняет изменения.
+    """
     conn = get_db_connection()
     conn.execute('INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)',
                  (name, slug, description))
@@ -513,12 +522,12 @@ def create_category(name, slug, description):
 
 def delete_category(category_id):
     """
-	Удаляет категорию из базы данных, если к ней не привязаны товары.
+    Удаляет категорию из базы данных, если к ней не привязаны товары.
 
-	Сначала считает количество товаров с указанным category_id.
-	Если таких товаров нет, удаляет категорию и возвращает True.
-	Если в категории есть товары, не удаляет категорию и возвращает False.
-	"""
+    Сначала считает количество товаров с указанным category_id.
+    Если таких товаров нет, удаляет категорию и возвращает True.
+    Если в категории есть товары, не удаляет категорию и возвращает False.
+    """
     conn = get_db_connection()
     products_count = conn.execute('''SELECT COUNT(*) FROM products WHERE products.category_id = ?''', (category_id,)).fetchone()[0]
     is_deleted = False
@@ -532,11 +541,11 @@ def delete_category(category_id):
 
 def update_category(name, new_slug, description, slug):
     """
-	Обновляет данные существующей категории.
+    Обновляет данные существующей категории.
 
-	Находит категорию по её текущему slug и обновляет название, slug
-	и описание. Используется при редактировании категории в админке.
-	"""
+    Находит категорию по её текущему slug и обновляет название, slug
+    и описание. Используется при редактировании категории в админке.
+    """
     conn = get_db_connection()
     conn.execute(''' UPDATE categories
                  SET name = ?, slug = ?, description = ?

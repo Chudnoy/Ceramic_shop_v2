@@ -104,7 +104,7 @@ def admin_products():
     """
 Показывает список товаров в админке с фильтрацией, поиском и сортировкой.
 
-Считывает параметры category, sort_by, order и q из query string. Проверяет
+Считывает параметры category, sort_by, order и q, query string и status. Проверяет
 существование выбранной категории, получает список товаров с include_hidden=True,
 чтобы админ видел все товары, включая скрытые, и передаёт данные в шаблон.
 """
@@ -112,6 +112,7 @@ def admin_products():
     sort_by = request.args.get('sort_by', 'name')
     order = request.args.get('order', 'ASC').upper()
     search_query = request.args.get('q', '').strip()
+    status = request.args.get('status', '').strip().lower()
 
     categories = get_all_categories()
 
@@ -123,7 +124,16 @@ def admin_products():
             flash('Категория не найдена', 'error')
             return redirect(url_for('admin.admin_products'))
         
-    products = get_all_products(category_slug, sort_by, order, search_query, include_hidden=True)
+    if status and status not in PRODUCT_STATUSES:
+        flash('Некорректный статус товара', 'error')
+        return redirect(url_for('admin.admin_products'))
+        
+    products = get_all_products(category_slug=category_slug,
+                                sort_by=sort_by,
+                                order=order,
+                                search_query=search_query,
+                                status=status,
+                                include_hidden=True)
         
     return render_template("admin/products.html",
                            products=products,
@@ -132,6 +142,7 @@ def admin_products():
                            current_category=current_category,
                            current_sort=sort_by,
                            current_order=order,
+                           current_status=status,
                            search_query=search_query,
                            product_statuses=PRODUCT_STATUSES)
 
@@ -349,11 +360,11 @@ def new_product():
 @admin_bp.route('/admin/categories')
 def admin_categories():
     """
-	Показывает список категорий в админке.
+    Показывает список категорий в админке.
 
-	Загружает категории из базы данных и передаёт их в шаблон
-	для отображения администратору.
-	"""
+    Загружает категории из базы данных и передаёт их в шаблон
+    для отображения администратору.
+    """
     categories = get_all_categories_with_product_count()
     return render_template('admin/categories.html', categories=categories)
 
@@ -361,13 +372,13 @@ def admin_categories():
 @admin_bp.route('/admin/categories/new', methods=['GET', 'POST'])
 def new_category_route():
     """
-	Обрабатывает создание новой категории в админке.
+    Обрабатывает создание новой категории в админке.
 
-	При GET-запросе показывает пустую форму создания категории.
-	При POST-запросе обрабатывает данные формы, валидирует название, slug
-	и описание, проверяет уникальность slug, создаёт категорию в базе данных
-	и возвращает администратора к списку категорий.
-	"""
+    При GET-запросе показывает пустую форму создания категории.
+    При POST-запросе обрабатывает данные формы, валидирует название, slug
+    и описание, проверяет уникальность slug, создаёт категорию в базе данных
+    и возвращает администратора к списку категорий.
+    """
     if request.method == 'POST':
         is_valid, error_message, data = process_category_form(request.form)
         
@@ -396,16 +407,16 @@ def new_category_route():
 @admin_bp.route('/admin/categories/edit/<slug>', methods=['GET', 'POST'])
 def edit_category_route(slug):
     """
-	Обрабатывает редактирование категории в админке.
+    Обрабатывает редактирование категории в админке.
 
-	Находит категорию по текущему slug. Если категория не найдена,
-	перенаправляет администратора к списку категорий.
+    Находит категорию по текущему slug. Если категория не найдена,
+    перенаправляет администратора к списку категорий.
 
-	При GET-запросе показывает форму редактирования с текущими данными категории.
-	При POST-запросе валидирует данные формы, проверяет уникальность нового slug
-	при его изменении, обновляет категорию в базе данных и возвращает
-	администратора к списку категорий.
-	"""
+    При GET-запросе показывает форму редактирования с текущими данными категории.
+    При POST-запросе валидирует данные формы, проверяет уникальность нового slug
+    при его изменении, обновляет категорию в базе данных и возвращает
+    администратора к списку категорий.
+    """
     category = get_category_by_slug(slug)
 
     if not category:
@@ -439,13 +450,13 @@ def edit_category_route(slug):
 @admin_bp.route('/admin/categories/delete/<slug>', methods=['POST'])
 def delete_category_route(slug):
     """
-	Обрабатывает удаление категории из админки.
+    Обрабатывает удаление категории из админки.
 
-	Находит категорию по slug и пытается удалить её из базы данных.
-	Категория удаляется только в том случае, если к ней не привязаны товары.
-	После операции показывает администратору сообщение о результате и возвращает
-	его к списку категорий.
-	"""
+    Находит категорию по slug и пытается удалить её из базы данных.
+    Категория удаляется только в том случае, если к ней не привязаны товары.
+    После операции показывает администратору сообщение о результате и возвращает
+    его к списку категорий.
+    """
     category = get_category_by_slug(slug)
     
     if category:

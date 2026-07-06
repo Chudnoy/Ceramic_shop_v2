@@ -26,13 +26,20 @@
             <option value="{{category.slug}}" {% if category_slug == category.slug %}selected{% endif %}>{{category.name}}</option>
         {% endfor %}
     </select>
+	<select name="status" id="status">
+		<option value="">Все статусы</option>
+		{% for status_key, status_label in product_statuses.items() %}
+			<option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>{{ status_label }}</option>
+		{% endfor %}
+	</select>
     <button type="submit">Подтвердить</button>
     {% if search_query %}
             <a href="{{ url_for('admin.admin_products', category=category_slug, 
-        sort_by=current_sort, order=current_order)}}" class="admin-reset-link">
+        sort_by=current_sort, order=current_order, status=current_status)}}" class="admin-reset-link">
             Сбросить поиск
             </a>
     {% endif %}
+	<a href="{{ url_for('admin.admin_products')}}" class="admin-reset-link">Сбросить все фильтры</a>
 </form>
 
 {% if products %}
@@ -67,7 +74,7 @@
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |
-                    <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар')">
+                    <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="admin-link-button">Удалить</button>
                     </form>
@@ -79,12 +86,14 @@
 {% else %}
     <p class="empty-message">
         {% if search_query %}
-            По запросу {{ search_query }} ничего не найдено
-        {% elif current_category %}
-            В этой категории пока нет товаров
-        {% else %}
-            Товаров пока нет
-        {% endif %}
+    		По запросу {{ search_query }} ничего не найдено
+		{% elif current_status %}
+    		Нет товаров с выбранным статусом
+		{% elif current_category %}
+    		В этой категории пока нет товаров
+		{% else %}
+    		Товаров пока нет
+		{% endif %}
     </p>
 {% endif %}
 {% endblock %}
