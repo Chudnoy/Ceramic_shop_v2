@@ -14,6 +14,16 @@
         <label for="description">Описание</label>
         <textarea name="description" id="description" rows="4">{{ product.description }}</textarea>
     </div>
+    
+    <div class="admin-form-group">
+        <label for="materials">Материалы</label>
+        <input type="text" name="materials" id="materials" value="{{ product.materials }}">
+    </div>
+    
+    <div class="admin-form-group">
+        <label for="year">Год изготовления</label>
+        <input type="number" name="year" id="year" value="{{ product.year }}">
+    </div>
 
     <div class="admin-form-group">
         <label for="price">Цена</label>

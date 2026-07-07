@@ -49,6 +49,8 @@
                 <th>Изображение</th>
                 <th>Название</th>
                 <th>Категория</th>
+                <th>Год изготовления</th>
+                <th>Материалы</th>
                 <th>Цена</th>
                 <th>Статус</th>
                 <th>Действия</th>
@@ -65,6 +67,16 @@
                 </td>
                 <td>{{ product.name }}</td>
                 <td>{{ product.category_name if product.category_name else '—' }}</td>
+                <td>{{ product.year if product.year else "—" }}</td>
+                <td>
+                    {% if product.materials% }
+                        {% for item in product.materials.split(', ') %}
+                            {{ loop.index }}. {{ item }}<br>
+                        {% endfor %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
                 <td>{{ product.price }} руб.</td>
                 <td>
                     <span class="product-status product-status-{{product.status}}">

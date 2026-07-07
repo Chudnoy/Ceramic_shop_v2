@@ -28,7 +28,7 @@ def validate_review(name, rating_str, comment):
     return True, "", {"name": name, "rating": rating, "comment": comment}
     
     
-def validate_product(name, price, description, category_id):
+def validate_product(name, price, description, category_id, year, materials):
     """
 Валидирует основные данные товара.
 
@@ -36,9 +36,15 @@ def validate_product(name, price, description, category_id):
 число и проверяет корректность category_id. Возвращает флаг успеха, сообщение
 об ошибке и очищенные данные товара без статуса.
 """
+    materials = materials.strip()
+    if not materials:
+        return False, "Материалы обязательны для заполнения", {}
+    
+    materials = ", ".join([material.strip() for material in materials.split(",") if materials.strip()])
+
     name = name.strip()
     if not name:
-        return False, "Имя обязательно для заполнения", {}
+        return False, "Название обязательно для заполнения", {}
         
     description = description.strip()
     if not description:
@@ -50,13 +56,20 @@ def validate_product(name, price, description, category_id):
             raise ValueError
     except (TypeError, ValueError):
         return False, "Цена должна быть положительным числом", {}
+        
+    try:
+        year = int(year)
+        if year < 1990 or year > 2100:
+            raise ValueError
+    except (TypeError, ValueError):
+        return False, "Введите корректный год", {}
     
     try:
         category_id = int(category_id)
     except (TypeError, ValueError):
         return False, "Некорректный ID категории", {}
         
-    return True, "", {"name": name, "price": price, "description": description, "category_id": category_id}
+    return True, "", {"name": name, "price": price, "description": description, "category_id": category_id, "year": year, "materials": materials}
 
 
 def is_valid_slug(s):

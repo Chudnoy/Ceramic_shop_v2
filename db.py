@@ -35,6 +35,31 @@ def ensure_product_status_column():
     conn.close()
     
     
+def ensure_product_year_column():
+    conn = get_db_connection()
+    columns = conn.execute("PRAGMA table_info(products)").fetchall()
+    column_names = [column["name"] for column in columns]
+    
+    if "year" not in column_names:
+        conn.execute("ALTER TABLE products ADD COLUMN year INTEGER")
+        conn.commit()
+    
+    conn.close()
+    
+    
+def ensure_product_materials_column():
+    conn = get_db_connection()
+    columns = conn.execute("PRAGMA table_info(products)").fetchall()
+    column_names = [column["name"] for column in columns]
+    
+    if "materials" not in column_names:
+        conn.execute("ALTER TABLE products ADD COLUMN materials TEXT NOT NULL DEFAULT 'Каменная масса'")
+        conn.commit()
+        
+    conn.close()
+    
+    
+    
 def init_db():
     """
 Создаёт основные таблицы приложения и заполняет базу стартовыми данными.
@@ -112,6 +137,8 @@ def init_db():
     conn.close()
     
     ensure_product_status_column()
+    ensure_product_year_column()
+    ensure_product_materials_column()
     
     
 def get_reviews_by_product(product_id):
@@ -394,7 +421,7 @@ def delete_product(product_id):
     conn.close()
     
     
-def update_product(product_id, name, price, description, img_path, category_id, status):
+def update_product(product_id, name, price, description, img_path, category_id, status, year, materials):
     """
 Обновляет данные существующего товара.
 
@@ -404,14 +431,14 @@ def update_product(product_id, name, price, description, img_path, category_id, 
     conn = get_db_connection()
     conn.execute("""
     UPDATE products
-    SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?
+    SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?
     WHERE id = ?
-    """, (name, description, price, category_id, img_path, status, product_id))
+    """, (name, description, price, category_id, img_path, status, year, materials, product_id))
     conn.commit()
     conn.close()
     
     
-def create_product(name, price, description, img_path, category_id, status):
+def create_product(name, price, description, img_path, category_id, status, year, materials):
     """
 Создаёт новый товар в таблице products.
 
@@ -421,9 +448,9 @@ def create_product(name, price, description, img_path, category_id, status):
 """
     conn = get_db_connection()
     conn.execute("""
-    INSERT INTO products (id, name, description, price, img, category_id, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-    (str(uuid.uuid4()), name, description, price, img_path, category_id, status))
+    INSERT INTO products (id, name, description, price, img, category_id, status, year, materials)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+    (str(uuid.uuid4()), name, description, price, img_path, category_id, status, year, materials))
     conn.commit()
     conn.close()
     

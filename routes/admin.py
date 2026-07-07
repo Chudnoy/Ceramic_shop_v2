@@ -134,7 +134,8 @@ def admin_products():
                                 search_query=search_query,
                                 status=status,
                                 include_hidden=True)
-        
+    
+    #materials = products["materials"].split(", ")
     return render_template("admin/products.html",
                            products=products,
                            categories=categories,
@@ -301,7 +302,7 @@ def edit_product(product_id):
         else:
             data['img'] = product['img']
         
-        update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"])
+        update_product(product_id, data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"], data["year"], data["materials"])
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))
@@ -342,12 +343,12 @@ def new_product():
 
         data['img'] = image_path
             
-        create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"])
+        create_product(data["name"], data["price"], data["description"], data["img"], data["category_id"], data["status"], data["year"], data["materials"])
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))
         
-    empty_product = {"name": "", "description": "", "price": "", "category_id": None, "img": "", "status": "available"}
+    empty_product = {"name": "", "description": "", "price": "", "category_id": None, "img": "", "status": "available", "year": "", "materials": "Каменная масса"}
     
     return render_template("admin/product_form.html",
                            product=empty_product,

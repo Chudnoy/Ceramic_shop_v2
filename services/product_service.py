@@ -22,11 +22,13 @@ def process_product_form(form):
     price = form.get("price", 0)
     category_id = form.get("category_id")
     status = form.get("status", "available")
+    year = form.get("year", 0)
+    materials = form.get("materials", "")
     
     if status not in PRODUCT_STATUSES:
         return False, "Некорректный статус товара", None
         
-    is_valid, error_message, cleaned_data = validate_product(name, price, description, category_id)
+    is_valid, error_message, cleaned_data = validate_product(name, price, description, category_id, year, materials)
     
     if not is_valid:
         return False, error_message, None
