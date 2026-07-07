@@ -69,7 +69,7 @@
                 <td>{{ product.category_name if product.category_name else '—' }}</td>
                 <td>{{ product.year if product.year else "—" }}</td>
                 <td>
-                    {% if product.materials% }
+                    {% if product.materials %}
                         {% for item in product.materials.split(', ') %}
                             {{ loop.index }}. {{ item }}<br>
                         {% endfor %}

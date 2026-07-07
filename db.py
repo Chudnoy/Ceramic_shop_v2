@@ -86,6 +86,8 @@ def init_db():
     status TEXT NOT NULL DEFAULT 'available',
     img TEXT,
     category_id INTEGER,
+    year INTEGER,
+    materials TEXT NOT NULL DEFAULT 'Каменная масса',
     FOREIGN KEY (category_id) REFERENCES categories(id)
     )""")
     
@@ -126,13 +128,13 @@ def init_db():
     
     if cursor.fetchone()[0] == 0:
         products = [
-        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpeg", 1),
-        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpeg", 1),
-        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpeg", 2),
-        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpeg", 2),
-        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpeg", 3)
+        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpeg", 1, 2025, "Каменная масса, глазури"),
+        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpeg", 1, 2025, "Каменная масса, глазури"),
+        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpeg", 2, 2025, "Каменная масса, глазури"),
+        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpeg", 2, 2025, "Каменная масса, глазури"),
+        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpeg", 3, 2025, "Каменная масса, глазури")
         ]
-        cursor.executemany("INSERT INTO products (id, name, description, price, img, category_id) VALUES (?, ?, ?, ?, ?, ?)", products)
+        cursor.executemany("INSERT INTO products (id, name, description, price, img, category_id, year, materials) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", products)
     conn.commit()
     conn.close()
     
