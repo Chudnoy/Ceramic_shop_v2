@@ -5,8 +5,29 @@ PRODUCT_STATUSES = {
 "available": "В наличии",
 "reserved": "Зарезервировано",
 "sold": "Продано",
-"hidden": "Скрыт"
 }
+
+
+def get_product_cart_unavailable_reason(product):
+    if not product:
+        return "Работа не найдена"
+        
+    if product["is_visible"] != 0:
+        return "Эта работа сейчас не опубликована"
+        
+    if product["is_for_sale"] != 0:
+        return "Эта работа не предназначена для продажи"
+        
+    if product["status"] == "reserved":
+        return "Эта работа уже зарезервирована"
+        
+    if product["status"] == "sold":
+        return "Эта работа уже продана"
+    
+    if product["status"] != "available":
+        return "Эта работа сейчас недоступна для продажи"
+        
+    return ""
 
 
 def process_product_form(form):

@@ -133,7 +133,7 @@ def admin_products():
                                 order=order,
                                 search_query=search_query,
                                 status=status,
-                                include_hidden=True)
+                                only_visible=False)
     
     #materials = products["materials"].split(", ")
     return render_template("admin/products.html",

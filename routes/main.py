@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
 from services.order_service import process_checkout_form, build_order_items
-from services.product_service import PRODUCT_STATUSES
+from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
 from validation import validate_review
 import uuid
 
@@ -82,12 +82,13 @@ def product_page(product_id):
 @main_bp.route("/add_to_cart/<product_id>", methods=["POST"])
 def add_to_cart_route(product_id):
     """
-Обрабатывает добавление товара в корзину.
+Обрабатывает добавление работы в корзину.
 
-Проверяет количество из формы, существование товара и его статус. Добавлять в
-корзину можно только товары со статусом "available". Поддерживает обычный POST
-с redirect и AJAX-запросы с JSON-ответом, чтобы корзина могла обновляться без
-перезагрузки страницы.
+Проверяет количество из формы, существование работы, публичную видимость,
+возможность продажи и статус. Добавлять в корзину можно только опубликованные
+работы, предназначенные для продажи и имеющие статус "available".
+
+Поддерживает обычный POST с redirect и AJAX-запросы с JSON-ответом.
 """
     quantity_str = request.form.get("quantity", "1")
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -100,37 +101,31 @@ def add_to_cart_route(product_id):
         if is_ajax:
             return jsonify({
             "success": False,
-            "message": "Количество должно быть положительным числом"}), 400
+            "message": "Количество должно быть положительным числом",
+            "cart_count": get_cart_count(session)
+            }), 400
             
-        return "Количество должно быть положительным числом", 400
+        flash("Количество должно быть положительным числом", "error")
+        return redirect(url_for("main.product_page", product_id=product_id))
         
     product = get_product_by_id(product_id)
         
-    if not product:
+    unavailable_reason = get_product_cart_unavailable_reason(product)
+    
+    if unavailable_reason:
         if is_ajax:
             return jsonify({
             "success": False,
-            "message": "Товар не найден"
-            }), 404
-        
-        flash("Товар не найден", "error")
-        return redirect(url_for("main.catalog"))
-        
-    if product["status"] != "available":
-        unavailable_messages = {
-        "reserved": "Этот товар уже зарезервирован",
-        "sold": "Этот товар уже продан",
-        "hidden": "Товар не найден"
-        }
-        message = unavailable_messages.get(product["status"], "Этот товар сейчас недоступен для покупки")
-        if is_ajax:
-            return jsonify({
-            "success": False,
-            "message": message
+            "message": unavailable_reason,
+            "cart_count": get_cart_count(session)
             }), 409
+        
+        flash(unavailable_reason, "error")
+        
+        if not product:
+            return redirect(url_for("main.catalog"))
             
-        flash("Этот товар сейчас недоступен для покупки", "error")
-        return redirect(url_for("main.catalog"))
+        return redirect(url_for("main.product_page", product_id=product_id))
         
     new_qty = add_to_cart_serv(session, product_id, quantity)
     cart_count = get_cart_count(session)
@@ -138,12 +133,12 @@ def add_to_cart_route(product_id):
     if is_ajax:
         return jsonify({
             'success': True,
-            'message': 'Товар добавлен в корзину',
+            'message': 'Работа добавлена в корзину',
             'cart_count': cart_count
         })
     
-    flash(f"Товар «{product['name']}» добавлен в корзину (количество: {new_qty})", "success")
-    return redirect(url_for("main.catalog"))
+    flash(f"Работа «{product['name']}» добавлена в корзину (количество: {new_qty})", "success")
+    return redirect(url_for("main.product_page", product_id=product_id))
     
     
 @main_bp.route("/cart")

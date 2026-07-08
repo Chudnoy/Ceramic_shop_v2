@@ -152,57 +152,72 @@ def add_review_db(product_id, name, rating, comment):
     conn.close()
     
     
-def get_all_products(category_slug=None, sort_by='name', order='ASC', search_query="", status='', include_hidden=False):
+def get_all_products(
+    category_slug=None,
+    sort_by="name",
+    order="ASC",
+    search_query="",
+    status="",
+    only_visible=True
+):
     """
-    Возвращает список товаров с учётом категории, поиска, сортировки и видимости.
+    Возвращает список работ с учётом категории, поиска, сортировки,
+    статуса и публичной видимости.
 
-    Подгружает данные категории через LEFT JOIN, чтобы у каждого товара были доступны
-    category_name и category_slug. Может фильтровать товары по slug категории и
-    поисковой строке, сортировать по разрешённым полям и скрывать товары со статусом
-    "hidden" для клиентской части сайта. Если include_hidden=True, возвращает все
-    товары, что используется в админке.
+    only_visible=True используется для публичной части сайта:
+    показываются только опубликованные работы.
+
+    only_visible=False используется в админке:
+    показываются все работы, включая скрытые с сайта.
     """
     conn = get_db_connection()
-    query = """SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
-            FROM products
-            LEFT JOIN categories
-            ON products.category_id = categories.id"""
-    
+
+    query = """
+    SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
+    FROM products
+    LEFT JOIN categories
+    ON products.category_id = categories.id
+    """
+
     params = []
-    condition = []
-    
-    if not include_hidden:
-        condition.append("products.status != ?")
-        params.append("hidden")
-    
+    conditions = []
+
+    if only_visible:
+        conditions.append("products.is_visible = 1")
+
     if category_slug:
-        condition.append("categories.slug = ?")
+        conditions.append("categories.slug = ?")
         params.append(category_slug)
-        
+
     if search_query:
-        condition.append("(products.name LIKE ? OR products.description LIKE ?)")
+        conditions.append("(products.name LIKE ? OR products.description LIKE ?)")
         params.extend([f"%{search_query}%", f"%{search_query}%"])
-        
-    allowed_statuses = {'available', 'reserved', 'sold', 'hidden'}
+
+    allowed_statuses = {"available", "reserved", "sold"}
     status = status.strip().lower()
-    if status not in allowed_statuses:
-        status = ''
-        
-    if status:
-        condition.append('products.status = ?')
+
+    if status in allowed_statuses:
+        conditions.append("products.status = ?")
         params.append(status)
-        
-    if condition:
-        query += " WHERE " + " AND ".join(condition)
-    
-    allowed_sort_fields = {'name': 'products.name', 'price': 'products.price'}
-    sort_field = allowed_sort_fields.get(sort_by, 'products.name')
-    allowed_sort_orders = ('ASC', 'DESC')
-    order = order.upper() if order.upper() in allowed_sort_orders else 'ASC'
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    allowed_sort_fields = {
+        "name": "products.name",
+        "price": "products.price"
+    }
+
+    sort_field = allowed_sort_fields.get(sort_by, "products.name")
+
+    allowed_sort_orders = ("ASC", "DESC")
+    order = order.upper() if order.upper() in allowed_sort_orders else "ASC"
 
     query += f" ORDER BY {sort_field} {order}"
+
     products = conn.execute(query, params).fetchall()
     conn.close()
+
     return products
     
     

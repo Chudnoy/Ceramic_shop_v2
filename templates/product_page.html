@@ -24,7 +24,7 @@
 					{{product_statuses.get(product.status, product.status)}}
 				</p>
 			{% endif %}
-			{% if product.status == 'available' %}
+			{% if product.is_visible and product.is_for_sale and product.status == 'available' %}
 				<form action="{{ url_for('main.add_to_cart_route', product_id=product.id)}}" method="POST" class="add-to-cart-form">
 					<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 					<div class="form-group form-group-inline">
