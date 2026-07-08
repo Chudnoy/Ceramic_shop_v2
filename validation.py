@@ -28,7 +28,7 @@ def validate_review(name, rating_str, comment):
     return True, "", {"name": name, "rating": rating, "comment": comment}
     
     
-def validate_product(name, price, description, category_id, year, materials):
+def validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale):
     """
 Валидирует основные данные товара.
 
@@ -40,7 +40,7 @@ def validate_product(name, price, description, category_id, year, materials):
     if not materials:
         return False, "Материалы обязательны для заполнения", {}
     
-    materials = ", ".join([material.strip() for material in materials.split(",") if materials.strip()])
+    materials = ", ".join([material.strip() for material in materials.split(",") if material.strip()])
 
     name = name.strip()
     if not name:
@@ -65,35 +65,56 @@ def validate_product(name, price, description, category_id, year, materials):
         return False, "Введите корректный год", {}
     
     try:
+        is_visible = int(is_visible)
+        if is_visible < 0 or is_visible > 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return False, 'Некорректные данные доступности на сайте', {}
+    
+    try:
+        is_for_sale = int(is_for_sale)
+        if is_for_sale < 0 or is_for_sale > 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return False, 'Некорректные данные о возможности продажи', {}
+    
+    try:
         category_id = int(category_id)
     except (TypeError, ValueError):
         return False, "Некорректный ID категории", {}
         
-    return True, "", {"name": name, "price": price, "description": description, "category_id": category_id, "year": year, "materials": materials}
+    return True, "", {"name": name, 
+                      "price": price, 
+                      "description": description, 
+                      "category_id": category_id, 
+                      "year": year, 
+                      "materials": materials, 
+                      'is_visible': is_visible,
+                      'is_for_sale': is_for_sale}
 
 
 def is_valid_slug(s):
     """
-	Проверяет, что slug состоит только из разрешённых символов.
+    Проверяет, что slug состоит только из разрешённых символов.
 
-	Разрешены латинские буквы, цифры и дефис.
-	Возвращает True, если slug соответствует правилу, иначе False.
-	"""
+    Разрешены латинские буквы, цифры и дефис.
+    Возвращает True, если slug соответствует правилу, иначе False.
+    """
     return re.fullmatch(r'^[A-Za-z0-9-]+$', s) is not None
 
 
 def validate_category(name, slug, description):
     """
-	Валидирует данные формы категории.
+    Валидирует данные формы категории.
 
-	Очищает название, slug и описание от лишних пробелов.
-	Проверяет, что название заполнено, а slug заполнен и состоит только
-	из латинских букв, цифр и дефисов. Описание может быть пустым.
+    Очищает название, slug и описание от лишних пробелов.
+    Проверяет, что название заполнено, а slug заполнен и состоит только
+    из латинских букв, цифр и дефисов. Описание может быть пустым.
 
-	Возвращает кортеж:
-	- True, "", cleaned_data — если данные корректны;
-	- False, error_message, None — если данные не прошли проверку.
-	"""
+    Возвращает кортеж:
+    - True, "", cleaned_data — если данные корректны;
+    - False, error_message, None — если данные не прошли проверку.
+    """
     name = name.strip()
     if not name:
         return False, 'Имя обязательно для заполнения', None

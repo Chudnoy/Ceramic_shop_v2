@@ -15,14 +15,7 @@ def get_db_connection():
     return conn
     
     
-def ensure_product_status_column():
-    """
-Проверяет, есть ли в таблице products колонка status, и добавляет её при необходимости.
-
-Функция нужна как простая миграция для уже существующей базы данных. Если проект
-запускается со старой таблицей products, где ещё нет статуса товара, функция
-добавляет колонку status со значением по умолчанию "available".
-"""
+def ensure_product_columns():
     conn = get_db_connection()
     
     columns = conn.execute("PRAGMA table_info(products)").fetchall()
@@ -30,32 +23,21 @@ def ensure_product_status_column():
     
     if "status" not in column_names:
         conn.execute("ALTER TABLE products ADD COLUMN status TEXT NOT NULL DEFAULT 'available'")
-        conn.commit()
-    
-    conn.close()
-    
-    
-def ensure_product_year_column():
-    conn = get_db_connection()
-    columns = conn.execute("PRAGMA table_info(products)").fetchall()
-    column_names = [column["name"] for column in columns]
-    
+        
     if "year" not in column_names:
         conn.execute("ALTER TABLE products ADD COLUMN year INTEGER")
-        conn.commit()
-    
-    conn.close()
-    
-    
-def ensure_product_materials_column():
-    conn = get_db_connection()
-    columns = conn.execute("PRAGMA table_info(products)").fetchall()
-    column_names = [column["name"] for column in columns]
-    
+        
     if "materials" not in column_names:
         conn.execute("ALTER TABLE products ADD COLUMN materials TEXT NOT NULL DEFAULT 'Каменная масса'")
-        conn.commit()
         
+    if 'is_visible' not in column_names:
+        conn.execute('ALTER TABLE products ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 1')
+        
+    if 'is_for_sale' not in column_names:
+        conn.execute('ALTER TABLE products ADD COLUMN is_for_sale INTEGER NOT NULL DEFAULT 1')
+        
+    conn.commit()
+    
     conn.close()
     
     
@@ -88,6 +70,8 @@ def init_db():
     category_id INTEGER,
     year INTEGER,
     materials TEXT NOT NULL DEFAULT 'Каменная масса',
+    is_visible INTEGER NOT NULL DEFAULT 1,
+    is_for_sale INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (category_id) REFERENCES categories(id)
     )""")
     
@@ -138,9 +122,7 @@ def init_db():
     conn.commit()
     conn.close()
     
-    ensure_product_status_column()
-    ensure_product_year_column()
-    ensure_product_materials_column()
+    ensure_product_columns()
     
     
 def get_reviews_by_product(product_id):
@@ -423,7 +405,7 @@ def delete_product(product_id):
     conn.close()
     
     
-def update_product(product_id, name, price, description, img_path, category_id, status, year, materials):
+def update_product(product_id, name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale):
     """
 Обновляет данные существующего товара.
 
@@ -433,14 +415,14 @@ def update_product(product_id, name, price, description, img_path, category_id, 
     conn = get_db_connection()
     conn.execute("""
     UPDATE products
-    SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?
+    SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?, is_visible = ?, is_for_sale = ?
     WHERE id = ?
-    """, (name, description, price, category_id, img_path, status, year, materials, product_id))
+    """, (name, description, price, category_id, img_path, status, year, materials, is_visible, is_for_sale, product_id))
     conn.commit()
     conn.close()
     
     
-def create_product(name, price, description, img_path, category_id, status, year, materials):
+def create_product(name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale):
     """
 Создаёт новый товар в таблице products.
 
@@ -450,9 +432,9 @@ def create_product(name, price, description, img_path, category_id, status, year
 """
     conn = get_db_connection()
     conn.execute("""
-    INSERT INTO products (id, name, description, price, img, category_id, status, year, materials)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-    (str(uuid.uuid4()), name, description, price, img_path, category_id, status, year, materials))
+    INSERT INTO products (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+    (str(uuid.uuid4()), name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale))
     conn.commit()
     conn.close()
     

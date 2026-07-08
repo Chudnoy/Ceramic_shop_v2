@@ -66,6 +66,16 @@
         </select>
     </div>
 
+	<div class="admin-form-group admin-checkbox-group">
+		<input type="checkbox" name="is_visible" id="is_visible" value="1" {% if product.is_visible %}checked{% endif %}>
+		<label for="is_visible">Доступен на сайте</label>
+	</div>
+
+	<div class="admin-form-group admin-checkbox-group">
+		<input type="checkbox" name="is_for_sale" id="is_for_sale" value="1" {% if product.is_for_sale %}checked{% endif %}>
+		<label for="is_for_sale">Для продажи</label>
+	</div>
+
     <button type="submit" class="admin-button">{{ submit_text }}</button>
 </form>
 {% endblock %}

@@ -53,6 +53,8 @@
                 <th>Материалы</th>
                 <th>Цена</th>
                 <th>Статус</th>
+				<th>Публикация</th>
+				<th>Продажа</th>
                 <th>Действия</th>
             </tr>
 
@@ -83,6 +85,12 @@
                         {{ product_statuses.get(product.status, product.status) }}
                     </span>
                 </td>
+				<td>
+					{% if product.is_visible %}Отображается{% else %}Не отображается{% endif %}
+				</td>
+				<td>
+					{% if product.is_for_sale %}Для продажи{% else %}Не продаётся{% endif %}
+				</td>
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |
