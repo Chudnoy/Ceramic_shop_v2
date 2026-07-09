@@ -528,11 +528,6 @@
     color: #383d41;
 }
 
-.product-status-hidden {
-    background: #f8d7da;
-    color: #721c24;
-}
-
 .admin-checkbox-group {
 	display: flex;
 	align-items: center;
@@ -545,6 +540,7 @@
 	margin: 0;
 	flex: 0 0 auto;
 	cursor: pointer;
+	padding: 0#42445A;
 }
 
 .admin-checkbox-group label {

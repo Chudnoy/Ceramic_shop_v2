@@ -19,7 +19,7 @@ from db import (get_all_products,
                 get_all_tags,
                 get_tags_for_product,
                 update_product_tags)
-from services.product_service import process_product_form, PRODUCT_STATUSES
+from services.product_service import process_product_form, PRODUCT_STATUSES, process_product_tag_ids
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
 from services.category_service import process_category_form
@@ -292,6 +292,12 @@ def edit_product(product_id):
         if not is_valid:
             flash(error_message, "error")
             return redirect(url_for("admin.edit_product", product_id=product_id))
+            
+        is_valid_tags, tag_error_messages, cleaned_tag_ids = process_product_tag_ids(request.form)
+        
+        if not is_valid_tags:
+            flash(tag_error_messages, "error")
+            return redirect(url_for("admin.edit_product", product_id=product_id))
         
         file = request.files.get('img')
         image_success, image_error, image_path = save_image(file)
@@ -316,9 +322,8 @@ def edit_product(product_id):
                        data["materials"],
                        data['is_visible'],
                        data['is_for_sale'])
-                       
-        tag_ids = request.form.getlist("tag_ids")
-        update_product_tags(product_id, tag_ids)
+            
+        update_product_tags(product_id, cleaned_tag_ids)
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))
@@ -355,6 +360,12 @@ def new_product():
         if not is_valid:
             flash(error_message, "error")
             return redirect(url_for("admin.new_product"))
+            
+        is_valid_tags, tag_error_messages, cleaned_tag_ids = process_product_tag_ids(request.form)
+        
+        if not is_valid_tags:
+            flash(tag_error_messages, "error")
+            return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
         image_success, image_error, image_path = save_image(file)
@@ -375,9 +386,8 @@ def new_product():
                        data["materials"], 
                        data['is_visible'],
                        data['is_for_sale'])
-                       
-        tag_ids = request.form.getlist("tag_ids")
-        update_product_tags(product_id, tag_ids)
+            
+        update_product_tags(product_id, cleaned_tag_ids)
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))

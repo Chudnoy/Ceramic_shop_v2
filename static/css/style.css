@@ -167,6 +167,36 @@ select {
 	padding: 28px 0;
 }
 
+.flash-messages {
+    margin-bottom: 32px;
+}
+
+.flash-message {
+    padding: 12px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.flash-message + .flash-message {
+    margin-top: 10px;
+}
+
+.flash-message--success {
+    border-color: rgba(72, 118, 82, 0.28);
+}
+
+.flash-message--error {
+    border-color: rgba(150, 69, 54, 0.32);
+}
+
+.flash-message--info {
+    border-color: rgba(82, 95, 120, 0.28);
+}
+
 
 /* ============================================
    4. HOME HERO

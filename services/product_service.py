@@ -1,4 +1,5 @@
 from validation import validate_product
+from db import  get_all_tags
 
 
 PRODUCT_STATUSES = {
@@ -59,3 +60,21 @@ def process_product_form(form):
     cleaned_data["status"] = status
         
     return True, "", cleaned_data
+    
+    
+def process_product_tag_ids(form):
+    tag_ids = form.getlist("tag_ids")
+    
+    cleaned_tag_ids = []
+    for tag_id in tag_ids:
+        try:
+            cleaned_tag_ids.append(int(tag_id))
+        except ValueError:
+            return False, "ID тега должно быть числом", []
+            
+    existing_ids = {tag["id"] for tag in get_all_tags()}
+    
+    if not all(tag_id in existing_ids for tag_id in cleaned_tag_ids):
+        return False, "Использованы несуществующие ID тегов", []
+            
+    return True, "", cleaned_tag_ids
