@@ -46,10 +46,12 @@ def init_db():
     """
 Создаёт основные таблицы приложения и заполняет базу стартовыми данными.
 
-Создаёт таблицы categories, products, reviews и orders, если они ещё не существуют.
-Если таблицы категорий или товаров пустые, добавляет начальные категории и товары.
-После основной инициализации запускает миграцию ensure_product_status_column(),
-чтобы существующая база тоже получила колонку статуса товара.
+Создаёт таблицы categories, products, reviews, orders, tags и product_tags,
+если они ещё не существуют. Если таблицы категорий, тегов или работ пустые,
+добавляет начальные данные.
+
+После основной инициализации запускает ensure_product_columns(),
+чтобы существующая база получила новые колонки products.
 """
     conn = get_db_connection()
     
@@ -96,33 +98,148 @@ def init_db():
                  status TEXT NOT NULL DEFAULT 'new',
                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                  )""")
+                 
+    conn.execute("""CREATE TABLE IF NOT EXISTS tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL UNIQUE
+    )""")
+    
+    conn.execute("""CREATE TABLE IF NOT EXISTS product_tags (
+    product_id TEXT NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (product_id, tag_id),
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
+    )""")
     
     cursor = conn.execute("SELECT COUNT(*) FROM categories")
     if cursor.fetchone()[0] == 0:
         categories = [
-        ("Вазы", "vases", "Красивые вазы ручной работы"),
-        ("Кружки", "mugs", "Уютные кружки для чая и кофе"),
+        ("Вазы", "vases", "Вазы утилитарные "),
+        ("Кружки", "mugs", "Кружки для разных целей"),
         ("Тарелки", "plates", "Авторские тарелки для сервировки"),
         ("Чашки", "cups", "Изысканные чашки для особых моментов"),
-        ("Статуэтки", "figurines", "Интерьерные статуэтки разных размеров")
+        ("Объекты", "objects", "Объекты для интерьера")
         ]
         conn.executemany("INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)", categories)
+        
+    cursor = conn.execute("SELECT COUNT(*) FROM tags")
+    
+    if cursor.fetchone()[0] == 0:
+        tags = [
+        ("Дом", "home"),
+        ("Память", "memory"),
+        ("Архитектура", "architecture"),
+        ("Разрушение", "destruction"),
+        ("Хрупкость", "fragility")
+        ]
+        
+        conn.executemany("INSERT INTO tags (name, slug) VALUES (?, ?)", tags)
     
     cursor = conn.execute("SELECT COUNT(*) FROM products")
     
     if cursor.fetchone()[0] == 0:
         products = [
-        (str(uuid.uuid4()), "Ваза голубая", "Нежная голубая ваза", 3000, "/static/img/vase.jpeg", 1, 2025, "Каменная масса, глазури"),
-        (str(uuid.uuid4()), "Ваза белая", "Утонченная белая ваза", 5000, "/static/img/white_vase.jpeg", 1, 2025, "Каменная масса, глазури"),
-        (str(uuid.uuid4()), "Кружка розовая", "Детская кружка с сердечком", 2000, "/static/img/pink_mug.jpeg", 2, 2025, "Каменная масса, глазури"),
-        (str(uuid.uuid4()), "Кружка чёрная", "Строгая черная кружка", 2500, "/static/img/black_mug.jpeg", 2, 2025, "Каменная масса, глазури"),
-        (str(uuid.uuid4()), "Тарелка декоративная", "Тарелка с золотым узором", 4000, "/static/img/plate.jpeg", 3, 2025, "Каменная масса, глазури")
+        (str(uuid.uuid4()), "Башня", "Тема дома красной нитью проходит сквозь всёмоё твочество. Он был разным, в зависимостиот моего состояния и меняющегося во временимира. Сейчас, я вдохновляюсь архитектуройсоветского постмодернизма, так как чувствуюсвязь, между происходящим сейчас итогда.Так я чувствую дом сейчас : какоборонительную башню, сохраняющуюхрупкость гнезда", 30000, "/static/img/tower.jpg", 5, 2025, "Каменная масса, глазури, фарфор"),
+        (str(uuid.uuid4()), "Проект «Дом», Версия 3", "Этот проект — о том, как личное становится общим, а прошлое превращается в часть настоящего. Для меня тема дома всегда была лакмусовой бумажкой. Во времена спокойствия — это убежище, кокон. Во времена перемен — хрупкая раковина. В его стенах, даже воображаемых, можно увидеть и мое собственное состояние, и эхо внешнегомира.", 25000, "/static/img/dom_v3.jpg", 5, 2025, "Каменная масса, фарфор, глазури"),
+        (str(uuid.uuid4()), "Сны Карелии", "Мы привыкли думать, что камни безмолвствуютвеками.Но в каждом изгибе, в каждой прожилке сокрыта тайна природы. Это не подражание, а преображение: мягкая глина застывает в образе вулканической породы, а глазурь хранит память отом, как свет играет на дне лесного озера.Прикоснитесь — и вы почувствуете не холод камня, а тепло, которое глина навсегда сберегла в памяти огня печи.", 15000, "/static/img/dreams_of_karelia.jpg", 1, 2025, "Каменная масса, глазури"),
+        (str(uuid.uuid4()), "Destruction", "Проект посвящен эстетизации разрушенияи попытке навязать хаосу систему и форму.Природные катаклизмы, взрывы бытовогогаза, постепенное тление — все эти силы,уничтожающие архитектуру, находятотражение в керамических объектах, лишьотдаленно напоминающих постройки.", 10000, "/static/img/destruction.jpg", 5, 2025, "Каменная масса, фарфор, глазури"),
+        (str(uuid.uuid4()), "Пасхальный купол", "Объект синтезирует архаичную символику яйца и древнерусской архитектуры. Форма яйца — универсальный архетип зарождения жизни. Венчающая часть в виде купола с нитевидной фактурой отсылает кправославным луковичным главам,символизирующим пламя свечи и небесную сферу. Цветовая гаммаимитирует пигменты народных промыслов, а белая кракелюрная глазурь напоминает глазурь на пасхальном куличе. Этаскульптура — размышление о циклическом бытии: яйцо таит в себе потенциал, купол оберегает — вместе они воплощаютнепрерывное возрождение в хаосе жизни", 17000, "/static/img/easter_dome.jpg", 1, 2025, "Каменная масса, глазури, фарфор")
         ]
-        cursor.executemany("INSERT INTO products (id, name, description, price, img, category_id, year, materials) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", products)
+        conn.executemany("INSERT INTO products (id, name, description, price, img, category_id, year, materials) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", products)
     conn.commit()
     conn.close()
     
     ensure_product_columns()
+    
+    
+def get_all_tags():
+    """
+    Возвращает все теги, отсортированные по названию
+    """
+    conn = get_db_connection()
+    tags = conn.execute("SELECT * FROM tags ORDER BY name").fetchall()
+    conn.close()
+    return tags
+    
+    
+def get_tags_for_product(product_id):
+    """
+    Возвращает теги, связанные с конкретной работой.
+    """
+    conn = get_db_connection()
+    tags = conn.execute("""
+    SELECT tags.*
+    FROM product_tags
+    JOIN tags
+    ON tags.id = product_tags.tag_id
+    WHERE product_tags.product_id = ?
+    ORDER BY tags.name
+    """, (product_id,)).fetchall()
+    
+    conn.close()
+    return tags
+    
+    
+def get_products_by_tag_slug(tag_slug, only_visible=True):
+    """
+    Возвращает работы, связанные с тегом по его slug.
+    """
+    conn = get_db_connection()
+    
+    query = """
+    SELECT products.*
+    FROM tags
+    JOIN product_tags
+    ON tags.id = product_tags.tag_id
+    JOIN products
+    ON product_tags.product_id = products.id
+    WHERE tags.slug = ?
+    """
+    
+    params = [tag_slug]
+    
+    if only_visible:
+        query += " AND products.is_visible = 1"
+        
+    query += " ORDER BY products.name"
+    products = conn.execute(query, params).fetchall()
+    conn.close()
+    return products
+    
+    
+def get_tag_by_slug(tag_slug):
+    conn = get_db_connection()
+    tag = conn.execute("SELECT * FROM tags WHERE slug = ?", (tag_slug,)).fetchone()
+    conn.close()
+    return tag
+    
+    
+def add_tag_to_product(product_id, tag_id):
+    """
+    Связывает работу с тегом
+    """
+    conn = get_db_connection()
+    conn.execute("INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?, ?)", (product_id, tag_id))
+    conn.commit()
+    conn.close()
+    
+    
+def update_product_tags(product_id, tag_ids):
+    """
+    Обновляет набор тегов для работы.
+
+    Сначала удаляет старые связи работы с тегами,
+    затем создаёт новые связи по переданному списку tag_ids.
+    """
+    conn = get_db_connection()
+    conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
+    
+    for tag_id in tag_ids:
+        conn.execute("INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?, ?)", (product_id, tag_id))
+    conn.commit()
+    conn.close()
     
     
 def get_reviews_by_product(product_id):
@@ -246,7 +363,7 @@ id товаров и количество. Если список id пустой
         return []
     conn = get_db_connection()
     placeholders = ", ".join("?" * len(product_ids))
-    query = f"SELECT id, name, description, price, status, img, category_id FROM products WHERE id IN ({placeholders})"
+    query = f"SELECT id, name, description, price, status, img, category_id, year, materials, is_visible, is_for_sale FROM products WHERE id IN ({placeholders})"
     products = conn.execute(query, product_ids).fetchall()
     conn.close()
     return products
@@ -439,19 +556,18 @@ def update_product(product_id, name, price, description, img_path, category_id, 
     
 def create_product(name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale):
     """
-Создаёт новый товар в таблице products.
-
-Генерирует UUID для нового товара и сохраняет название, описание, цену, путь к
-изображению, категорию и статус. Используется в админке после успешной обработки
-формы создания товара.
-"""
+    Создаёт новый товар в таблице products и возвращает id созданной записи.
+    """
+    product_id = str(uuid.uuid4())
     conn = get_db_connection()
     conn.execute("""
     INSERT INTO products (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-    (str(uuid.uuid4()), name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale))
+    (product_id, name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale))
     conn.commit()
     conn.close()
+    
+    return product_id
     
     
 def delete_order(order_id):

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id
+from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id, get_tags_for_product, get_products_by_tag_slug, get_tag_by_slug
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
 from services.order_service import process_checkout_form, build_order_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
@@ -22,61 +22,83 @@ def index():
 @main_bp.route("/catalog")
 def catalog():
     """
-Показывает клиентский каталог товаров.
+    Показывает клиентский каталог работ.
 
-Считывает параметры категории, сортировки и поиска из query string. Получает
-товары через get_all_products без include_hidden, поэтому скрытые товары не
-показываются клиентам. Проверяет существование выбранной категории и передаёт
-товары, категории, текущие фильтры и статусы товаров в шаблон каталога.
-"""
-    category_slug = request.args.get('category')
+    Считывает параметры категории, тега, сортировки и поиска из query string.
+    Если выбран тег, получает работы, связанные с этим тегом. Если тег не выбран,
+    получает работы через get_all_products с учётом категории, поиска и сортировки.
+
+    Скрытые работы не показываются клиентам. Проверяет существование выбранной
+    категории и выбранного тега, затем передаёт работы, категории, текущие фильтры,
+    тег и словарь статусов в шаблон каталога.
+    """
+    category_slug = request.args.get("category")
     sort_by = request.args.get("sort_by", "name")
     order = request.args.get("order", "ASC").upper()
     search_query = request.args.get("q", "").strip()
-    
-    products = get_all_products(category_slug, sort_by, order, search_query)
+    tag_slug = request.args.get("tag", "")
+
     categories = get_all_categories()
 
     current_category = None
-
     if category_slug:
         current_category = get_category_by_slug(category_slug)
         if not current_category:
             flash("Категория не найдена", "error")
-            return redirect(url_for('main.catalog'))
-    
-    return render_template("catalog.html",
-                           products=products,
-                           categories=categories,
-                           current_category=current_category,
-                           current_sort=sort_by,
-                           current_order=order,
-                           category_slug=category_slug,
-                           search_query=search_query, product_statuses=PRODUCT_STATUSES)
+            return redirect(url_for("main.catalog"))
+
+    tag = None
+    if tag_slug:
+        tag = get_tag_by_slug(tag_slug)
+        if not tag:
+            flash("Тег не найден", "error")
+            return redirect(url_for("main.catalog"))
+
+        products = get_products_by_tag_slug(tag_slug)
+    else:
+        products = get_all_products(category_slug, sort_by, order, search_query)
+
+    return render_template(
+        "catalog.html",
+        products=products,
+        tag=tag,
+        categories=categories,
+        current_category=current_category,
+        current_sort=sort_by,
+        current_order=order,
+        current_tag=tag_slug,
+        category_slug=category_slug,
+        search_query=search_query,
+        product_statuses=PRODUCT_STATUSES
+    )
                            
                            
 @main_bp.route('/product/<product_id>')
 def product_page(product_id):
     """
-Показывает страницу отдельного товара.
+Показывает страницу отдельной работы.
 
-Загружает товар вместе с категорией и отзывами. Если товар не найден или имеет
-статус "hidden", перенаправляет пользователя в каталог с сообщением об ошибке.
-Для доступных к просмотру товаров передаёт данные товара, отзывы и словарь
-статусов в шаблон страницы товара.
+Загружает работу вместе с категорией, отзывами и тегами. Если работа не найдена
+или скрыта с публичной части сайта, перенаправляет пользователя в каталог
+с сообщением об ошибке.
+
+Для доступных к просмотру работ передаёт данные работы, отзывы, теги и словарь
+статусов в шаблон страницы работы.
 """
     product = get_product_with_category(product_id)
     
     if not product:
-        flash("Товар не найден", "error")
+        flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         
-    if product["status"] == "hidden":
-        flash("Товар не найден", "error")
+    if product["is_visible"] != 1:
+        flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         
     reviews = get_reviews_by_product(product_id)
-    return render_template("product_page.html", product=product, reviews=reviews, product_statuses=PRODUCT_STATUSES)
+    tags = get_tags_for_product(product_id)
+    
+    return render_template("product_page.html", tags=tags, product=product, reviews=reviews, product_statuses=PRODUCT_STATUSES)
     
     
 @main_bp.route("/add_to_cart/<product_id>", methods=["POST"])
@@ -170,9 +192,9 @@ def remove_unavailable_route():
     removed = remove_unavailable_items(session)
     
     if removed:
-        flash("Недоступные товары удалены", "success")
+        flash("Недоступные работы удалены", "success")
     else:
-        flash("Нет недоступных товаров", "error")
+        flash("Нет недоступных работ", "error")
     
     return redirect(url_for("main.show_cart"))
     
@@ -195,21 +217,21 @@ def remove_from_cart_route(product_id):
         if removed:
             return jsonify({
                 'success': True,
-                'message': 'Товар удалён из корзины',
+                'message': 'Работа удалена из корзины',
                 'cart_count': cart_summary['cart_count'],
                 'total': cart_summary['total']
             })
         return jsonify({
             'success': False,
-            'message': 'Товар не найден в корзине',
+            'message': 'Работа не найдена в корзине',
             'cart_count': cart_summary["cart_count"],
             'total': cart_summary["total"]
         }), 404
 
     if removed:
-        flash("Товар удалён из корзины", "info")
+        flash("Работа удалена из корзины", "info")
     else:
-        flash("Товар не найден в корзине", "error")
+        flash("Работа не найдена в корзине", "error")
     return redirect(url_for("main.show_cart"))
 
 
@@ -226,7 +248,7 @@ def clear_cart_route():
         clear_cart(session)
         flash('Корзина очищена', 'success')
     else:
-        flash('В корзине нет товаров', 'error')
+        flash('В корзине нет работ', 'error')
         
     return redirect(url_for('main.show_cart'))
     
@@ -241,7 +263,7 @@ def add_review(product_id):
 добавления возвращает пользователя на страницу товара.
 """
     if not product_exists(product_id):
-        flash("Товар не найден", "error")
+        flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         
     name = request.form.get("name", "").strip()
@@ -265,10 +287,10 @@ def checkout_form():
     """
 Показывает форму оформления заказа.
 
-Собирает актуальную сводку корзины и пропускает к оформлению только если в корзине
-есть товары, доступные для заказа. Недоступные товары не передаются в checkout.
-Если часть товаров стала недоступна, показывает предупреждение, что они не будут
-включены в заказ.
+Собирает актуальную сводку корзины через build_cart_summary().
+К оформлению передаются только работы, которые сейчас доступны для покупки.
+Если в корзине есть недоступные работы, пользователь получает предупреждение,
+а эти работы не включаются в заказ.
 """
     cart_summary = build_cart_summary(session)
     available_products = cart_summary["available_products"]
@@ -278,11 +300,11 @@ def checkout_form():
         return redirect(url_for("main.catalog"))
         
     if not available_products:
-        flash("В корзине нет товаров, доступных для оформления", "error")
+        flash("В корзине нет работ, доступных для оформления", "error")
         return redirect(url_for("main.show_cart"))
         
     if cart_summary["has_unavailable_items"]:
-        flash("Некоторые товары больше недоступны и не будут включены в заказ", "info")
+        flash("Некоторые работы больше недоступны и не будут включены в заказ", "info")
 
     return render_template("checkout.html", products=available_products, total=cart_summary['total'], cart=cart_summary['cart'])
     
@@ -292,10 +314,9 @@ def checkout_process():
     """
 Обрабатывает отправку формы оформления заказа.
 
-Повторно собирает актуальную сводку корзины перед созданием заказа, чтобы не
-оформить товары, которые стали недоступны после открытия страницы checkout.
-Валидирует данные покупателя, формирует состав заказа только из доступных товаров,
-создаёт заказ в базе данных, очищает корзину и перенаправляет на страницу успеха.
+Повторно собирает актуальную сводку корзины перед созданием заказа.
+Заказ создаётся только из работ, которые на момент отправки формы доступны
+для покупки. Недоступные работы из корзины в заказ не включаются.
 """
     cart_summary = build_cart_summary(session)
     cart = cart_summary['cart']
@@ -306,7 +327,7 @@ def checkout_process():
         return redirect(url_for("main.catalog"))
     
     if not available_products:
-        flash("В корзине нет товаров, доступных для оформления", "error")
+        flash("В корзине нет работ, доступных для оформления", "error")
         return redirect(url_for("main.show_cart"))
     
     is_valid, error_message, data = process_checkout_form(request.form)

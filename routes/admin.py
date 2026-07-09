@@ -15,7 +15,10 @@ from db import (get_all_products,
                 create_category,
                 delete_category,
                 update_category,
-                get_all_categories_with_product_count)
+                get_all_categories_with_product_count,
+                get_all_tags,
+                get_tags_for_product,
+                update_product_tags)
 from services.product_service import process_product_form, PRODUCT_STATUSES
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
@@ -313,14 +316,22 @@ def edit_product(product_id):
                        data["materials"],
                        data['is_visible'],
                        data['is_for_sale'])
+                       
+        tag_ids = request.form.getlist("tag_ids")
+        update_product_tags(product_id, tag_ids)
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))
         
     categories = get_all_categories()
+    tags = get_all_tags()
+    product_tags = get_tags_for_product(product_id)
+    selected_tag_ids = [tag["id"] for tag in product_tags]
     return render_template("admin/product_form.html",
                            product=product,
                            categories=categories,
+                           tags=tags,
+                           selected_tag_ids=selected_tag_ids,
                            title="Редактирование товара",
                            submit_text="Сохранить",
                            product_statuses=PRODUCT_STATUSES)
@@ -336,6 +347,7 @@ def new_product():
 создаёт новый товар в базе данных и возвращает пользователя к списку товаров.
 """
     categories = get_all_categories()
+    tags = get_all_tags()
     
     if request.method == "POST":
         is_valid, error_message, data = process_product_form(request.form)
@@ -353,7 +365,7 @@ def new_product():
 
         data['img'] = image_path
             
-        create_product(data["name"], 
+        product_id = create_product(data["name"], 
                        data["price"], 
                        data["description"], 
                        data["img"], 
@@ -363,6 +375,9 @@ def new_product():
                        data["materials"], 
                        data['is_visible'],
                        data['is_for_sale'])
+                       
+        tag_ids = request.form.getlist("tag_ids")
+        update_product_tags(product_id, tag_ids)
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))
@@ -381,6 +396,8 @@ def new_product():
     return render_template("admin/product_form.html",
                            product=empty_product,
                            categories=categories,
+                           tags=tags,
+                           selected_tag_ids=[],
                            title="Новый товар",
                            submit_text="Создать",
                            product_statuses=PRODUCT_STATUSES)

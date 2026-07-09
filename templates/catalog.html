@@ -13,26 +13,49 @@
 {% block content %}
 	<section class="catalog-page">
 		<header class="catalog-header">
-			<p class="home-section-label">Работы</p>
-			<div class="catalog-header__content">
-				{% if current_category %}
-					<h1 class="catalog-header__title">
-						{{ current_category.name }}
-					</h1>
-					{% if current_category.description %}
-						<p class="catalog-header__description">
-							{{ current_category.description }}
-						</p>
-					{% endif %}
-				{% else %}
-					<h1 class="catalog-header__title">Доступные работы</h1>
-					<p class="catalog-header__description">
-						Керамические объекты и малые формы. Некоторые работы доступны
-					для приобретения, другие представлены как часть художественной практики.
-					</p>
-				{% endif %}
-			</div>
-		</header>
+    <p class="home-section-label">Работы</p>
+
+    <div class="catalog-header__content">
+        {% if current_category %}
+            <h1 class="catalog-header__title">
+                {{ current_category.name }}
+            </h1>
+
+            {% if current_category.description %}
+                <p class="catalog-header__description">
+                    {{ current_category.description }}
+                </p>
+            {% endif %}
+        {% elif tag %}
+            <h1 class="catalog-header__title">
+                Работы по тегу «{{ tag.name }}»
+            </h1>
+
+            <p class="catalog-header__description">
+                Подборка работ, связанных с этим мотивом или темой.
+            </p>
+        {% else %}
+            <h1 class="catalog-header__title">Доступные работы</h1>
+
+            <p class="catalog-header__description">
+                Керамические объекты и малые формы. Некоторые работы доступны
+                для приобретения, другие представлены как часть художественной практики.
+            </p>
+        {% endif %}
+
+        {% if tag %}
+            <div class="catalog-header__filter">
+                <span class="catalog-header__eyebrow">
+                    Тег: {{ tag.name }}
+                </span>
+
+                <a class="catalog-header__reset" href="{{ url_for('main.catalog') }}">
+                    Все работы
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</header>
 		<section class="catalog-tools" aria-label="Фильтры и поиск">
 			<nav class="catalog-categories" aria-label="Категории работ">
 				<a href="{{ url_for('main.catalog', sort_by=current_sort, order=current_order, q=search_query) }}"

@@ -56,6 +56,23 @@
     </div>
     
     <div class="admin-form-group">
+        <label>Теги</label>
+        <div class="admin-checkbox-list">
+            {% for tag in tags %}
+                <div class="admin-checkbox-group">
+                    <input type="checkbox" 
+                    name="tag_ids" 
+                    id="tag_{{ tag.id }}"
+                    value="{{ tag.id }}"
+                    {% if tag.id in selected_tag_ids %}checked{% endif %}
+                    >
+                    <label for="tag_{{ tag.id }}">{{tag.name}}</label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="admin-form-group">
         <label for="status">Статус товара</label>
         <select name="status" id="status" class="form-control" required>
             {% for status_key, status_label in product_statuses.items() %}

@@ -624,34 +624,98 @@ select {
 }
 
 .catalog-header {
-	display: grid;
-	grid-template-columns: 220px minmax(0, 1fr);
-	gap: 48px;
-	align-items: start;
-	margin-bottom: 64px;
+    margin-bottom: 48px;
 }
 
 .catalog-header__content {
-	min-width: 0;
+    max-width: 760px;
 }
 
 .catalog-header__title {
-	min-width: 820px;
-	font-family: var(--font-serif);
-	font-size: clamp(48px, 7vw, 96px);
-	font-weight: 400;
-	line-height: 0.95;
-	letter-spacing: -0.065em;
+    margin: 0;
+    max-width: 680px;
+    font-family: var(--font-heading);
+    font-size: clamp(42px, 7vw, 88px);
+    line-height: 0.95;
+    font-weight: 400;
+    letter-spacing: -0.06em;
+    color: var(--color-text);
 }
 
 .catalog-header__description {
-	max-width: 600px;
-	margin-top: 24px;
-	color: var(--color-muted);
-	font-size: 17px;
-	line-height: 1.75;
+    max-width: 620px;
+    margin: 24px 0 0;
+    font-size: clamp(16px, 1.7vw, 19px);
+    line-height: 1.7;
+    color: var(--color-muted);
 }
 
+.catalog-header__filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.catalog-header__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 6px 13px;
+    border: 1px solid rgba(45, 42, 39, 0.18);
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.catalog-header__reset {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    font-size: 13px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+}
+
+.catalog-header__reset:hover {
+    color: var(--color-muted);
+}
+
+@media (max-width: 640px) {
+    .catalog-header {
+        margin-bottom: 36px;
+    }
+
+    .catalog-header__title {
+        font-size: clamp(38px, 14vw, 58px);
+        letter-spacing: -0.055em;
+    }
+
+    .catalog-header__description {
+        margin-top: 18px;
+        font-size: 15px;
+        line-height: 1.65;
+    }
+
+    .catalog-header__filter {
+        margin-top: 22px;
+        gap: 12px;
+    }
+
+    .catalog-header__eyebrow,
+    .catalog-header__reset {
+        font-size: 12px;
+    }
+}
 /* ================================
 	CATALOG TOOLS
 	Категории, поиск, сортировка

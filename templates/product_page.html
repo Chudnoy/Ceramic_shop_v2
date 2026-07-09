@@ -12,6 +12,13 @@
 			<h1 class="product-title">{{product.name}}</h1>
 			<p class="product-description">{{product.description}}</p>
 			<p class="product-price">{{product.price}} руб.</p>
+            {% if tags %}
+				<div class="product-tags">
+					{% for tag in tags %}
+						<a href="{{ url_for('main.catalog', tag=tag.slug) }}" class="product-tag">{{ tag.name }}</a>
+					{% endfor %}
+				</div>
+			{% endif %}
 			{% if product.category_name %}
 				<p class="product-category">Категория
 					<a href="{{ url_for('main.catalog', category=product.category_slug) }}" class="category-link">
