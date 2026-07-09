@@ -189,12 +189,14 @@ def get_products_by_tag_slug(tag_slug, only_visible=True):
     conn = get_db_connection()
     
     query = """
-    SELECT products.*
+    SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
     FROM tags
     JOIN product_tags
     ON tags.id = product_tags.tag_id
     JOIN products
     ON product_tags.product_id = products.id
+    LEFT JOIN categories
+    ON products.category_id = categories.id
     WHERE tags.slug = ?
     """
     
@@ -204,6 +206,7 @@ def get_products_by_tag_slug(tag_slug, only_visible=True):
         query += " AND products.is_visible = 1"
         
     query += " ORDER BY products.name"
+    
     products = conn.execute(query, params).fetchall()
     conn.close()
     return products

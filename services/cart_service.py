@@ -1,4 +1,5 @@
 from db import get_products_by_ids
+from services.product_service import get_product_cart_unavailable_reason
 
 def get_cart(session):
     """
@@ -78,11 +79,14 @@ def build_cart_summary(session):
         
         quantity = cart[product_dict['id']]
         item_total = product_dict['price'] * quantity
-        is_available_for_order = product_dict['status'] == "available"
+        
+        unavailable_reason = get_product_cart_unavailable_reason(product_dict)
+        is_available_for_order = unavailable_reason == ""
         
         product_dict["cart_quantity"] = quantity
         product_dict["cart_item_total"] = item_total
         product_dict["is_available_for_order"] = is_available_for_order
+        product_dict["unavailable_reason"] = unavailable_reason
         
         if is_available_for_order:
             available_products.append(product_dict)
@@ -122,7 +126,8 @@ def remove_unavailable_items(session):
     removed = False
     
     for product in cart_products:
-        if product["status"] == "available":
+        unavailable_reasons = get_product_cart_unavailable_reason(product)
+        if not unavailable_reasons:
             available_product_ids.add(product["id"])
             
     for product_id in list(cart.keys()):

@@ -12,10 +12,10 @@ def get_product_cart_unavailable_reason(product):
     if not product:
         return "Работа не найдена"
         
-    if product["is_visible"] != 0:
+    if product["is_visible"] != 1:
         return "Эта работа сейчас не опубликована"
         
-    if product["is_for_sale"] != 0:
+    if product["is_for_sale"] != 1:
         return "Эта работа не предназначена для продажи"
         
     if product["status"] == "reserved":
