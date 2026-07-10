@@ -1,40 +1,150 @@
 {% extends 'base.html' %}
 
-{% block title %}Заказ оформлен - Керамическая мастерская{% endblock %}
+{% block title %}Заказ оформлен — Полина Яланская{% endblock %}
 
 {% block content %}
-    <div class="success-page">
-        <h1 class="success-title">Спасибо за заказ!</h1>
-        <p class="success-subtitle">Ваш заказ #{{order_id[:8]}} успешно оформлен.</p>
-        <div class="order-details">
-            <h2 class="section-title">Детали заказа</h2>
-            <div class="order-customer">
-                <p><strong>Имя: </strong>{{order.customer_name}}</p>
-                <p><strong>Email: </strong>{{order.customer_email}}</p>
-                {% if order.customer_phone %}
-                    <p><strong>Телефон: </strong>{{order.customer_phone}}</p>
-                {% endif %}
-                {% if order.customer_address %}
-                    <p><strong>Адрес: </strong>{{order.customer_address}}</p>
-                {% endif %}
-            </div>
-            
-            <h3 class="order-items-title">Состав заказа</h3>
-            <ul class="order-items">
-                {% for product_id, item in order_items.items() %}
-                    <li class="order-item">
-                        <span class="order-item-name">{{item.name}}</span>
-                        <span class="order-item-qty">{{item.quantity}}</span>
-                        <span class="order-item-price">{{item.price * item.quantity}}</span>
-                    </li>
-                {% endfor %}
-            </ul>
-            <div class="order-total">
-                <strong>Итого: {{order.total}} руб.</strong>
-            </div>
-        </div>
-        <div class="success-actions">
-            <a href="{{url_for('main.catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
-        </div>
-    </div>
+	<section class="order-success-page">
+		<header class="order-success-hero">
+			<p class="home-section-label">Подтверждение</p>
+
+			<div class="order-success-hero__content">
+				<p class="order-success-hero__number">
+					Заказ № {{ order_id[:8] }}
+				</p>
+
+				<h1 class="order-success-hero__title">
+					Заказ оформлен
+				</h1>
+
+				<p class="order-success-hero__description">
+					Мы получили ваши данные и состав заказа.
+					После подтверждения наличия работ с вами свяжутся,
+					чтобы обсудить оплату, доставку или получение.
+				</p>
+			</div>
+		</header>
+
+		<div class="order-success-layout">
+			<section class="order-success-section">
+				<div class="order-success-section__heading">
+					<p class="order-success-section__number">01</p>
+
+					<h2 class="order-success-section__title">
+						Состав заказа
+					</h2>
+				</div>
+
+				<div class="order-success-items">
+					{% for product_id, item in order_items.items() %}
+						<article class="order-success-item">
+							<div class="order-success-item__main">
+								<p class="order-success-item__label">
+									Работа
+								</p>
+
+								<h3 class="order-success-item__title">
+									{{ item.name }}
+								</h3>
+							</div>
+
+							<div class="order-success-item__meta">
+								<div class="order-success-item__meta-entry">
+									<span class="order-success-item__meta-label">
+										Количество
+									</span>
+
+									<span class="order-success-item__meta-value">
+										{{ item.quantity }}
+									</span>
+								</div>
+
+								<div class="order-success-item__meta-entry">
+									<span class="order-success-item__meta-label">
+										Стоимость
+									</span>
+
+									<span class="order-success-item__meta-value">
+										{{ item.price * item.quantity }} руб.
+									</span>
+								</div>
+							</div>
+						</article>
+					{% endfor %}
+				</div>
+
+				<div class="order-success-total">
+					<span class="order-success-total__label">
+						Итого
+					</span>
+
+					<span class="order-success-total__value">
+						{{ order.total }} руб.
+					</span>
+				</div>
+			</section>
+
+			<aside class="order-success-contact">
+				<div class="order-success-section__heading">
+					<p class="order-success-section__number">02</p>
+
+					<h2 class="order-success-section__title">
+						Контактные данные
+					</h2>
+				</div>
+
+				<dl class="order-success-contact__list">
+					<div class="order-success-contact__entry">
+						<dt>Имя</dt>
+						<dd>{{ order.customer_name }}</dd>
+					</div>
+
+					<div class="order-success-contact__entry">
+						<dt>Электронная почта</dt>
+						<dd>{{ order.customer_email }}</dd>
+					</div>
+
+					{% if order.customer_phone %}
+						<div class="order-success-contact__entry">
+							<dt>Телефон</dt>
+							<dd>{{ order.customer_phone }}</dd>
+						</div>
+					{% endif %}
+
+					{% if order.customer_address %}
+						<div class="order-success-contact__entry">
+							<dt>Получение или адрес</dt>
+							<dd>{{ order.customer_address }}</dd>
+						</div>
+					{% endif %}
+				</dl>
+
+				<div class="order-success-contact__note">
+					<p>
+						Сохраните номер заказа. Он пригодится,
+						если потребуется уточнить детали.
+					</p>
+
+					<p class="order-success-contact__order-number">
+						{{ order_id[:8] }}
+					</p>
+				</div>
+			</aside>
+		</div>
+
+		<footer class="order-success-footer">
+			<a
+				href="{{ url_for('main.catalog') }}"
+				class="order-success-primary-action"
+			>
+				Вернуться к работам
+			</a>
+
+			<a
+				href="{{ url_for('main.index') }}"
+				class="order-success-secondary-action"
+			>
+				На главную
+			</a>
+		</footer>
+	</section>
 {% endblock %}

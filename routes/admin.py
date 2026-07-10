@@ -545,7 +545,7 @@ def admin_tags_route():
 @admin_bp.route('/admin/tags/tag_detail/<tag_slug>')
 def tag_details(tag_slug):
     tag = get_tag_by_slug(tag_slug)
-    products = get_products_by_tag_slug(tag_slug)
+    products = get_products_by_tag_slug(tag_slug, only_visible=False)
     
     return render_template('admin/tag_details.html', tag=tag, products=products)
 
@@ -554,10 +554,14 @@ def tag_details(tag_slug):
 def delete_tag_route(tag_id):
     
     tag = get_tag_by_id(tag_id)
+    
+    if not tag:
+        flash('Тег не найден', 'error')
+        return redirect(url_for('admin.admin_tags_route'))
 
     if not tag:
         flash('Тег не найден', 'error')
-        return redirect(url_for('admin.admin_tagd_route'))
+        return redirect(url_for('admin.admin_tag_route'))
 
     if get_product_count_by_tag_id(tag_id):
         flash("Этот тег используется в работах и пока не может быть удалён", 'error')
@@ -583,7 +587,7 @@ def new_tag_route():
         tags = get_all_tags()
         
         existing_names = {tag['name'] for tag in tags}
-        existing_slugs = {tag['Slug'] for tag in tags}
+        existing_slugs = {tag['slug'] for tag in tags}
         
         if tag_data['tag_name'] in existing_names:
             flash('Тег с таким названием уже существует', 'error')
@@ -595,7 +599,7 @@ def new_tag_route():
 
         create_tag(tag_data['tag_name'], tag_data['tag_slug'])
 
-        flash(f'Тег «{tag_data['tag_name']}» добавлен', 'success')
+        flash(f"Тег «{tag_data['tag_name']}» добавлен", 'success')
         return redirect(url_for('admin.admin_tags_route'))
     
     empty_tag = {'id': '', 'name': '', 'slug': ''}
@@ -606,6 +610,10 @@ def new_tag_route():
 @admin_bp.route('/admin/tags/edit/<tag_slug>', methods=['GET', 'POST'])
 def edit_tag_route(tag_slug):
     tag = get_tag_by_slug(tag_slug)
+    
+    if not tag:
+        flash('Тег не найден', 'error')
+        return redirect(url_for('admin.admin_tags_route'))
     
     if request.method == 'POST':
         is_valid_tag, error_message, tag_data = process_tag_form(request.form)
@@ -622,7 +630,7 @@ def edit_tag_route(tag_slug):
         if tag_data['tag_name'] != tag['name']:
             if tag_data['tag_name'] in existing_names:
                 flash('Тег с таким названием уже существует', 'error')
-                return redirect(url_for('admin.edt_tag_route', tag_slug=tag_slug))
+                return redirect(url_for('admin.edit_tag_route', tag_slug=tag_slug))
         
         if tag_data['tag_slug'] != tag['slug']:
             if tag_data['tag_slug'] in existing_slugs:
@@ -634,4 +642,4 @@ def edit_tag_route(tag_slug):
         flash(f'Тег «{tag_data['tag_name']}» изменён', 'success')
         return redirect(url_for('admin.admin_tags_route'))
     
-    return render_template('admin/tag_form.html', title=f'Изменение тега "{tag['name']}"', submit_text='Сохранить', tag=tag)
+    return render_template('admin/tag_form.html', title=f"Изменение тега «{tag['name']}»", submit_text='Сохранить', tag=tag)

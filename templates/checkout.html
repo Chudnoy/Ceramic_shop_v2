@@ -1,50 +1,199 @@
 {% extends 'base.html' %}
 
-{% block title %}Оформление заказа - Керамическая мастерская{% endblock %}
+{% block title %}Оформление заказа — Полина Яланская{% endblock %}
 
 {% block content %}
-    <h1 class="page-title">Оформление заказа</h1>
-    <div class="checkout-wrapper">
-        <div class="checkout-summary">
-            <h2 class="section-title">Ваш заказ</h2>
-            {% if products %}
-                <ul class="checkout-items">
-                    {% for product in products %}
-                        <li class="checkout-item">
-                            <span class="checkout-item-name">{{product.name}}</span>
-                            <span class="checkout-item-qty">{{product.cart_quantity}}</span>
-                            <span class="checkout-item-price">{{product.cart_item_total}} руб.</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-                <div class="checkout-total">
-                    Итого {{total}} руб.
-                </div>
-            {% endif %}
-        </div>
-        
-        <div class="checkout-form-wrapper">
-            <h2 class="section-title">Контактные данные</h2>
-            <form action="" method="post" class="checkout-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
-                    <label for="customer_name">Ваше имя:</label>
-                    <input type="text" id="customer_name" name="customer_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="customer_email">Email:</label>
-                    <input type="email" id="customer_email" name="customer_email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="customer_phone">Телефон:</label>
-                    <input type="tel" id="customer_phone" name="customer_phone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="customer_address">Адрес доставки:</label>
-                    <textarea id="customer_address" name="customer_address" class="form-control" rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn btn-success">Подтвердить заказ</button>
-            </form>
-        </div>
-    </div>
+	<section class="checkout-page">
+		<header class="checkout-header">
+			<p class="home-section-label">Приобретение</p>
+
+			<div class="checkout-header__content">
+				<h1 class="checkout-header__title">
+					Оформление
+				</h1>
+
+				<p class="checkout-header__description">
+					Оставьте контактные данные. После оформления мы свяжемся с вами,
+					чтобы подтвердить наличие работы и обсудить получение или доставку.
+				</p>
+			</div>
+		</header>
+
+		<div class="checkout-layout">
+			<div class="checkout-form-column">
+				<div class="checkout-section-heading">
+					<p class="checkout-section-heading__number">01</p>
+
+					<div>
+						<h2 class="checkout-section-heading__title">
+							Контактные данные
+						</h2>
+
+						<p class="checkout-section-heading__description">
+							Поля с отметкой «обязательно» необходимо заполнить.
+						</p>
+					</div>
+				</div>
+
+				<form
+					action="{{ url_for('main.checkout_process') }}"
+					method="post"
+					class="checkout-form"
+				>
+					<input
+						type="hidden"
+						name="csrf_token"
+						value="{{ csrf_token() }}"
+					>
+
+					<div class="checkout-form__grid">
+						<div class="public-form-group checkout-form__field--wide">
+							<label for="customer_name">
+								Имя
+								<span class="public-form-group__required">
+									обязательно
+								</span>
+							</label>
+
+							<input
+								type="text"
+								id="customer_name"
+								name="customer_name"
+								autocomplete="name"
+								required
+							>
+						</div>
+
+						<div class="public-form-group">
+							<label for="customer_email">
+								Электронная почта
+								<span class="public-form-group__required">
+									обязательно
+								</span>
+							</label>
+
+							<input
+								type="email"
+								id="customer_email"
+								name="customer_email"
+								autocomplete="email"
+								required
+							>
+						</div>
+
+						<div class="public-form-group">
+							<label for="customer_phone">
+								Телефон
+							</label>
+
+							<input
+								type="tel"
+								id="customer_phone"
+								name="customer_phone"
+								autocomplete="tel"
+							>
+						</div>
+
+						<div class="public-form-group checkout-form__field--wide">
+							<label for="customer_address">
+								Адрес или пожелания по получению
+							</label>
+
+							<textarea
+								id="customer_address"
+								name="customer_address"
+								rows="5"
+								autocomplete="street-address"
+								placeholder="Город, адрес или удобный способ получения работы"
+							></textarea>
+						</div>
+					</div>
+
+					<div class="checkout-form__footer">
+						<p class="checkout-form__notice">
+							Отправляя форму, вы подтверждаете намерение приобрести
+							выбранные работы. Окончательные детали заказа будут
+							согласованы после подтверждения.
+						</p>
+
+						<button
+							type="submit"
+							class="checkout-submit"
+						>
+							Оформить заказ
+						</button>
+					</div>
+				</form>
+			</div>
+
+			<aside class="checkout-summary">
+				<div class="checkout-section-heading checkout-section-heading--summary">
+					<p class="checkout-section-heading__number">02</p>
+
+					<div>
+						<h2 class="checkout-section-heading__title">
+							Состав заказа
+						</h2>
+
+						<p class="checkout-section-heading__description">
+							В заказ войдут только доступные на данный момент работы.
+						</p>
+					</div>
+				</div>
+
+				<div class="checkout-summary__items">
+					{% for product in products %}
+						<article class="checkout-summary-item">
+							<div class="checkout-summary-item__image-wrapper">
+								{% if product.img %}
+									<img
+										src="{{ product.img }}"
+										alt="{{ product.name }}"
+										class="checkout-summary-item__image"
+									>
+								{% else %}
+									<div class="checkout-summary-item__placeholder">
+										Нет изображения
+									</div>
+								{% endif %}
+							</div>
+
+							<div class="checkout-summary-item__content">
+								<h3 class="checkout-summary-item__title">
+									{{ product.name }}
+								</h3>
+
+								<div class="checkout-summary-item__meta">
+									<span>
+										Количество: {{ product.cart_quantity }}
+									</span>
+
+									<span>
+										{{ product.cart_item_total }} руб.
+									</span>
+								</div>
+							</div>
+						</article>
+					{% endfor %}
+				</div>
+
+				<div class="checkout-summary__total">
+					<span class="checkout-summary__total-label">
+						Итого
+					</span>
+
+					<span class="checkout-summary__total-value">
+						{{ total }} руб.
+					</span>
+				</div>
+
+				<a
+					href="{{ url_for('main.show_cart') }}"
+					class="checkout-summary__back"
+				>
+					Вернуться в корзину
+				</a>
+			</aside>
+		</div>
+	</section>
 {% endblock %}

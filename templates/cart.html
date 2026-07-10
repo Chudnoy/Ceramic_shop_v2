@@ -1,77 +1,219 @@
 {% extends 'base.html' %}
 
-{% block title %}Корзина - Керамическая мастерская{% endblock %}
+{% block title %}Корзина — Полина Яланская{% endblock %}
 
 {% block content %}
-	<h1 class="page-title">Корзина</h1>
-	<div class="cart-content">
+	<section class="cart-page">
+		<header class="cart-header">
+			<p class="home-section-label">Приобретение</p>
+
+			<div class="cart-header__content">
+				<h1 class="cart-header__title">Корзина</h1>
+
+				<p class="cart-header__description">
+					Выбранные работы перед оформлением заказа.
+					Доступность каждой работы проверяется повторно.
+				</p>
+			</div>
+		</header>
+
 		{% if products %}
 			{% if has_unavailable_items %}
-				<div class="cart-warning">
-					Некоторые товары в корзине больше недоступны для покупки и не будут включены в заказ
-				</div>
-				<form action="{{ url_for('main.remove_unavailable_route') }}" method="post">
-					<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-					<button type="submit" class="btn btn-danger btn-sm">Удалить недоступные товары</button>
-				</form>
-			{% endif %}
-			<table class="cart-table">
-				<thead>
-					<tr>
-						<th>Товар</th>
-						<th>Количество</th>
-						<th>Сумма</th>
-						<th>Действие</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for product in products %}
-						<tr class="{% if not product.is_available_for_order %}cart_unavailable{% endif %}">
-							<td>
-								<span class="cart-product-name">{{ product.name}}</span>
-								{% if not product.is_available_for_order %}
-									<span class="product-status product-status-{{product.status}}">
-										{{ product_statuses.get(product.status, product.status) }}
-									</span>
-								{% endif %}
-							</td>
-							<td>{{ product.cart_quantity }}</td>
-							<td>
-								{% if product.is_available_for_order %}
-									{{ product.cart_item_total }} руб.
-								{% else %}
-									<span class="cart-item-excluded">Не входит в заказ</span>
-								{% endif %}
-							</td>
-							<td>
-								<form action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}" method="post" class="remove-from-cart-form">
-									<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-									<button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-								</form>
-							</td>
-						</tr>
-					{% endfor %}
-				</tbody>
-			</table>
+				<div class="cart-notice">
+					<div class="cart-notice__text">
+						<p class="cart-notice__title">
+							Некоторые работы больше недоступны
+						</p>
 
-			<div class="cart-total">
-				Итого к оформлению: {{total}} руб.
-			</div>
-			<div class="cart-actions">
-				<a href="{{url_for('main.checkout_form')}}" class="btn btn-success">Оформить заказ</a>
-				<a href="{{url_for('main.catalog')}}" class="btn btn-secondary">Продолжить покупки</a>
-				{% if products %}
-					<form action="{{ url_for('main.clear_cart_route') }}" method="post" onsubmit="return confirm('Очистить корзину?')">
-						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-						<button type="submit" class="btn btn-danger">Очистить корзину</button>
+						<p class="cart-notice__description">
+							Они останутся видны в корзине, но не будут включены
+							в заказ и не учитываются в итоговой сумме.
+						</p>
+					</div>
+
+					<form
+						action="{{ url_for('main.remove_unavailable_route') }}"
+						method="post"
+					>
+						<input
+							type="hidden"
+							name="csrf_token"
+							value="{{ csrf_token() }}"
+						>
+
+						<button type="submit" class="cart-text-button">
+							Удалить недоступные
+						</button>
 					</form>
-				{% endif %}
+				</div>
+			{% endif %}
+
+			<div class="cart-layout">
+				<div class="cart-items">
+					{% for product in products %}
+						<article
+							class="cart-item{% if not product.is_available_for_order %} cart-item--unavailable{% endif %}"
+						>
+							<a
+								href="{{ url_for('main.product_page', product_id=product.id) }}"
+								class="cart-item__image-link"
+							>
+								{% if product.img %}
+									<img
+										src="{{ product.img }}"
+										alt="{{ product.name }}"
+										class="cart-item__image"
+									>
+								{% else %}
+									<div class="cart-item__placeholder">
+										Нет изображения
+									</div>
+								{% endif %}
+							</a>
+
+							<div class="cart-item__content">
+								<div class="cart-item__heading">
+									<div>
+										<p class="cart-item__label">
+											Работа
+										</p>
+
+										<h2 class="cart-item__title">
+											<a href="{{ url_for('main.product_page', product_id=product.id) }}">
+												{{ product.name }}
+											</a>
+										</h2>
+									</div>
+
+									<form
+										action="{{ url_for('main.remove_from_cart_route', product_id=product.id) }}"
+										method="post"
+										class="remove-from-cart-form"
+									>
+										<input
+											type="hidden"
+											name="csrf_token"
+											value="{{ csrf_token() }}"
+										>
+
+										<button
+											type="submit"
+											class="cart-remove-button"
+											aria-label="Удалить {{ product.name }} из корзины"
+										>
+											Удалить
+										</button>
+									</form>
+								</div>
+
+								{% if not product.is_available_for_order %}
+									<div class="cart-item__status">
+										<p class="cart-item__status-title">
+											Недоступна для оформления
+										</p>
+
+										{% if product.unavailable_reason %}
+											<p class="cart-item__status-description">
+												{{ product.unavailable_reason }}
+											</p>
+										{% else %}
+											<p class="cart-item__status-description">
+												{{ product_statuses.get(product.status, product.status) }}
+											</p>
+										{% endif %}
+									</div>
+								{% endif %}
+
+								<div class="cart-item__meta">
+									<div class="cart-item__meta-entry">
+										<span class="cart-item__meta-label">Количество</span>
+										<span class="cart-item__meta-value">
+											{{ product.cart_quantity }}
+										</span>
+									</div>
+
+									<div class="cart-item__meta-entry">
+										<span class="cart-item__meta-label">Стоимость</span>
+
+										{% if product.is_available_for_order %}
+											<span class="cart-item__meta-value">
+												{{ product.cart_item_total }} руб.
+											</span>
+										{% else %}
+											<span class="cart-item__meta-value cart-item__meta-value--muted">
+												Не входит в заказ
+											</span>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+						</article>
+					{% endfor %}
+				</div>
+
+				<aside class="cart-summary">
+					<p class="cart-summary__label">Итого</p>
+
+					<p class="cart-summary__total">
+						{{ total }} руб.
+					</p>
+
+					<p class="cart-summary__note">
+						В итог включены только работы, которые доступны
+						для оформления на данный момент.
+					</p>
+
+					<a
+						href="{{ url_for('main.checkout_form') }}"
+						class="cart-primary-action"
+					>
+						Перейти к оформлению
+					</a>
+
+					<a
+						href="{{ url_for('main.catalog') }}"
+						class="cart-secondary-action"
+					>
+						Продолжить просмотр
+					</a>
+
+					<form
+						action="{{ url_for('main.clear_cart_route') }}"
+						method="post"
+						class="cart-clear-form"
+						onsubmit="return confirm('Очистить корзину?')"
+					>
+						<input
+							type="hidden"
+							name="csrf_token"
+							value="{{ csrf_token() }}"
+						>
+
+						<button type="submit" class="cart-clear-button">
+							Очистить корзину
+						</button>
+					</form>
+				</aside>
 			</div>
 		{% else %}
-			<div class="empty-cart">
-				<p>Корзина пуста</p>
-				<a href="{{url_for('main.catalog')}}" class="btn btn-primary">Вернуться в каталог</a>
+			<div class="cart-empty">
+				<p class="cart-empty__label">Корзина пуста</p>
+
+				<h2 class="cart-empty__title">
+					Здесь пока нет выбранных работ
+				</h2>
+
+				<p class="cart-empty__description">
+					Вернитесь к каталогу, чтобы продолжить знакомство с работами.
+				</p>
+
+				<a
+					href="{{ url_for('main.catalog') }}"
+					class="cart-primary-action"
+				>
+					Смотреть работы
+				</a>
 			</div>
 		{% endif %}
-	</div>
+	</section>
 {% endblock %}
