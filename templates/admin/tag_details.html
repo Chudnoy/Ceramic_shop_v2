@@ -1,0 +1,34 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+	<h1 class="admin-page-title">Тег "{{ tag.name }}"</h1>
+
+	<table class="admin-table">
+		<tr>
+			<th>ID</th>
+			<th>Название</th>
+			<th>slug</th>
+			<th>Товары с этим тегом</th>
+			<th>Действия</th>
+		</tr>
+		<tr>
+			<td>{{ tag.id }}</td>
+			<td>{{ tag.name }}</td>
+			<td>{{ tag.slug }}</td>
+			<td>
+				{% if products %}
+					{% for product in products %}
+						<div class="tag-products">
+							{{ loop.index }}. {{ product.name }}
+						</div>
+					{% endfor %}
+				{% else %}
+					Сейчас нет товаров с этим тегом
+				{% endif %}
+			</td>
+			<td>
+				<a href="{{ url_for('admin.edit_tag_route', tag_slug=tag.slug) }}">Редактировать</a>
+			</td>
+		</tr>
+	</table>
+{% endblock %}

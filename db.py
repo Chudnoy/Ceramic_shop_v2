@@ -132,7 +132,8 @@ def init_db():
         ("Память", "memory"),
         ("Архитектура", "architecture"),
         ("Разрушение", "destruction"),
-        ("Хрупкость", "fragility")
+        ("Хрупкость", "fragility"),
+        ("Природа", "nature")
         ]
         
         conn.executemany("INSERT INTO tags (name, slug) VALUES (?, ?)", tags)
@@ -142,7 +143,7 @@ def init_db():
     if cursor.fetchone()[0] == 0:
         products = [
         (str(uuid.uuid4()), "Башня", "Тема дома красной нитью проходит сквозь всёмоё твочество. Он был разным, в зависимостиот моего состояния и меняющегося во временимира. Сейчас, я вдохновляюсь архитектуройсоветского постмодернизма, так как чувствуюсвязь, между происходящим сейчас итогда.Так я чувствую дом сейчас : какоборонительную башню, сохраняющуюхрупкость гнезда", 30000, "/static/img/tower.jpg", 5, 2025, "Каменная масса, глазури, фарфор"),
-        (str(uuid.uuid4()), "Проект «Дом», Версия 3", "Этот проект — о том, как личное становится общим, а прошлое превращается в часть настоящего. Для меня тема дома всегда была лакмусовой бумажкой. Во времена спокойствия — это убежище, кокон. Во времена перемен — хрупкая раковина. В его стенах, даже воображаемых, можно увидеть и мое собственное состояние, и эхо внешнегомира.", 25000, "/static/img/dom_v3.jpg", 5, 2025, "Каменная масса, фарфор, глазури"),
+        (str(uuid.uuid4()), "Проект «Дом». Версия 3", "Этот проект — о том, как личное становится общим, а прошлое превращается в часть настоящего. Для меня тема дома всегда была лакмусовой бумажкой. Во времена спокойствия — это убежище, кокон. Во времена перемен — хрупкая раковина. В его стенах, даже воображаемых, можно увидеть и мое собственное состояние, и эхо внешнегомира.", 25000, "/static/img/dom_v3.jpg", 5, 2025, "Каменная масса, фарфор, глазури"),
         (str(uuid.uuid4()), "Сны Карелии", "Мы привыкли думать, что камни безмолвствуютвеками.Но в каждом изгибе, в каждой прожилке сокрыта тайна природы. Это не подражание, а преображение: мягкая глина застывает в образе вулканической породы, а глазурь хранит память отом, как свет играет на дне лесного озера.Прикоснитесь — и вы почувствуете не холод камня, а тепло, которое глина навсегда сберегла в памяти огня печи.", 15000, "/static/img/dreams_of_karelia.jpg", 1, 2025, "Каменная масса, глазури"),
         (str(uuid.uuid4()), "Destruction", "Проект посвящен эстетизации разрушенияи попытке навязать хаосу систему и форму.Природные катаклизмы, взрывы бытовогогаза, постепенное тление — все эти силы,уничтожающие архитектуру, находятотражение в керамических объектах, лишьотдаленно напоминающих постройки.", 10000, "/static/img/destruction.jpg", 5, 2025, "Каменная масса, фарфор, глазури"),
         (str(uuid.uuid4()), "Пасхальный купол", "Объект синтезирует архаичную символику яйца и древнерусской архитектуры. Форма яйца — универсальный архетип зарождения жизни. Венчающая часть в виде купола с нитевидной фактурой отсылает кправославным луковичным главам,символизирующим пламя свечи и небесную сферу. Цветовая гаммаимитирует пигменты народных промыслов, а белая кракелюрная глазурь напоминает глазурь на пасхальном куличе. Этаскульптура — размышление о циклическом бытии: яйцо таит в себе потенциал, купол оберегает — вместе они воплощаютнепрерывное возрождение в хаосе жизни", 17000, "/static/img/easter_dome.jpg", 1, 2025, "Каменная масса, глазури, фарфор")
@@ -210,11 +211,34 @@ def get_products_by_tag_slug(tag_slug, only_visible=True):
     products = conn.execute(query, params).fetchall()
     conn.close()
     return products
+
+
+
+def get_tags_with_product_count():
+    conn = get_db_connection()
+    tags = conn.execute("""SELECT tags.*, COUNT(products.id) AS products_count
+                          FROM tags
+                          LEFT JOIN product_tags
+                          ON product_tags.tag_id = tags.id
+                          LEFT JOIN products
+                          ON products.id = product_tags.product_id
+                          GROUP BY tags.id
+                          ORDER BY tags.name
+                          """).fetchall()
+    conn.close()
+    return tags
     
     
 def get_tag_by_slug(tag_slug):
     conn = get_db_connection()
     tag = conn.execute("SELECT * FROM tags WHERE slug = ?", (tag_slug,)).fetchone()
+    conn.close()
+    return tag
+
+
+def get_tag_by_id(tag_id):
+    conn = get_db_connection()
+    tag = conn.execute("SELECT * FROM tags WHERE id = ?", (tag_id,)).fetchone()
     conn.close()
     return tag
     
@@ -241,6 +265,40 @@ def update_product_tags(product_id, tag_ids):
     
     for tag_id in tag_ids:
         conn.execute("INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?, ?)", (product_id, tag_id))
+    conn.commit()
+    conn.close()
+
+
+def get_product_count_by_tag_id(tag_id):
+    conn = get_db_connection()
+    products_count = conn.execute("""SELECT COUNT(products.id)
+                                  FROM tags
+                                  JOIN product_tags
+                                  ON product_tags.tag_id = tags.id
+                                  JOIN products
+                                  ON products.id = product_tags.product_id
+                                  WHERE tags.id = ?""", (tag_id,)).fetchone()[0]
+    conn.close()
+    return products_count
+
+
+def create_tag(tag_name, tag_slug):
+    conn = get_db_connection()
+    conn.execute("INSERT INTO tags (name, slug) VALUES (?, ?)", (tag_name, tag_slug))
+    conn.commit()
+    conn.close()
+
+
+def update_tag(tag_name, tag_slug, tag_id):
+    conn = get_db_connection()
+    conn.execute("UPDATE tags SET name = ?, slug = ? WHERE id = ?", (tag_name, tag_slug, tag_id))
+    conn.commit()
+    conn.close()
+
+
+def delete_tag_by_id(tag_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM tags WHERE id = ?", (tag_id,))
     conn.commit()
     conn.close()
     
@@ -529,12 +587,10 @@ def get_product_with_category(product_id):
     
 def delete_product(product_id):
     """
-Удаляет товар из таблицы products по его id.
-
-Функция удаляет только запись товара из базы данных. Удаление связанного файла
-изображения выполняется отдельно на уровне admin route через image_service.
-"""
+    Удаляет работу и связанные с ней строки из таблицы product_tags.
+    """
     conn = get_db_connection()
+    conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
     conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
     conn.commit()
     conn.close()

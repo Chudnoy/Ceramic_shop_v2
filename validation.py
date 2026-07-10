@@ -126,3 +126,15 @@ def validate_category(name, slug, description):
     description = description.strip()
     
     return True, '', {'name': name, 'slug': slug, 'description': description}
+
+
+def validate_tag(tag_name, tag_slug):
+    tag_name = tag_name.strip()
+    if not tag_name:
+        return False, 'Название тега должно быть заполнено', None
+    
+    tag_slug = tag_slug.strip().lower()
+    if not tag_slug or not is_valid_slug(tag_slug):
+        return False, 'Slug обязателен и может содержать только латинские буквы, цифры и дефис', None
+    
+    return True, '', {'tag_name': tag_name, 'tag_slug': tag_slug}

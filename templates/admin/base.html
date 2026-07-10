@@ -18,6 +18,7 @@
                 <a href="{{ url_for('admin.admin_products') }}">Товары</a>
                 <a href="{{ url_for('admin.admin_orders') }}">Заказы</a>
 				<a href="{{ url_for('admin.admin_categories') }}">Категории</a>
+				<a href="{{ url_for('admin.admin_tags_route') }}">Теги</a>
                 {% if session.get('is_admin') %}
                     <form action="{{ url_for('admin.logout') }}" method="post" class="admin-inline-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
