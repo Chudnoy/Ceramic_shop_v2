@@ -27,7 +27,7 @@ from db import (get_all_products,
                 create_tag,
                 get_tag_by_slug,
                 update_tag,
-                archive_or_restore_product)
+                set_product_archived)
 from services.product_service import process_product_form, PRODUCT_STATUSES, process_product_tag_ids
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
@@ -265,7 +265,7 @@ def edit_order(order_id):
     return render_template("admin/order_form.html", order=order, order_statuses=ORDER_STATUSES)
     
     
-@admin_bp.route("/admin/archive_products")
+@admin_bp.route("/admin/products/archive")
 def admin_archived_products():
     products = get_all_products(only_visible=False,is_archived=True)
     
@@ -275,43 +275,73 @@ def admin_archived_products():
 @admin_bp.route("/admin/products/archive/<product_id>", methods=["POST"])
 def archive_product_route(product_id):
     product = get_product_by_id(product_id)
-    
+
     if not product:
         flash("Работа не найдена", "error")
-        return redirect(url_for("admin.admin_products"))
-    archive_or_restore_product(product_id, archive_action=1)
-    flash(f"Работа {product['name']} перемещена в архив", "success")
+        return redirect(url_for("admin.admin_products")
+        )
+
+    if product["is_archived"] == 1:
+        flash("Работа уже находится в архиве","info")
+        return redirect(url_for("admin.admin_archived_products"))
+
+    set_product_archived(product_id, 1)
+
+    flash(f"Работа «{product['name']}» перемещена в архив","success")
+
     return redirect(url_for("admin.admin_archived_products"))
     
     
 @admin_bp.route("/admin/archived_products/restore/<product_id>", methods=["POST"])
 def restore_product_route(product_id):
     product = get_product_by_id(product_id)
-    
+
     if not product:
         flash("Работа не найдена", "error")
+        return redirect(url_for("admin.admin_archived_products"))
+
+    if product["is_archived"] != 1:
+        flash("Работа не находится в архиве","error")
         return redirect(url_for("admin.admin_products"))
-        
-    archive_or_restore_product(product_id, archive_action=0)
-    flash("Работа изъята из архива", "success")
-    return redirect(url_for("admin.admin_archive_products"))
+
+    set_product_archived(product_id, 0)
+
+    flash(f"Работа «{product['name']}» восстановлена","success")
+
+    return redirect(url_for("admin.admin_archived_products"))
 
 
 
-@admin_bp.route("/admin/products/delete/<product_id>", methods=['POST'])
+@admin_bp.route(
+    "/admin/products/delete/<product_id>",
+    methods=["POST"]
+)
 def delete_product_route(product_id):
     """
-Обрабатывает удаление товара из админки.
+    Окончательно удаляет архивную работу.
 
-Если товар найден, сначала удаляет связанное изображение через image_service,
-затем удаляет запись товара из базы данных. После операции возвращает пользователя
-к списку товаров.
-"""
+    Сначала удаляет данные из базы, затем файл изображения.
+    Удаление разрешено только для работы, находящейся в архиве.
+    """
     product = get_product_by_id(product_id)
-    if product:
-        delete_image(product["img"])
-        delete_product(product_id)
-    flash("Товар удалён", "info")
+
+    if not product:
+        flash("Работа не найдена", "error")
+        return redirect(url_for("admin.admin_archived_products"))
+
+    if product["is_archived"] != 1:
+        flash("Перед окончательным удалением переместите работу в архив", "error")
+        return redirect(url_for("admin.admin_products"))
+
+    image_path = product["img"]
+
+    delete_product(product_id)
+
+    if image_path:
+        delete_image(image_path)
+
+    flash(f"Работа «{product['name']}» удалена навсегда", "info")
+
     return redirect(url_for("admin.admin_archived_products"))
     
     

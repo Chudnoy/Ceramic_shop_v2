@@ -159,18 +159,28 @@ def init_db():
     ensure_product_columns()
     
     
-def archive_or_restore_product(product_id, archive_action=1):
-    
-    is_for_sale = 1
-    is_visible = 1
-    
+def set_product_archived(product_id, is_archived):
+    """
+    Изменяет состояние архива работы.
+
+    is_archived:
+    1 — работа находится в архиве;
+    0 — работа активна.
+
+    Функция не изменяет is_visible и is_for_sale, поэтому после восстановления
+    сохраняются прежние настройки публикации и продажи.
+    """
     conn = get_db_connection()
-    
-    if archive_action:
-        is_visible = 0
-        is_for_sale = 0
-        
-    conn.execute("UPDATE products SET is_archived = ?, is_visible = ?, is_for_sale = ? WHERE id = ?", (archive_action, is_visible, is_for_sale, product_id))
+
+    conn.execute(
+        """
+        UPDATE products
+        SET is_archived = ?
+        WHERE id = ?
+        """,
+        (is_archived, product_id)
+    )
+
     conn.commit()
     conn.close()
     
@@ -206,29 +216,42 @@ def get_tags_for_product(product_id):
 def get_products_by_tag_slug(tag_slug, only_visible=True):
     """
     Возвращает работы, связанные с тегом по его slug.
+
+    Для публичной части сайта возвращает только опубликованные
+    и неархивные работы.
+
+    Для админки при only_visible=False возвращает все связанные работы,
+    включая скрытые и архивные.
     """
     conn = get_db_connection()
-    
+
     query = """
-    SELECT products.*, categories.name AS category_name, categories.slug AS category_slug
-    FROM tags
-    JOIN product_tags
-    ON tags.id = product_tags.tag_id
-    JOIN products
-    ON product_tags.product_id = products.id
-    LEFT JOIN categories
-    ON products.category_id = categories.id
-    WHERE tags.slug = ?
+        SELECT
+            products.*,
+            categories.name AS category_name,
+            categories.slug AS category_slug
+        FROM tags
+        JOIN product_tags
+            ON tags.id = product_tags.tag_id
+        JOIN products
+            ON product_tags.product_id = products.id
+        LEFT JOIN categories
+            ON products.category_id = categories.id
+        WHERE tags.slug = ?
     """
-    
+
     params = [tag_slug]
-    
+
     if only_visible:
-        query += " AND products.is_visible = 1"
-        
+        query += """
+            AND products.is_visible = 1
+            AND products.is_archived = 0
+        """
+
     query += " ORDER BY products.name"
-    
+
     products = conn.execute(query, params).fetchall()
+
     conn.close()
     return products
 
@@ -381,10 +404,10 @@ def get_all_products(
     params = []
     conditions = []
     
-    if not is_archived:
-        conditions.append("products.is_archived = 0")
-    else:
+    if is_archived:
         conditions.append("products.is_archived = 1")
+    else:
+        conditions.append("products.is_archived = 0")
 
     if only_visible:
         conditions.append("products.is_visible = 1")
@@ -450,7 +473,7 @@ id товаров и количество. Если список id пустой
         return []
     conn = get_db_connection()
     placeholders = ", ".join("?" * len(product_ids))
-    query = f"SELECT id, name, description, price, status, img, category_id, year, materials, is_visible, is_for_sale FROM products WHERE id IN ({placeholders})"
+    query = f"SELECT id, name, description, price, status, img, category_id, year, materials, is_visible, is_archived, is_for_sale FROM products WHERE id IN ({placeholders})"
     products = conn.execute(query, product_ids).fetchall()
     conn.close()
     return products
@@ -613,11 +636,24 @@ def get_product_with_category(product_id):
     
 def delete_product(product_id):
     """
-    Удаляет работу и связанные с ней строки из таблицы product_tags.
+    Окончательно удаляет работу из базы.
+
+    Сначала удаляет зависимые строки:
+    - связи работы с тегами;
+    - отзывы работы.
+
+    Затем удаляет саму работу.
+
+    Все изменения сохраняются одним commit().
     """
     conn = get_db_connection()
+
     conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
+
+    conn.execute("DELETE FROM reviews WHERE product_id = ?", (product_id,))
+
     conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
+
     conn.commit()
     conn.close()
     

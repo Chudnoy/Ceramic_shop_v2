@@ -91,7 +91,7 @@ def product_page(product_id):
         flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         
-    if product["is_visible"] != 1:
+    if product["is_visible"] != 1 or product["is_archived"] == 1:
         flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         

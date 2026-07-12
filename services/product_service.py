@@ -10,24 +10,32 @@ PRODUCT_STATUSES = {
 
 
 def get_product_cart_unavailable_reason(product):
+    """
+    Возвращает причину, по которой работа недоступна для оформления.
+
+    Если работа доступна, возвращает пустую строку.
+    """
     if not product:
         return "Работа не найдена"
-        
+
+    if product["is_archived"] == 1:
+        return "Эта работа находится в архиве"
+
     if product["is_visible"] != 1:
         return "Эта работа сейчас не опубликована"
-        
+
     if product["is_for_sale"] != 1:
         return "Эта работа не предназначена для продажи"
-        
+
     if product["status"] == "reserved":
         return "Эта работа уже зарезервирована"
-        
+
     if product["status"] == "sold":
         return "Эта работа уже продана"
-    
+
     if product["status"] != "available":
         return "Эта работа сейчас недоступна для продажи"
-        
+
     return ""
 
 
