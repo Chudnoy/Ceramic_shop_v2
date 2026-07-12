@@ -1,4 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+import os
+
+from flask import (
+    Blueprint,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from werkzeug.security import check_password_hash
+
 from database.categories import (
     create_category,
     delete_category,
@@ -44,12 +56,16 @@ from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
 from services.category_service import process_category_form
 from services.tag_service import process_tag_form
-from werkzeug.security import generate_password_hash, check_password_hash
-import os
 admin_bp = Blueprint("admin", __name__)
 
-ADMIN_LOGIN = os.environ.get('ADMIN_LOGIN', 'admin')
-ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', '')
+ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN")
+ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH")
+
+if not ADMIN_LOGIN:
+    raise RuntimeError("ADMIN_LOGIN не задан")
+
+if not ADMIN_PASSWORD_HASH:
+    raise RuntimeError("ADMIN_PASSWORD_HASH не задан")
 
 
 @admin_bp.before_request
