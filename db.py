@@ -36,6 +36,9 @@ def ensure_product_columns():
     if 'is_for_sale' not in column_names:
         conn.execute('ALTER TABLE products ADD COLUMN is_for_sale INTEGER NOT NULL DEFAULT 1')
         
+    if "is_archived" not in column_names:
+        conn.execute("ALTER TABLE products ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0")
+        
     conn.commit()
     
     conn.close()
@@ -74,6 +77,7 @@ def init_db():
     materials TEXT NOT NULL DEFAULT 'Каменная масса',
     is_visible INTEGER NOT NULL DEFAULT 1,
     is_for_sale INTEGER NOT NULL DEFAULT 1,
+    is_archived INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES categories(id)
     )""")
     
@@ -153,6 +157,22 @@ def init_db():
     conn.close()
     
     ensure_product_columns()
+    
+    
+def archive_or_restore_product(product_id, archive_action=1):
+    
+    is_for_sale = 1
+    is_visible = 1
+    
+    conn = get_db_connection()
+    
+    if archive_action:
+        is_visible = 0
+        is_for_sale = 0
+        
+    conn.execute("UPDATE products SET is_archived = ?, is_visible = ?, is_for_sale = ? WHERE id = ?", (archive_action, is_visible, is_for_sale, product_id))
+    conn.commit()
+    conn.close()
     
     
 def get_all_tags():
@@ -336,7 +356,8 @@ def get_all_products(
     order="ASC",
     search_query="",
     status="",
-    only_visible=True
+    only_visible=True,
+    is_archived=False
 ):
     """
     Возвращает список работ с учётом категории, поиска, сортировки,
@@ -359,6 +380,11 @@ def get_all_products(
 
     params = []
     conditions = []
+    
+    if not is_archived:
+        conditions.append("products.is_archived = 0")
+    else:
+        conditions.append("products.is_archived = 1")
 
     if only_visible:
         conditions.append("products.is_visible = 1")

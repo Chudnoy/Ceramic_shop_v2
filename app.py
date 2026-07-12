@@ -1,14 +1,24 @@
+import os
+from datetime import timedelta
+
+from dotenv import load_dotenv
+
+
+APP_FILE_PATH = os.path.abspath(__file__)
+PROJECT_DIR = os.path.dirname(APP_FILE_PATH)
+ENV_PATH = os.path.join(PROJECT_DIR, ".env")
+
+load_dotenv(ENV_PATH)
+
+
 from flask import Flask, session, request, redirect, url_for, flash, jsonify
-from db import init_db
+
 from routes.admin import admin_bp
 from routes.main import main_bp
-from datetime import timedelta
-import os
-from dotenv import load_dotenv
+
+from db import init_db
 from services.cart_service import get_cart_count
 from services.csrf_service import validate_csrf_from_form, get_csrf_token
-
-load_dotenv()
 
 init_db()
 
@@ -17,7 +27,13 @@ app = Flask(__name__)
 app.register_blueprint(admin_bp)
 app.register_blueprint(main_bp)
 app.permanent_session_lifetime = timedelta(days=1)
-app.secret_key = os.environ.get('SECRET_KEY', 'def-secret-key')
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY не задан")
+    
+app.secret_key = SECRET_KEY
 
 
 @app.before_request

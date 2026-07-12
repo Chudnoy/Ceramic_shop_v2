@@ -94,9 +94,9 @@
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |
-                    <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар?')">
+                    <form action="{{url_for('admin.archive_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Переместить в архив?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="admin-link-button">Удалить</button>
+                        <button type="submit" class="admin-link-button">В архив</button>
                     </form>
                 </td>
             </tr>
