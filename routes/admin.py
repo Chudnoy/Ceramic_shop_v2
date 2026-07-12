@@ -35,6 +35,7 @@ from database.products import (
     get_product_by_id,
     set_product_archived,
     update_product,
+    get_products_by_tag_slug
 )
 
 from database.stats import get_admin_stats
