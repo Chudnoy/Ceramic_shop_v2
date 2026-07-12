@@ -1,5 +1,5 @@
 from validation import validate_product
-from db import  get_all_tags
+from database.tags import get_all_tags
 
 
 PRODUCT_STATUSES = {

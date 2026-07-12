@@ -16,7 +16,7 @@ from flask import Flask, session, request, redirect, url_for, flash, jsonify
 from routes.admin import admin_bp
 from routes.main import main_bp
 
-from db import init_db
+from database.schema import init_db
 from services.cart_service import get_cart_count
 from services.csrf_service import validate_csrf_from_form, get_csrf_token
 

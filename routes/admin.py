@@ -1,33 +1,44 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from db import (get_all_products,
-                get_all_orders,
-                delete_product,
-                update_product,
-                get_product_by_id,
-                get_all_categories, 
-                create_product,
-                delete_order,
-                get_order_by_id,
-                update_order,
-                update_order_status,
-                get_category_by_slug,
-                get_admin_stats,
-                create_category,
-                delete_category,
-                update_category,
-                get_all_categories_with_product_count,
-                get_all_tags,
-                get_tags_for_product,
-                update_product_tags,
-                get_products_by_tag_slug,
-                get_tags_with_product_count,
-                get_product_count_by_tag_id,
-                delete_tag_by_id,
-                get_tag_by_id,
-                create_tag,
-                get_tag_by_slug,
-                update_tag,
-                set_product_archived)
+from database.categories import (
+    create_category,
+    delete_category,
+    get_all_categories,
+    get_all_categories_with_product_count,
+    get_category_by_slug,
+    update_category,
+)
+
+from database.orders import (
+    delete_order,
+    get_all_orders,
+    get_order_by_id,
+    update_order,
+    update_order_status,
+)
+
+from database.products import (
+    create_product,
+    delete_product,
+    get_all_products,
+    get_product_by_id,
+    set_product_archived,
+    update_product,
+)
+
+from database.stats import get_admin_stats
+
+from database.tags import (
+    create_tag,
+    delete_tag_by_id,
+    get_all_tags,
+    get_product_count_by_tag_id,
+    get_tag_by_id,
+    get_tag_by_slug,
+    get_tags_for_product,
+    get_tags_with_product_count,
+    update_product_tags,
+    update_tag,
+)
 from services.product_service import process_product_form, PRODUCT_STATUSES, process_product_tag_ids
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES

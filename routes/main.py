@@ -1,5 +1,31 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from db import get_all_products, get_all_categories, get_category_by_slug, get_product_with_category, get_reviews_by_product, product_exists, get_product_by_id, add_review_db, create_order, get_order_by_id, get_tags_for_product, get_products_by_tag_slug, get_tag_by_slug
+from database.categories import (
+    get_all_categories,
+    get_category_by_slug,
+)
+
+from database.orders import (
+    create_order,
+    get_order_by_id,
+)
+
+from database.products import (
+    get_all_products,
+    get_product_by_id,
+    get_product_with_category,
+    get_products_by_tag_slug,
+    product_exists,
+)
+
+from database.reviews import (
+    add_review_db,
+    get_reviews_by_product,
+)
+
+from database.tags import (
+    get_tag_by_slug,
+    get_tags_for_product,
+)
 from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
 from services.order_service import process_checkout_form, build_order_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
