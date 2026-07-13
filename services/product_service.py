@@ -1,5 +1,6 @@
 from validation import validate_product
 from database.tags import get_all_tags
+from database.categories import get_category_by_id
 
 
 PRODUCT_STATUSES = {
@@ -56,14 +57,20 @@ def process_product_form(form):
     materials = form.get("materials", "")
     is_visible = 1 if form.get('is_visible') == '1' else 0
     is_for_sale = 1 if form.get('is_for_sale') == '1' else 0
+    is_featured = 1 if form.get("is_featured") == "1" else 0
     
     if status not in PRODUCT_STATUSES:
         return False, "Некорректный статус товара", None
         
-    is_valid, error_message, cleaned_data = validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale)
+    is_valid, error_message, cleaned_data = validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale, is_featured)
     
     if not is_valid:
         return False, error_message, None
+        
+    category = get_category_by_id(cleaned_data["category_id"])
+    
+    if not category:
+        return False, "Выбранная категория не существует", None
     
     cleaned_data["status"] = status
         

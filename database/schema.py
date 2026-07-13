@@ -25,6 +25,9 @@ def ensure_product_columns():
     if "is_archived" not in column_names:
         conn.execute("ALTER TABLE products ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0")
         
+    if "is_featured" not in column_names:
+        conn.execute("ALTER TABLE products ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0")
+        
     conn.commit()
     
     conn.close()
@@ -64,6 +67,7 @@ def init_db():
     is_visible INTEGER NOT NULL DEFAULT 1,
     is_for_sale INTEGER NOT NULL DEFAULT 1,
     is_archived INTEGER NOT NULL DEFAULT 0,
+    is_featured INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES categories(id)
     )""")
     

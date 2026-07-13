@@ -28,7 +28,7 @@ def validate_review(name, rating_str, comment):
     return True, "", {"name": name, "rating": rating, "comment": comment}
     
     
-def validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale):
+def validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale, is_featured):
     """
 Валидирует основные данные товара.
 
@@ -77,6 +77,13 @@ def validate_product(name, price, description, category_id, year, materials, is_
             raise ValueError
     except (TypeError, ValueError):
         return False, 'Некорректные данные о возможности продажи', {}
+        
+    try:
+        is_featured = int(is_featured)
+        if is_featured < 0 or is_featured > 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return False, "Получены некорректные данные об избранном товаре", {}
     
     try:
         category_id = int(category_id)
@@ -90,7 +97,8 @@ def validate_product(name, price, description, category_id, year, materials, is_
                       "year": year, 
                       "materials": materials, 
                       'is_visible': is_visible,
-                      'is_for_sale': is_for_sale}
+                      'is_for_sale': is_for_sale,
+                      "is_featured": is_featured}
 
 
 def is_valid_slug(s):

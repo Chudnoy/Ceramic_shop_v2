@@ -423,7 +423,8 @@ def edit_product(product_id):
                        data["year"], 
                        data["materials"],
                        data['is_visible'],
-                       data['is_for_sale'])
+                       data['is_for_sale'],
+                       data["is_featured"])
             
         update_product_tags(product_id, cleaned_tag_ids)
         
@@ -487,7 +488,8 @@ def new_product():
                        data["year"], 
                        data["materials"], 
                        data['is_visible'],
-                       data['is_for_sale'])
+                       data['is_for_sale'],
+                       data["is_featured"])
             
         update_product_tags(product_id, cleaned_tag_ids)
         
@@ -503,7 +505,8 @@ def new_product():
                      "year": "", 
                      "materials": "Каменная масса", 
                      'is_visible': 1, 
-                     'is_for_sale': 1}
+                     'is_for_sale': 1,
+                     "is_featured": 0}
     
     return render_template("admin/product_form.html",
                            product=empty_product,
@@ -617,15 +620,16 @@ def delete_category_route(slug):
     """
     category = get_category_by_slug(slug)
     
-    if category:
-        if delete_category(category['id']):
-            flash('Категория удалена', 'success')
-        else:
-            flash('В категории ещё есть товары', 'error')
+    if not category:
+        flash("Категория не найдена", "error")
+        return redirect(url_for("admin.admin_categories"))
+    
+    if delete_category(category["id"]):
+        flash("Категория удалена", "success")
     else:
-        flash('Категория не найдена', 'error')
-            
-    return redirect(url_for('admin.admin_categories'))
+        flash("Категорию нельзя удалить пока к ней привязаны работы", "error")
+        
+    return redirect(url_for("admin.admin_categories"))
 
 
 @admin_bp.route('/admin/tags')

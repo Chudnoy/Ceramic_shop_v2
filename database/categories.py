@@ -75,6 +75,14 @@ def get_category_by_slug(slug):
     return category
     
     
+def get_category_by_id(category_id):
+    conn = get_db_connection()
+    category = conn.execute("SELECT * FROM categories WHERE id = ?", (category_id,)).fetchone()
+    conn.close()
+    
+    return category
+    
+    
 def get_all_categories_with_product_count():
     conn = get_db_connection()
     categories = conn.execute('''SELECT categories.*, COUNT(products.id) AS products_count

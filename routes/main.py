@@ -42,7 +42,8 @@ def index():
 
 Рендерит шаблон index.html без дополнительной бизнес-логики.
 """
-    return render_template("index.html")
+    products = get_all_products(is_archived=False, only_visible=True, only_featured=True)
+    return render_template("index.html", products=products)
 
 
 @main_bp.route("/catalog")

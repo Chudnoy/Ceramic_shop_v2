@@ -59,32 +59,50 @@
 	</div>
 
 	<div class="home-projects__grid">
-		<article class="home-project-card">
-			<p class="home-project-card__year">2025</p>
-			<h3>Башня</h3>
-			<p>
-				Дом как оборонительная структура, сохраняющая внутри себя
-				хрупкость гнезда.
-			</p>
-		</article>
-
-		<article class="home-project-card">
-			<p class="home-project-card__year">2020—2025</p>
-			<h3>Проект «Дом»</h3>
-			<p>
-				Серия объектов о доме как личном, внутреннем и постоянно
-				меняющемся пространстве.
-			</p>
-		</article>
-
-		<article class="home-project-card">
-			<p class="home-project-card__year">2025</p>
-			<h3>Destruction</h3>
-			<p>
-				Разрушение как состояние формы: архитектура, хаос и след
-				материального распада.
-			</p>
-		</article>
+	    {% if products %}
+	        {% for product in products %}
+	            <article class="home-project-card">
+	                <a
+	                    href="{{ url_for('main.product_page', product_id=product.id) }}"
+	                    class="home-project-card__link"
+	                >
+	                    <div class="home-project-card__media">
+	                        {% if product.img %}
+	                            <img
+	                                src="{{ product.img }}"
+	                                alt="{{ product.name }}"
+	                                class="home-project-card__image"
+	                            >
+	                        {% else %}
+	                            <div class="home-project-card__placeholder">
+	                                Изображение отсутствует
+	                            </div>
+	                        {% endif %}
+	                    </div>
+	
+	                    <div class="home-project-card__content">
+	                        {% if product.year %}
+	                            <p class="home-project-card__year">
+	                                {{ product.year }}
+	                            </p>
+	                        {% endif %}
+	
+	                        <h3 class="home-project-card__title">
+	                            {{ product.name }}
+	                        </h3>
+	
+	                        <p class="home-project-card__description">
+	                            {{ product.description }}
+	                        </p>
+	                    </div>
+	                </a>
+	            </article>
+	        {% endfor %}
+	    {% else %}
+	        <p class="home-projects__empty">
+	            Избранные работы пока не добавлены.
+	        </p>
+	    {% endif %}
 	</div>
 </section>
 {% endblock %}
