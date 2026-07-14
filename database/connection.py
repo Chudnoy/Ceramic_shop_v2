@@ -9,5 +9,6 @@ def get_db_connection():
 данными в routes, services и шаблонах.
 """
     conn = sqlite3.connect("shop.db")
+    conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn

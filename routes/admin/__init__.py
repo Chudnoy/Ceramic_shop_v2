@@ -7,4 +7,3 @@ from . import dashboard
 from . import orders
 from . import categories
 from . import tags
-from .. import admin_legacy

@@ -713,7 +713,6 @@ select {
         margin-bottom: 28px;
     }
 }
-}
 
 
 /* =================================
@@ -736,7 +735,7 @@ select {
 .catalog-header__title {
     margin: 0;
     max-width: 680px;
-    font-family: var(--font-heading);
+    font-family: var(--font-serif);
     font-size: clamp(42px, 7vw, 88px);
     line-height: 0.95;
     font-weight: 400;
