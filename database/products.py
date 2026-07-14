@@ -35,6 +35,13 @@ def update_product(product_id, name, price, description, img_path, category_id, 
     conn.close()
     
     
+def update_product_state(product_id, status, is_visible, is_for_sale, is_featured):
+    conn = get_db_connection()
+    conn.execute("UPDATE products SET status = ?, is_visible = ?, is_for_sale = ?, is_featured = ? WHERE id = ?", (status, is_visible, is_for_sale, is_featured, product_id))
+    conn.commit()
+    conn.close()
+    
+    
 def delete_product(product_id):
     """
     Окончательно удаляет работу из базы.

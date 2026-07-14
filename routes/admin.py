@@ -35,7 +35,8 @@ from database.products import (
     get_product_by_id,
     set_product_archived,
     update_product,
-    get_products_by_tag_slug
+    get_products_by_tag_slug,
+    update_product_state
 )
 
 from database.stats import get_admin_stats
@@ -52,7 +53,7 @@ from database.tags import (
     update_product_tags,
     update_tag,
 )
-from services.product_service import process_product_form, PRODUCT_STATUSES, process_product_tag_ids
+from services.product_service import process_product_form, process_product_state_form, PRODUCT_STATUSES, process_product_tag_ids
 from services.image_service import save_image, delete_image
 from services.order_service import process_order_form, ORDER_STATUSES
 from services.category_service import process_category_form
@@ -516,6 +517,26 @@ def new_product():
                            title="Новый товар",
                            submit_text="Создать",
                            product_statuses=PRODUCT_STATUSES)
+                           
+                           
+@admin_bp.route("/admin/products/state/<product_id>", methods=["POST"])
+def update_product_state_route(product_id):
+    product = get_product_by_id(product_id)
+    
+    if not product:
+        flash("Работа не найдена", "error")
+        return redirect(url_for("admin.admin_products"))
+        
+    is_valid, message, cleaned_data = process_product_state_form(request.form)
+    
+    if not is_valid:
+        flash(message, "error")
+        return redirect(url_for("admin.admin_products"))
+        
+    update_product_state(product_id, cleaned_data["status"], cleaned_data["is_visible"], cleaned_data["is_for_sale"], cleaned_data["is_featured"])
+    
+    flash("Состояние работы обновлено", "success")
+    return redirect(url_for("admin.admin_products"))
 
 
 @admin_bp.route('/admin/categories')

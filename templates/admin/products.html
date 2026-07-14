@@ -52,9 +52,7 @@
                 <th>Год изготовления</th>
                 <th>Материалы</th>
                 <th>Цена</th>
-                <th>Статус</th>
-				<th>Публикация</th>
-				<th>Продажа</th>
+                <th>Состояние>
                 <th>Действия</th>
             </tr>
 
@@ -80,17 +78,64 @@
                     {% endif %}
                 </td>
                 <td>{{ product.price }} руб.</td>
-                <td>
-                    <span class="product-status product-status-{{product.status}}">
-                        {{ product_statuses.get(product.status, product.status) }}
-                    </span>
+                <td class="admin-product-state">
+                    <form
+                        action="{{ url_for('admin.update_product_state_route', product_id=product.id) }}"
+                        method="post"
+                        class="admin-product-state__form"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <label class="admin-product-state__field">
+                            <span>Статус</span>
+
+                            <select name="status">
+                                {% for status_value, status_label in product_statuses.items() %}
+                                    <option
+                                        value="{{ status_value }}"
+                                        {% if product.status == status_value %}selected{% endif %}
+                                    >
+                                        {{ status_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_visible"
+                                value="1"
+                                {% if product.is_visible %}checked{% endif %}
+                            >
+                            <span>На сайте</span>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_for_sale"
+                                value="1"
+                                {% if product.is_for_sale %}checked{% endif %}
+                            >
+                            <span>Продаётся</span>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_featured"
+                                value="1"
+                                {% if product.is_featured %}checked{% endif %}
+                            >
+                            <span>На главной</span>
+                        </label>
+
+                        <button type="submit" class="admin-product-state__submit">
+                            Сохранить
+                        </button>
+                    </form>
                 </td>
-				<td>
-					{% if product.is_visible %}Отображается{% else %}Не отображается{% endif %}
-				</td>
-				<td>
-					{% if product.is_for_sale %}Для продажи{% else %}Не продаётся{% endif %}
-				</td>
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |

@@ -62,6 +62,9 @@ def process_product_form(form):
     if status not in PRODUCT_STATUSES:
         return False, "Некорректный статус товара", None
         
+    if not is_visible and is_featured:
+        return False, "Работу нельзя добавить на главную, пока она скрыта с сайта", None
+        
     is_valid, error_message, cleaned_data = validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale, is_featured)
     
     if not is_valid:
@@ -74,6 +77,29 @@ def process_product_form(form):
     
     cleaned_data["status"] = status
         
+    return True, "", cleaned_data
+    
+    
+def process_product_state_form(form):
+    status = form.get("status", "").strip().lower()
+    
+    is_visible = 1 if form.get("is_visible") == "1" else 0
+    is_for_sale = 1 if form.get("is_for_sale") == "1" else 0
+    is_featured = 1 if form.get("is_featured") == "1" else 0
+    
+    if status not in PRODUCT_STATUSES:
+        return False, "Некорректный статус работы", None 
+        
+    if not is_visible and is_featured:
+        return False, "Чтобы оказаться на главной, работа должна отображаться на сайте", None
+        
+    cleaned_data = {
+    "status": status,
+    "is_visible": is_visible,
+    "is_for_sale": is_for_sale,
+    "is_featured": is_featured
+    }
+    
     return True, "", cleaned_data
     
     
