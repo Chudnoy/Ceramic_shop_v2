@@ -20,8 +20,6 @@ from database.schema import init_db
 from services.cart_service import get_cart_count
 from services.csrf_service import validate_csrf_from_form, get_csrf_token
 
-init_db()
-
 
 app = Flask(__name__)
 app.register_blueprint(admin_bp)
@@ -73,4 +71,5 @@ def inject_csrf_token():
     
     
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=8000, debug=True)

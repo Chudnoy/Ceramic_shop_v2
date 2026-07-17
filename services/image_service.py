@@ -2,7 +2,10 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
+IMAGE_SERVICE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(IMAGE_SERVICE_DIR)
+
+UPLOAD_FOLDER = os.path.join(PROJECT_DIR, "static", "uploads")
 UPLOAD_URL = "/static/uploads/"
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 
