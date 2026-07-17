@@ -81,6 +81,7 @@ def test_add_tag_to_product_ensures_unique_product_tag_pair(tags_test_db):
     
     conn = tags_test_db()
     pairs_count = conn.execute("SELECT COUNT(*) FROM product_tags").fetchone()[0]
+    conn.close()
     
     assert pairs_count == 1
     
@@ -113,7 +114,7 @@ def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
     tag_names = [tag["name"] for tag in tags_for_first_product]
     
     assert len(tag_names) == 2
-    assert tag_names == sorted(tag_names)
+    assert tag_names == ["Дом", "Природа"]
     
     
 def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
