@@ -109,7 +109,11 @@ def create_test_product(
             is_for_sale=1,
             is_featured=0
             ):
-    product_id = products.create_product(
+    conn = products.get_db_connection()
+    try:
+        
+        product_id = products.insert_product(
+            conn=conn,
             name=name,
             price=price,
             description=description,
@@ -122,8 +126,13 @@ def create_test_product(
             is_for_sale=is_for_sale,
             is_featured=is_featured
             )
-            
-    return product_id
+        conn.commit()
+        return product_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     
     
 def create_test_category(
@@ -203,8 +212,11 @@ def test_update_product_changes_all_product_data_except_id(products_test_db):
                     slug="cups"
                     )
     
-    products.update_product(
-                        product_id,
+    conn = products.get_db_connection()
+    try:
+        products.update_product_data(
+                        conn=conn,
+                        product_id=product_id,
                         name="Чашка",
                         price=2500,
                         description="Синяя чашка",
@@ -217,6 +229,12 @@ def test_update_product_changes_all_product_data_except_id(products_test_db):
                         is_for_sale=0,
                         is_featured=1
                         )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
                         
     product = products.get_product_by_id(product_id)
     

@@ -2,37 +2,102 @@ import uuid
 from database.connection import get_db_connection
 
 
-def create_product(name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
-    """
-    Создаёт новый товар в таблице products и возвращает id созданной записи.
-    """
+def insert_product(
+        conn,
+        name,
+        price,
+        description,
+        img_path,
+        category_id,
+        status,
+        year,
+        materials,
+        is_visible,
+        is_for_sale,
+        is_featured
+    ):
     product_id = str(uuid.uuid4())
-    conn = get_db_connection()
     conn.execute("""
     INSERT INTO products (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
     (product_id, name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured))
-    conn.commit()
-    conn.close()
     
     return product_id
-    
-    
-def update_product(product_id, name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
-    """
-Обновляет данные существующего товара.
 
-Сохраняет новое название, описание, цену, категорию, путь к изображению и статус
-товара. Используется в админке после успешной обработки формы редактирования.
-"""
+
+def create_product(name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
     conn = get_db_connection()
+    
+    try:
+        product_id = insert_product(
+                conn=conn,
+                name=name,
+                price=price,
+                description=description,
+                img_path=img_path,
+                category_id=category_id,
+                status=status,
+                year=year,
+                materials=materials,
+                is_visible=is_visible,
+                is_for_sale=is_for_sale,
+                is_featured=is_featured
+            )
+        conn.commit()
+        return product_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+        
+        
+def update_product_data(
+        conn,
+        product_id,
+        name,
+        price,
+        description,
+        img_path,
+        category_id,
+        status,
+        year,
+        materials,
+        is_visible,
+        is_for_sale,
+        is_featured,
+):
     conn.execute("""
     UPDATE products
     SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?, is_visible = ?, is_for_sale = ?, is_featured = ?
     WHERE id = ?
     """, (name, description, price, category_id, img_path, status, year, materials, is_visible, is_for_sale, is_featured, product_id))
-    conn.commit()
-    conn.close()
+    
+    
+def update_product(product_id, name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
+    conn = get_db_connection()
+    try:
+        update_product_data(
+            conn=conn,
+            product_id=product_id,
+            name=name,
+            price=price,
+            description=description,
+            img_path=img_path,
+            category_id=category_id,
+            status=status,
+            year=year,
+            materials=materials,
+            is_visible=is_visible,
+            is_for_sale=is_for_sale,
+            is_featured=is_featured
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     
     
 def update_product_state(product_id, status, is_visible, is_for_sale, is_featured):

@@ -24,6 +24,8 @@ from services.product_service import (
     process_product_form,
     process_product_state_form,
     process_product_tag_ids,
+    create_product_with_tags,
+    update_product_with_tags
 )
 
 from . import admin_bp
@@ -133,9 +135,6 @@ def new_product():
 по умолчанию. При POST-запросе валидирует данные формы, сохраняет изображение,
 создаёт новый товар в базе данных и возвращает пользователя к списку товаров.
 """
-    categories = get_all_categories()
-    tags = get_all_tags()
-    
     if request.method == "POST":
         is_valid, error_message, data = process_product_form(request.form)
         
@@ -150,27 +149,15 @@ def new_product():
             return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
-        image_success, image_error, image_path = save_image(file)
+        is_created, create_error, product_id = create_product_with_tags(
+                    data=data,
+                    tag_ids=cleaned_tag_ids,
+                    file=file
+        )
         
-        if not image_success:
-            flash(image_error, 'error')
-            return redirect(url_for('admin.new_product'))
-
-        data['img'] = image_path
-            
-        product_id = create_product(data["name"], 
-                       data["price"], 
-                       data["description"], 
-                       data["img"], 
-                       data["category_id"], 
-                       data["status"], 
-                       data["year"], 
-                       data["materials"], 
-                       data['is_visible'],
-                       data['is_for_sale'],
-                       data["is_featured"])
-            
-        update_product_tags(product_id, cleaned_tag_ids)
+        if not is_created:
+            flash(create_error, "error")
+            return redirect(url_for("admin.new_product"))
         
         flash("Товар создан", "success")
         return redirect(url_for("admin.admin_products"))
@@ -186,6 +173,9 @@ def new_product():
                      'is_visible': 1, 
                      'is_for_sale': 1,
                      "is_featured": 0}
+                     
+    categories = get_all_categories()
+    tags = get_all_tags()
     
     return render_template("admin/product_form.html",
                            product=empty_product,
@@ -226,31 +216,18 @@ def edit_product(product_id):
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
         file = request.files.get('img')
-        image_success, image_error, image_path = save_image(file)
         
-        if not image_success:
-            flash(image_error, 'error')
-            return redirect(url_for('admin.edit_product', product_id=product_id))
-
-        if image_path:
-            data['img'] = image_path
-        else:
-            data['img'] = product['img']
+        is_updated, update_error = update_product_with_tags(
+            product_id=product_id,
+            old_image_path=product["img"],
+            data=data,
+            tag_ids=cleaned_tag_ids,
+            file=file
+        )
         
-        update_product(product_id, 
-                       data["name"], 
-                       data["price"], 
-                       data["description"], 
-                       data["img"], 
-                       data["category_id"], 
-                       data["status"], 
-                       data["year"], 
-                       data["materials"],
-                       data['is_visible'],
-                       data['is_for_sale'],
-                       data["is_featured"])
-            
-        update_product_tags(product_id, cleaned_tag_ids)
+        if not is_updated:
+            flash(error_message, "error")
+            return redirect(url_for("admin.edit_product", product_id=product_id))
         
         flash("Товар обновлён", "success")
         return redirect(url_for("admin.admin_products"))

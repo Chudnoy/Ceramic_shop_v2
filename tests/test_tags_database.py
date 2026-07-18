@@ -47,6 +47,23 @@ def tags_test_db(tmp_path, monkeypatch):
     return get_test_db_connection
     
     
+def replace_test_product_tags(product_id, tag_ids):
+    conn = tags.get_db_connection()
+    
+    try:
+        tags.replace_product_tags(
+                conn=conn,
+                product_id=product_id,
+                tag_ids=tag_ids
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+    
+    
 def test_update_tag_updates_fields(tags_test_db):
     
     tags.create_tag("Природа", "nature")
@@ -138,7 +155,7 @@ def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
     
     assert old_product_tags == ["Дом", "Природа"]
     
-    tags.update_product_tags(product["id"], [tags.get_tag_by_slug("wind")["id"], tags.get_tag_by_slug("house")["id"]])
+    replace_test_product_tags(product["id"], [tags.get_tag_by_slug("wind")["id"], tags.get_tag_by_slug("house")["id"]])
     
     new_product_tags = [tag["name"] for tag in tags.get_tags_for_product(product["id"])]
     
@@ -161,7 +178,7 @@ def test_update_product_tags_deletes_tags_when_tags_list_is_empty(tags_test_db):
     
     old_product_tags = [tag["name"] for tag in tags.get_tags_for_product(1)]
     
-    tags.update_product_tags(1, [])
+    replace_test_product_tags(1, [])
     
     new_product_tags = tags.get_tags_for_product(1)
     

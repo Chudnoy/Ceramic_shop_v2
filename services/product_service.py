@@ -1,5 +1,8 @@
 from validation import validate_product
-from database.tags import get_all_tags
+from database.connection import get_db_connection
+from database.products import insert_product, update_product_data
+from database.tags import get_all_tags, replace_product_tags
+from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id
 
 
@@ -119,3 +122,104 @@ def process_product_tag_ids(form):
         return False, "Использованы несуществующие ID тегов", []
             
     return True, "", cleaned_tag_ids
+    
+    
+def create_product_with_tags(data, tag_ids, file):
+    image_success, image_error, image_path = save_image(file)
+    
+    if not image_success:
+        return False, image_error, None
+        
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        
+        product_id = insert_product(
+                conn=conn,
+                name=data["name"],
+                price=data["price"],
+                description=data["description"],
+                img_path=image_path,
+                category_id=data["category_id"],
+                status=data["status"],
+                year=data["year"],
+                materials=data["materials"],
+                is_visible=data["is_visible"],
+                is_for_sale=data["is_for_sale"],
+                is_featured=data["is_featured"]
+        )
+    
+        replace_product_tags(
+            conn=conn,
+            product_id=product_id,
+            tag_ids=tag_ids
+        )
+        conn.commit()
+        return True, "", product_id
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        delete_image(image_path)
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+            
+            
+def update_product_with_tags(
+            product_id,
+            old_image_path,
+            data,
+            tag_ids,
+            file
+):
+    image_success, image_error, new_image_path = save_image(file)
+    
+    if not image_success:
+        return False, image_error
+        
+    final_image_path = new_image_path or old_image_path
+    
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        
+        update_product_data(
+            conn=conn,
+            product_id=product_id,
+            name=data["name"],
+            price=data["price"],
+            description=data["description"],
+            img_path=final_image_path,
+            category_id=data["category_id"],
+            status=data["status"],
+            year=data["year"],
+            materials=data["materials"],
+            is_visible=data["is_visible"],
+            is_for_sale=data["is_for_sale"],
+            is_featured=data["is_featured"]
+        )
+        
+        replace_product_tags(
+            conn=conn,
+            product_id=product_id,
+            tag_ids=tag_ids
+        )
+        
+        conn.commit()
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        if new_image_path:
+            delete_image(new_image_path)
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+            
+    if new_image_path and old_image_path != new_image_path:
+        delete_image(old_image_path)
+        
+    return True, ""
