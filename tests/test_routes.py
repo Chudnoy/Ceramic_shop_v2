@@ -77,3 +77,36 @@ def test_logout_removes_admin_session(client):
     
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/admin/login")
+    
+    
+def test_invalid_csrf_token_prevents_logout(client):
+    with client.session_transaction() as test_session:
+        test_session["is_admin"] = True
+        test_session["csrf_token"] = "test_token"
+        
+    response = client.post(
+            "/admin/logout",
+            data={"csrf_token": "wrong_token"}
+    )
+    
+    with client.session_transaction() as session_after_logout:
+        assert session_after_logout["is_admin"] is True
+        
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/")
+    
+    
+@pytest.mark.parametrize(
+    "admin_url",
+    [
+        "/admin",
+        "/admin/products",
+        "/admin/orders",
+        "/admin/categories",
+        "/admin/tags"
+    ]
+)
+def test_protected_admin_routes_redirect_to_login(client, admin_url):
+    response = client.get(admin_url)
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/admin/login")

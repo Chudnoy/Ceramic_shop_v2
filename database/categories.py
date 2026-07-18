@@ -1,3 +1,4 @@
+import sqlite3
 from database.connection import get_db_connection
 
 def create_category(name, slug, description):
@@ -39,14 +40,21 @@ def delete_category(category_id):
     Если в категории есть товары, не удаляет категорию и возвращает False.
     """
     conn = get_db_connection()
-    products_count = conn.execute('''SELECT COUNT(*) FROM products WHERE products.category_id = ?''', (category_id,)).fetchone()[0]
-    is_deleted = False
-    if products_count == 0:
-        conn.execute('DELETE FROM categories WHERE id = ?', (category_id,))
-        is_deleted = True
-    conn.commit()
-    conn.close()
-    return is_deleted
+    
+    try:
+        products_count = conn.execute("SELECT COUNT(*) FROM products WHERE category_id = ?", (category_id,)).fetchone()[0]
+        
+        if products_count > 0:
+            return False
+        
+        cursor = conn.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     
     
 def get_all_categories():
