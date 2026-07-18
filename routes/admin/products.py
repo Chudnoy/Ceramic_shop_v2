@@ -2,23 +2,20 @@ from flask import flash, redirect, render_template, request, url_for
 
 from database.categories import (
     get_all_categories,
-    get_category_by_slug,
+    get_category_by_slug
 )
 from database.products import (
-    create_product,
     delete_product,
     get_all_products,
     get_product_by_id,
     set_product_archived,
-    update_product,
-    update_product_state,
+    update_product_state
 )
 from database.tags import (
     get_all_tags,
-    get_tags_for_product,
-    update_product_tags,
+    get_tags_for_product
 )
-from services.image_service import delete_image, save_image
+from services.image_service import delete_image
 from services.product_service import (
     PRODUCT_STATUSES,
     process_product_form,

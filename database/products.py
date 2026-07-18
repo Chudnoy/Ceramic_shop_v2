@@ -23,33 +23,6 @@ def insert_product(
     (product_id, name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured))
     
     return product_id
-
-
-def create_product(name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
-    conn = get_db_connection()
-    
-    try:
-        product_id = insert_product(
-                conn=conn,
-                name=name,
-                price=price,
-                description=description,
-                img_path=img_path,
-                category_id=category_id,
-                status=status,
-                year=year,
-                materials=materials,
-                is_visible=is_visible,
-                is_for_sale=is_for_sale,
-                is_featured=is_featured
-            )
-        conn.commit()
-        return product_id
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
         
         
 def update_product_data(
@@ -72,32 +45,6 @@ def update_product_data(
     SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?, is_visible = ?, is_for_sale = ?, is_featured = ?
     WHERE id = ?
     """, (name, description, price, category_id, img_path, status, year, materials, is_visible, is_for_sale, is_featured, product_id))
-    
-    
-def update_product(product_id, name, price, description, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured):
-    conn = get_db_connection()
-    try:
-        update_product_data(
-            conn=conn,
-            product_id=product_id,
-            name=name,
-            price=price,
-            description=description,
-            img_path=img_path,
-            category_id=category_id,
-            status=status,
-            year=year,
-            materials=materials,
-            is_visible=is_visible,
-            is_for_sale=is_for_sale,
-            is_featured=is_featured
-        )
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
     
     
 def update_product_state(product_id, status, is_visible, is_for_sale, is_featured):

@@ -62,23 +62,6 @@ def replace_product_tags(conn, product_id, tag_ids):
         conn.execute("INSERT OR IGNORE INTO product_tags (product_id, tag_id) VALUES (?, ?)", (product_id, tag_id))
     
     
-def update_product_tags(product_id, tag_ids):
-    conn = get_db_connection()
-    
-    try:
-        replace_product_tags(
-                conn=conn,
-                product_id=product_id,
-                tag_ids=tag_ids
-        )
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
-    
-    
 def get_tags_for_product(product_id):
     """
     Возвращает теги, связанные с конкретной работой.
