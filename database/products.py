@@ -54,28 +54,14 @@ def update_product_state(product_id, status, is_visible, is_for_sale, is_feature
     conn.close()
     
     
-def delete_product(product_id):
-    """
-    Окончательно удаляет работу из базы.
-
-    Сначала удаляет зависимые строки:
-    - связи работы с тегами;
-    - отзывы работы.
-
-    Затем удаляет саму работу.
-
-    Все изменения сохраняются одним commit().
-    """
-    conn = get_db_connection()
-
+def delete_product_data(conn, product_id):
     conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
 
     conn.execute("DELETE FROM reviews WHERE product_id = ?", (product_id,))
 
-    conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
-
-    conn.commit()
-    conn.close()
+    cursor = conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    
+    return cursor.rowcount > 0
 
 
 def product_exists(product_id):

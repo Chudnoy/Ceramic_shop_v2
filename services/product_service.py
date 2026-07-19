@@ -1,6 +1,6 @@
 from validation import validate_product
 from database.connection import get_db_connection
-from database.products import insert_product, update_product_data
+from database.products import insert_product, update_product_data, delete_product_data
 from database.tags import get_all_tags, replace_product_tags
 from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id
@@ -221,5 +221,31 @@ def update_product_with_tags(
             
     if new_image_path and old_image_path != new_image_path:
         delete_image(old_image_path)
+        
+    return True, ""
+    
+    
+def delete_product_with_image(product_id, image_path):
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        is_deleted = delete_product_data(conn, product_id)
+        conn.commit()
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+        
+    if not is_deleted:
+        return False, "Товар не найден"
+        
+    try:
+        delete_image(image_path)
+    except OSError:
+        return True, "Товар удалён, но файл изображения удалить не удалось"
         
     return True, ""

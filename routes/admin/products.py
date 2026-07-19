@@ -5,7 +5,6 @@ from database.categories import (
     get_category_by_slug
 )
 from database.products import (
-    delete_product,
     get_all_products,
     get_product_by_id,
     set_product_archived,
@@ -15,14 +14,14 @@ from database.tags import (
     get_all_tags,
     get_tags_for_product
 )
-from services.image_service import delete_image
 from services.product_service import (
     PRODUCT_STATUSES,
     process_product_form,
     process_product_state_form,
     process_product_tag_ids,
     create_product_with_tags,
-    update_product_with_tags
+    update_product_with_tags,
+    delete_product_with_image
 )
 
 from . import admin_bp
@@ -223,7 +222,7 @@ def edit_product(product_id):
         )
         
         if not is_updated:
-            flash(error_message, "error")
+            flash(update_error, "error")
             return redirect(url_for("admin.edit_product", product_id=product_id))
         
         flash("Товар обновлён", "success")
@@ -265,12 +264,7 @@ def update_product_state_route(product_id):
     
 @admin_bp.route("/admin/products/delete/<product_id>", methods=["POST"])
 def delete_product_route(product_id):
-    """
-    Окончательно удаляет архивную работу.
-
-    Сначала удаляет данные из базы, затем файл изображения.
-    Удаление разрешено только для работы, находящейся в архиве.
-    """
+    
     product = get_product_by_id(product_id)
 
     if not product:
@@ -281,13 +275,18 @@ def delete_product_route(product_id):
         flash("Перед окончательным удалением переместите работу в архив", "error")
         return redirect(url_for("admin.admin_products"))
 
-    image_path = product["img"]
-
-    delete_product(product_id)
-
-    if image_path:
-        delete_image(image_path)
-
-    flash(f"Работа «{product['name']}» удалена навсегда", "info")
+    is_deleted, delete_message = delete_product_with_image(
+            product_id=product_id,
+            image_path=product["img"]
+    )
+    
+    if not is_deleted:
+        flash(delete_message, "error")
+        return redirect(url_for("admin.admin_archived_products"))
+        
+    if delete_message:
+        flash(delete_message, "info")
+    else:
+        flash(f"Работа «{product['name']}» удалена навсегда", "info")
 
     return redirect(url_for("admin.admin_archived_products"))

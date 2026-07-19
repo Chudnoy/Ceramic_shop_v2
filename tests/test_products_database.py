@@ -673,32 +673,68 @@ def test_get_all_products_ignores_invalid_sort_data(products_test_db):
     assert product_names == ["Белая ваза", "Детская кружка", "Сны Карелии"]
     
     
-def test_delete_product_completely_removes_product_dependencies(products_test_db):
-    
+def test_delete_product_completely_removes_product_dependencies(
+    products_test_db,
+):
     create_test_category(products_test_db)
     tags.create_tag("Природа", "nature")
+
     product_id = create_test_product()
     tag_id = tags.get_tag_by_slug("nature")["id"]
+
     tags.add_tag_to_product(product_id, tag_id)
+
     reviews.add_review_db(
-            product_id=product_id,
-            name="Денис",
-            rating=4,
-            comment="Нормально"
-            )
-    products.delete_product(product_id)
-    
-    product = products.get_product_by_id(product_id)
-    
-    assert product is None
-    
+        product_id=product_id,
+        name="Денис",
+        rating=4,
+        comment="Нормально",
+    )
+
     conn = products_test_db()
 
-    product_tags_count = conn.execute("SELECT COUNT(*) FROM product_tags WHERE product_id = ?", (product_id,)).fetchone()[0]
-    
-    reviews_count = conn.execute("SELECT COUNT(*) FROM reviews WHERE product_id = ?",(product_id,)).fetchone()[0]
-    
-    conn.close()
-    
+    try:
+        is_deleted = products.delete_product_data(
+            conn=conn,
+            product_id=product_id,
+        )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+    assert is_deleted is True
+
+    product = products.get_product_by_id(product_id)
+
+    assert product is None
+
+    check_conn = products_test_db()
+
+    product_tags_count = check_conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM product_tags
+        WHERE product_id = ?
+        """,
+        (product_id,),
+    ).fetchone()[0]
+
+    reviews_count = check_conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM reviews
+        WHERE product_id = ?
+        """,
+        (product_id,),
+    ).fetchone()[0]
+
+    check_conn.close()
+
     assert product_tags_count == 0
     assert reviews_count == 0
