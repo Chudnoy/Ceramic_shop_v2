@@ -35,16 +35,6 @@ def ensure_product_columns():
     
     
 def init_db():
-    """
-Создаёт основные таблицы приложения и заполняет базу стартовыми данными.
-
-Создаёт таблицы categories, products, reviews, orders, tags и product_tags,
-если они ещё не существуют. Если таблицы категорий, тегов или работ пустые,
-добавляет начальные данные.
-
-После основной инициализации запускает ensure_product_columns(),
-чтобы существующая база получила новые колонки products.
-"""
     conn = get_db_connection()
     
     conn.execute("""CREATE TABLE IF NOT EXISTS categories (
@@ -92,6 +82,23 @@ def init_db():
                  status TEXT NOT NULL DEFAULT 'new',
                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                  )""")
+                 
+    conn.execute("""CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id TEXT NOT NULL,
+            product_id TEXT,
+            product_name TEXT NOT NULL,
+            unit_price INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            
+            FOREIGN KEY (order_id)
+                REFERENCES orders(id)
+                ON DELETE CASCADE
+            
+            FOREIGN KEY (product_id)
+                REFERENCES products(id)
+                ON DELETE SET NULL
+    )""")
                  
     conn.execute("""CREATE TABLE IF NOT EXISTS tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
