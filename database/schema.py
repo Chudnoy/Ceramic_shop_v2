@@ -77,7 +77,6 @@ def init_db():
                  customer_email TEXT NOT NULL,
                  customer_phone TEXT,
                  customer_address TEXT,
-                 items TEXT NOT NULL,
                  total INTEGER NOT NULL,
                  status TEXT NOT NULL DEFAULT 'new',
                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

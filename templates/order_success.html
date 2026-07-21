@@ -35,7 +35,7 @@
 				</div>
 
 				<div class="order-success-items">
-					{% for product_id, item in order_items.items() %}
+					{% for item in order_items %}
 						<article class="order-success-item">
 							<div class="order-success-item__main">
 								<p class="order-success-item__label">
@@ -43,7 +43,7 @@
 								</p>
 
 								<h3 class="order-success-item__title">
-									{{ item.name }}
+									{{ item.product_name }}
 								</h3>
 							</div>
 
@@ -64,7 +64,7 @@
 									</span>
 
 									<span class="order-success-item__meta-value">
-										{{ item.price * item.quantity }} руб.
+										{{ item.unit_price * item.quantity }} руб.
 									</span>
 								</div>
 							</div>

@@ -1,5 +1,5 @@
-import json
 from database.connection import get_db_connection
+from database.order_items import get_order_items_by_order_id
 
 
 def insert_order(
@@ -15,46 +15,25 @@ def insert_order(
     conn.execute(
         """
         INSERT INTO orders
-        (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (id, customer_name, customer_email, customer_phone, customer_address, total, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (order_id, customer_name, customer_email, customer_phone, customer_address, "{}", total, status)
+        (order_id, customer_name, customer_email, customer_phone, customer_address, total, status)
     )
 
 
-def create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total):
-    """
-Создаёт новый заказ в таблице orders.
+def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total, status):
+    cursor = conn.execute(
+        """
+        UPDATE orders
+        SET
+            customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, total = ?, status = ?
+        WHERE id = ?
+        """,
+        (customer_name, customer_email, customer_phone, customer_address, total, status, order_id)
+    )
 
-Принимает данные покупателя, словарь товаров заказа и итоговую сумму. Словарь
-товаров преобразуется в JSON перед сохранением в базу. Новый заказ создаётся
-со статусом "new".
-"""
-    conn = get_db_connection()
-    items_json = json.dumps(items_dict, ensure_ascii=False)
-    conn.execute("""INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                 (order_id,customer_name, customer_email, customer_phone, customer_address, items_json, total, 'new'))
-    conn.commit()
-    conn.close()
-    
-    
-def update_order(order_id, name, email, phone, address, items, total, status):
-    """
-Обновляет данные существующего заказа.
-
-Принимает обновлённые данные покупателя, состав заказа, итоговую сумму и статус.
-Словарь товаров преобразуется в JSON перед сохранением в базу данных.
-"""
-    conn = get_db_connection()
-    items_json = json.dumps(items, ensure_ascii=False)
-    conn.execute("""
-    UPDATE orders
-    SET customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, items = ?, total = ?, status = ?
-    WHERE id = ?""",
-    (name, email, phone, address, items_json, total, status, order_id))
-    conn.commit()
-    conn.close()
+    return cursor.rowcount > 0
     
     
 def delete_order(order_id):
@@ -71,62 +50,59 @@ def delete_order(order_id):
     
     
 def get_all_orders(search_query='', status=''):
-    """
-Возвращает список заказов с возможной фильтрацией по поиску и статусу.
+    conn = None
+    try:
+        conn = get_db_connection()
+        query = """
+                SELECT
+                id, customer_name, customer_email, customer_phone, total, status, created_at
+                FROM orders
+                """
+        params = []
+        condition = []
 
-Позволяет искать заказы по id, имени покупателя, email, телефону и адресу.
-Также может фильтровать заказы по статусу. Поле items каждого заказа декодируется
-из JSON в Python-словарь перед возвратом.
-"""
-    conn = get_db_connection()
-    query = 'SELECT * FROM orders'
-    params = []
-    condition = []
+        if search_query:
+            condition.append('(id LIKE ? OR customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ? OR customer_address LIKE ?)')
+            search_pattern = f'%{search_query}%'
+            params.extend([search_pattern, search_pattern, search_pattern, search_pattern, search_pattern])
 
-    if search_query:
-        condition.append('(id LIKE ? OR customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ? OR customer_address LIKE ?)')
-        search_pattern = f'%{search_query}%'
-        params.extend([search_pattern, search_pattern, search_pattern, search_pattern, search_pattern])
+        if status:
+            condition.append('status = ?')
+            params.append(status)
 
-    if status:
-        condition.append('status = ?')
-        params.append(status)
+        if condition:
+            query += ' WHERE ' + ' AND '.join(condition)
+        
+        query += ' ORDER BY created_at DESC'
 
-    if condition:
-        query += ' WHERE ' + ' AND '.join(condition)
-    
-    query += ' ORDER BY created_at DESC'
+        rows = conn.execute(query, params).fetchall()
 
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-
-    orders = []
-
-    for row in rows:
-        order = dict(row)
-        order['items'] = json.loads(order['items'])
-        orders.append(order)
-    return orders
+        return [dict(row) for row in rows]
+    finally:
+        if conn is not None:
+            conn.close()
     
     
 def get_order_by_id(order_id):
-    """
-Возвращает заказ по его id.
+    conn = None
+    try:
+        conn = get_db_connection()
+        order_row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
 
-Загружает заказ из таблицы orders, преобразует строку в обычный словарь и
-декодирует поле items из JSON обратно в Python-словарь. Если заказ не найден,
-возвращает None.
-"""
-    conn = get_db_connection()
-    row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-    conn.close()
+        if order_row is None:
+            return None
+        
+        order = dict(order_row)
 
-    if not row:
-        return None
+        saved_items = get_order_items_by_order_id(conn=conn, order_id=order_id)
+
+        order['items'] =[dict(item) for item in saved_items]
+
+        return order
     
-    order = dict(row)
-    order['items'] = json.loads(order['items'])
-    return order
+    finally:
+        if conn is not None:
+            conn.close()
     
     
 def update_order_status(order_id, status):

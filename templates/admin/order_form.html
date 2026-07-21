@@ -27,15 +27,15 @@
 
     <h3>Товары</h3>
 
-    {% for product_id, product in order['items'].items() %}
+    {% for item in order['items'] %}
         <div class="admin-form-group">
-            <label for="quantity_{{ product_id }}">
-                {{ product['name'] }}
+            <label for="quantity_{{ item['id'] }}">
+                {{ item['product_name'] }}
             </label>
             <input type="number"
-                   name="quantity_{{ product_id }}"
-                   id="quantity_{{ product_id }}"
-                   value="{{ product['quantity'] }}"
+                   name="quantity_{{ item['id'] }}"
+                   id="quantity_{{ item['id'] }}"
+                   value="{{ item['quantity'] }}"
                    min="1">
         </div>
     {% endfor %}

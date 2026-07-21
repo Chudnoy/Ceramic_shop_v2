@@ -1,6 +1,6 @@
 from flask import request, render_template, flash, redirect, url_for
-from database.orders import get_all_orders, get_order_by_id, update_order, update_order_status, delete_order
-from services.order_service import ORDER_STATUSES, process_order_form
+from database.orders import get_all_orders, get_order_by_id, update_order_status, delete_order
+from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items
 
 from . import admin_bp
 
@@ -58,9 +58,14 @@ def edit_order(order_id):
             flash(error_message, 'error')
             return redirect(url_for('admin.edit_order', order_id=order_id))
         
-        update_order(order_id, data['name'], data['email'], data['phone'], data['address'], data['items'], data['total'], data['status'])
-        flash("Заказ обновлён", "success")
-        return redirect(url_for("admin.admin_orders"))
+        is_updated, update_error = update_order_with_items(order_id, data)
+
+        if not is_updated:
+            flash(update_error, 'error')
+            return redirect(url_for('admin.edit_order', order_id=order_id))
+        
+        flash('Заказ обновлён', 'success')
+        return redirect(url_for('admin.admin_orders'))
     
     return render_template("admin/order_form.html", order=order, order_statuses=ORDER_STATUSES)
     

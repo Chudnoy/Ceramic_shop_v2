@@ -31,7 +31,6 @@ def order_service_test_db(tmp_path):
             customer_email TEXT NOT NULL,
             customer_phone TEXT,
             customer_address TEXT,
-            items TEXT NOT NULL,
             total INTEGER NOT NULL,
             status TEXT NOT NULL DEFAULT 'new',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
@@ -74,6 +73,42 @@ def create_test_product(
         VALUES (?, ?, ?)
         """,
         (product_id, name, price)
+    )
+    
+    
+def create_test_order(
+            conn,
+            order_id="order-1",
+            customer_name="Денис",
+            customer_email="denis@gmail.com",
+            customer_phone=None,
+            customer_address=None,
+            total=30000,
+            status="new"
+            ):
+    conn.execute(
+        """
+        INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, total, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (order_id, customer_name, customer_email, customer_phone, customer_address, total, status)
+    )
+    
+    
+def create_test_order_item(
+            conn,
+            order_id="order-1",
+            product_id="product-1",
+            product_name="Башня",
+            unit_price=30000,
+            quantity=1
+            ):
+    conn.execute(
+        """
+        INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (order_id, product_id, product_name, unit_price, quantity)
     )
 
 
@@ -282,3 +317,230 @@ def test_build_order_item_list_creates_items_from_available_products():
             "quantity": 2,
         },
     ]
+
+
+def test_update_order_with_items_updates_order_and_all_items(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+
+    create_test_product(
+        conn=conn,
+        product_id='product-1',
+        name='Башня',
+        price=30000
+    )
+    create_test_product(
+        conn=conn,
+        product_id='product-2',
+        name='Чаша',
+        price=5000
+    )
+
+    create_test_order(
+        conn=conn,
+        order_id='order-1',
+        total=40000
+    )
+
+    create_test_order_item(
+        conn=conn,
+        order_id='order-1',
+        product_id='product-1',
+        product_name='Башня',
+        unit_price=30000,
+        quantity=1
+    )
+    create_test_order_item(
+        conn=conn,
+        order_id='order-1',
+        product_id='product-2',
+        product_name='Чаша',
+        unit_price=5000,
+        quantity=2
+    )
+
+    conn.commit()
+
+    saved_item_rows = conn.execute("SELECT id, product_id FROM order_items WHERE order_id = ? ORDER BY id", ('order-1',)).fetchall()
+
+    first_item_id = saved_item_rows[0]['id']
+    second_item_id = saved_item_rows[1]['id']
+
+    conn.close()
+
+    monkeypatch.setattr(
+        order_service,
+        'get_db_connection',
+        order_service_test_db
+    )
+
+    data = {
+        'name': 'Новое имя',
+        'email': 'new@mail.com',
+        'phone': '98765',
+        'address': 'new address',
+        'items': [
+            {
+                'id': first_item_id,
+                'quantity': 2
+            },
+            {
+                'id': second_item_id,
+                'quantity': 3
+            }
+        ],
+        'total': 75000,
+        'status': 'processing'
+    }
+
+    is_updated, error_message = order_service.update_order_with_items(order_id='order-1', data=data)
+
+    check_conn = order_service_test_db()
+    saved_order = check_conn.execute(
+        """
+        SELECT
+            customer_name, customer_email, customer_phone, customer_address, total, status
+        FROM orders
+        WHERE id = ?
+        """,
+        ('order-1',)
+    ).fetchone()
+
+    saved_items = check_conn.execute(
+        """
+        SELECT
+            id, quantity
+        FROM order_items
+        WHERE order_id = ?
+        ORDER BY id
+        """,
+        ('order-1',)
+    ).fetchall()
+    check_conn.close()
+
+    assert is_updated is True
+    assert error_message == ''
+
+    assert saved_order['customer_name'] == 'Новое имя'
+    assert saved_order['customer_email'] == 'new@mail.com'
+    assert saved_order['customer_phone'] == '98765'
+    assert saved_order['customer_address'] == 'new address'
+    assert saved_order['total'] == 75000
+    assert saved_order['status'] == 'processing'
+
+    assert saved_items[0]['id'] == first_item_id
+    assert saved_items[0]['quantity'] == 2
+
+    assert saved_items[1]['id'] == second_item_id
+    assert saved_items[1]['quantity'] == 3
+
+
+def test_update_order_with_items_rolls_back_when_item_is_not_found(
+    order_service_test_db,
+    monkeypatch,
+):
+    conn = order_service_test_db()
+
+    create_test_product(
+        conn=conn,
+        product_id="product-1",
+        name="Башня",
+        price=30000,
+    )
+
+    create_test_order(
+        conn=conn,
+        order_id="order-1",
+        customer_name="Старое имя",
+        total=30000,
+        status="new",
+    )
+
+    create_test_order_item(
+        conn=conn,
+        order_id="order-1",
+        product_id="product-1",
+        product_name="Башня",
+        unit_price=30000,
+        quantity=1,
+    )
+
+    conn.commit()
+
+    saved_item = conn.execute(
+        """
+        SELECT id
+        FROM order_items
+        WHERE order_id = ?
+        """,
+        ("order-1",),
+    ).fetchone()
+
+    existing_item_id = saved_item["id"]
+
+    conn.close()
+
+    monkeypatch.setattr(
+        order_service,
+        "get_db_connection",
+        order_service_test_db,
+    )
+
+    data = {
+        "name": "Новое имя",
+        "email": "new@email.com",
+        "phone": "+79990000000",
+        "address": "Новый адрес",
+        "items": [
+            {
+                "id": existing_item_id,
+                "quantity": 3,
+            },
+            {
+                "id": 999999,
+                "quantity": 2,
+            },
+        ],
+        "total": 100000,
+        "status": "processing",
+    }
+
+    is_updated, error_message = (
+        order_service.update_order_with_items(
+            order_id="order-1",
+            data=data,
+        )
+    )
+
+    check_conn = order_service_test_db()
+
+    saved_order = check_conn.execute(
+        """
+        SELECT
+            customer_name,
+            total,
+            status
+        FROM orders
+        WHERE id = ?
+        """,
+        ("order-1",),
+    ).fetchone()
+
+    saved_item = check_conn.execute(
+        """
+        SELECT quantity
+        FROM order_items
+        WHERE id = ?
+        """,
+        (existing_item_id,),
+    ).fetchone()
+
+    check_conn.close()
+
+    assert is_updated is False
+    assert error_message == "Одна из позиций заказа не найдена"
+
+    assert saved_order["customer_name"] == "Старое имя"
+    assert saved_order["total"] == 30000
+    assert saved_order["status"] == "new"
+
+    assert saved_item["quantity"] == 1

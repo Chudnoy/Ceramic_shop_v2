@@ -29,7 +29,6 @@ from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear
 from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
 from validation import validate_review
-import uuid
 
 main_bp = Blueprint('main', __name__)
 
@@ -379,18 +378,12 @@ def checkout_process():
     
 @main_bp.route("/order_success/<order_id>")
 def order_success(order_id):
-    """
-Показывает страницу успешного оформления заказа.
-
-Ищет заказ по order_id. Если заказ не найден, возвращает пользователя в каталог.
-Если найден, передаёт заказ и его товары в шаблон страницы успешного оформления.
-"""
     order = get_order_by_id(order_id)
     
     if not order:
         flash("Заказ не найден", "error")
         return redirect(url_for("main.catalog"))
     
-    order_items = order.get('items', {})
+    order_items = order.get('items', [])
     
     return render_template("order_success.html", order=order, order_id=order_id, order_items=order_items)
