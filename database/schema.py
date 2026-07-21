@@ -93,7 +93,7 @@ def init_db():
             
             FOREIGN KEY (order_id)
                 REFERENCES orders(id)
-                ON DELETE CASCADE
+                ON DELETE CASCADE,
             
             FOREIGN KEY (product_id)
                 REFERENCES products(id)

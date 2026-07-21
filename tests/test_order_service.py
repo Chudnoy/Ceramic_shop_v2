@@ -139,7 +139,7 @@ def test_create_order_with_items_rolls_back_when_item_insert_fails(order_service
     check_conn = order_service_test_db()
     orders_count = check_conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
     order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
-    conn.close()
+    check_conn.close()
     
     assert orders_count == 0
     assert order_items_count == 0

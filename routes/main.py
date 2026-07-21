@@ -25,7 +25,7 @@ from database.tags import (
     get_tag_by_slug,
     get_tags_for_product
 )
-from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
+from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
 from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
 from validation import validate_review
@@ -368,7 +368,7 @@ def checkout_process():
     
     if not is_created:
         flash(create_error, "error")
-        return redirect(url_for("main.cart"))
+        return redirect(url_for("main.show_cart"))
     
     clear_cart(session)
     
