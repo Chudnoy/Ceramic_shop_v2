@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database.categories import (
     get_all_categories,
-    get_category_by_slug,
+    get_category_by_slug
 )
 
 from database.orders import (
-    create_order,
-    get_order_by_id,
+    get_order_by_id
 )
 
 from database.products import (
@@ -14,20 +13,20 @@ from database.products import (
     get_product_by_id,
     get_product_with_category,
     get_products_by_tag_slug,
-    product_exists,
+    product_exists
 )
 
 from database.reviews import (
     add_review_db,
-    get_reviews_by_product,
+    get_reviews_by_product
 )
 
 from database.tags import (
     get_tag_by_slug,
-    get_tags_for_product,
+    get_tags_for_product
 )
-from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
-from services.order_service import process_checkout_form, build_order_items
+from services.cart_service import get_cart, add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
+from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
 from validation import validate_review
 import uuid
@@ -363,11 +362,13 @@ def checkout_process():
         flash(error_message, "error")
         return redirect(url_for("main.checkout_form"))
         
-    items_dict, total = build_order_items(cart, available_products)
+    items = build_order_item_list(cart, available_products)
     
-    order_id = str(uuid.uuid4())
+    is_created, create_error, order_id = create_order_with_items(data=data, items=items)
     
-    create_order(order_id, data["customer_name"], data["customer_email"], data["customer_phone"], data["customer_address"], items_dict, total)
+    if not is_created:
+        flash(create_error, "error")
+        return redirect(url_for("main.cart"))
     
     clear_cart(session)
     

@@ -1,6 +1,7 @@
 import sqlite3
 import pytest
 import database.order_items as order_items
+from database import orders
 
 @pytest.fixture
 def order_items_test_db(tmp_path):
@@ -26,8 +27,12 @@ def order_items_test_db(tmp_path):
             id TEXT PRIMARY KEY,
             customer_name TEXT NOT NULL,
             customer_email TEXT NOT NULL,
+            customer_phone TEXT,
+            customer_address TEXT,
             items TEXT NOT NULL,
-            total INTEGER NOT NULL
+            total INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'new',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
     conn.execute("""
@@ -75,15 +80,18 @@ def create_test_order(
             order_id="order-1",
             customer_name="Денис",
             customer_email="denis@gmail.com",
+            customer_phone=None,
+            customer_address=None,
             items="{}",
-            total=30000
+            total=30000,
+            status="new"
             ):
     conn.execute(
         """
-        INSERT INTO orders (id, customer_name, customer_email, items, total)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (order_id, customer_name, customer_email, items, total)
+        (order_id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
     )
     
     
@@ -256,3 +264,42 @@ def test_insert_order_items_creates_all_items(order_items_test_db):
     
     assert saved_items[1]["product_name"] == "Чаша"
     assert saved_items[1]["quantity"] == 2
+    
+    
+def test_insert_order_creates_order(order_items_test_db):
+    conn = order_items_test_db()
+    
+    orders.insert_order(
+            conn=conn,
+            order_id="order-1",
+            customer_name="Денис",
+            customer_email="denis@gmail.com",
+            customer_phone="55566",
+            customer_address="СПБ",
+            total=40000,
+            status="new"
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    check_conn = order_items_test_db()
+    saved_order = check_conn.execute(
+            """
+                SELECT id, customer_name, customer_email, customer_phone, customer_address, items, total, status
+                FROM orders
+                WHERE id = ?
+            """,
+            ("order-1",)
+    ).fetchone()
+    check_conn.close()
+    
+    assert saved_order is not None
+    assert saved_order["id"] == "order-1"
+    assert saved_order["customer_name"] == "Денис"
+    assert saved_order["customer_email"] == "denis@gmail.com"
+    assert saved_order["customer_phone"] == "55566"
+    assert saved_order["customer_address"] == "СПБ"
+    assert saved_order["items"] == "{}"
+    assert saved_order["total"] == 40000
+    assert saved_order["status"] == "new"

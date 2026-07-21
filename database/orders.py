@@ -1,6 +1,27 @@
 import json
 from database.connection import get_db_connection
 
+
+def insert_order(
+        conn,
+        order_id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+        total,
+        status="new"
+):
+    conn.execute(
+        """
+        INSERT INTO orders
+        (id, customer_name, customer_email, customer_phone, customer_address, items, total, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (order_id, customer_name, customer_email, customer_phone, customer_address, "{}", total, status)
+    )
+
+
 def create_order(order_id, customer_name, customer_email, customer_phone, customer_address, items_dict, total):
     """
 Создаёт новый заказ в таблице orders.
