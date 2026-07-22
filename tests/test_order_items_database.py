@@ -190,7 +190,7 @@ def test_insert_order_item_creates_item(order_items_test_db):
             """,
             (item_id,)
     ).fetchone()
-    conn.close()
+    check_conn.close()
     
     assert order_item is not None
     assert order_item["id"] == item_id
