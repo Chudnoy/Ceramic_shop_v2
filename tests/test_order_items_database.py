@@ -411,7 +411,7 @@ def test_update_order_details_updates_order(order_items_test_db):
         customer_phone='98765',
         customer_address='new address',
         total=60000,
-        status='processing'
+        status='confirmed'
     )
 
     conn.commit()
@@ -435,7 +435,7 @@ def test_update_order_details_updates_order(order_items_test_db):
     assert saved_order['customer_phone'] == '98765'
     assert saved_order['customer_address'] == 'new address'
     assert saved_order['total'] == 60000
-    assert saved_order['status'] == 'processing'
+    assert saved_order['status'] == 'confirmed'
 
 
 def test_update_order_item_quantity_updates_requested_item(order_items_test_db):

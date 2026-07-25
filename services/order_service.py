@@ -1,14 +1,15 @@
 import uuid
 from database.connection import get_db_connection
 from database.orders import insert_order, update_order_details
-from database.order_items import insert_order_items, update_order_item_quantity
+from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id
+from database.products import update_product_status, get_products_by_ids
 
 
 ORDER_STATUSES = {
-    'new': 'Новый',
-    'processing': 'В работе',
-    'completed': 'Выполнен',
-    'cancelled': 'Отменён'
+    "new": "Новый",
+    "confirmed": "Подтверждён",
+    "completed": "Выполнен",
+    "canceled": "Отменён",
 }
 
 
@@ -139,8 +140,18 @@ def create_order_with_items(data, items):
                 items=items
         )
         
-        conn.commit()
+        for item in items:
+            is_reserved = update_product_status(
+                conn=conn,
+                product_id=item["product_id"],
+                new_status="reserved",
+                expected_status="available"
+            )
+            if not is_reserved:
+                conn.rollback()
+                return False, f"Работа «{item['product_name']}» больше недоступна", None
         
+        conn.commit()
         return True, "", order_id
     except Exception:
         if conn is not None:

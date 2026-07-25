@@ -21,7 +21,8 @@ def order_service_test_db(tmp_path):
         CREATE TABLE products (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            price INTEGER NOT NULL
+            price INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT "available"
         )
     """)
     conn.execute("""
@@ -65,14 +66,15 @@ def create_test_product(
             conn,
             product_id="product-1",
             name="Башня",
-            price=30000
+            price=30000,
+            status="available"
             ):
     conn.execute(
         """
-        INSERT INTO products (id, name, price)
-        VALUES (?, ?, ?)
+        INSERT INTO products (id, name, price, status)
+        VALUES (?, ?, ?, ?)
         """,
-        (product_id, name, price)
+        (product_id, name, price, status)
     )
     
     
@@ -389,7 +391,7 @@ def test_update_order_with_items_updates_order_and_all_items(order_service_test_
             }
         ],
         'total': 75000,
-        'status': 'processing'
+        'status': 'confirmed'
     }
 
     is_updated, error_message = order_service.update_order_with_items(order_id='order-1', data=data)
@@ -425,7 +427,7 @@ def test_update_order_with_items_updates_order_and_all_items(order_service_test_
     assert saved_order['customer_phone'] == '98765'
     assert saved_order['customer_address'] == 'new address'
     assert saved_order['total'] == 75000
-    assert saved_order['status'] == 'processing'
+    assert saved_order['status'] == 'confirmed'
 
     assert saved_items[0]['id'] == first_item_id
     assert saved_items[0]['quantity'] == 2
@@ -501,7 +503,7 @@ def test_update_order_with_items_rolls_back_when_item_is_not_found(
             },
         ],
         "total": 100000,
-        "status": "processing",
+        "status": "confirmed",
     }
 
     is_updated, error_message = (
@@ -544,3 +546,134 @@ def test_update_order_with_items_rolls_back_when_item_is_not_found(
     assert saved_order["status"] == "new"
 
     assert saved_item["quantity"] == 1
+    
+    
+def test_create_order_with_items_reserves_all_products(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+    create_test_product(
+            conn=conn,
+            product_id="product-1",
+            name="Башня",
+            price=30000
+    )
+    create_test_product(
+            conn=conn,
+            product_id="product-2",
+            name="Чаша",
+            price=5000
+    )
+    conn.commit()
+    conn.close()
+    
+    monkeypatch.setattr(
+            order_service,
+            "get_db_connection",
+            order_service_test_db
+    )
+    
+    data = {
+        "customer_name": "Денис",
+        "customer_email": "denis@gmail.com",
+        "customer_phone": None,
+        "customer_address": None,
+    }
+    
+    items = [
+        {
+            "product_id": "product-1",
+            "product_name": "Башня",
+            "unit_price": 30000,
+            "quantity": 1,
+        },
+        {
+            "product_id": "product-2",
+            "product_name": "Чаша",
+            "unit_price": 5000,
+            "quantity": 1,
+        },
+    ]
+    
+    is_created, error_message, order_id = order_service.create_order_with_items(data=data, items=items)
+    
+    check_conn = order_service_test_db()
+    saved_products = check_conn.execute("SELECT id, status FROM products ORDER BY id").fetchall()
+    check_conn.close()
+    
+    assert is_created is True
+    assert error_message == ""
+    assert order_id is not None
+    
+    assert saved_products[0]["id"] == "product-1"
+    assert saved_products[0]["status"] == "reserved"
+    
+    assert saved_products[1]["id"] == "product-2"
+    assert saved_products[1]["status"] == "reserved"
+    
+    
+def test_create_order_with_items_rolls_back_when_product_cannot_be_reserved(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+    create_test_product(
+            conn=conn,
+            product_id="product-1",
+            name="Башня",
+            price=30000,
+            status="available"
+    )
+    create_test_product(
+            conn=conn,
+            product_id="product-2",
+            name="Чаша",
+            price=5000,
+            status="reserved"
+    )
+    conn.commit()
+    conn.close()
+    
+    monkeypatch.setattr(
+            order_service,
+            "get_db_connection",
+            order_service_test_db
+    )
+    
+    data = {
+        "customer_name": "Денис",
+        "customer_email": "denis@gmail.com",
+        "customer_phone": None,
+        "customer_address": None,
+    }
+    
+    items = [
+        {
+            "product_id": "product-1",
+            "product_name": "Башня",
+            "unit_price": 30000,
+            "quantity": 1,
+        },
+        {
+            "product_id": "product-2",
+            "product_name": "Чаша",
+            "unit_price": 5000,
+            "quantity": 1,
+        },
+    ]
+    
+    is_created, error_message, order_id = order_service.create_order_with_items(data=data, items=items)
+    
+    check_conn = order_service_test_db()
+    orders_count = check_conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
+    saved_products = check_conn.execute("SELECT id, status FROM products ORDER BY id").fetchall()
+    check_conn.close()
+    
+    assert is_created is False
+    assert error_message == "Работа «Чаша» больше недоступна"
+    assert order_id is None
+    
+    assert orders_count == 0
+    assert order_items_count == 0
+    
+    assert saved_products[0]["id"] == "product-1"
+    assert saved_products[0]["status"] == "available"
+    
+    assert saved_products[1]["id"] == "product-2"
+    assert saved_products[1]["status"] == "reserved"

@@ -294,3 +294,9 @@ def set_product_archived(product_id, is_archived):
 
     conn.commit()
     conn.close()
+    
+    
+def update_product_status(conn, product_id, new_status, expected_status):
+    cursor = conn.execute("UPDATE products SET status = ? WHERE id = ? AND status = ?", (new_status, product_id, expected_status))
+    
+    return cursor.rowcount > 0

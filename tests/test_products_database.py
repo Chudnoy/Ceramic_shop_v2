@@ -738,3 +738,51 @@ def test_delete_product_completely_removes_product_dependencies(
 
     assert product_tags_count == 0
     assert reviews_count == 0
+    
+    
+def test_update_product_status_updates_when_status_matches(products_test_db):
+    create_test_category(products_test_db)
+    product_id = create_test_product()
+    
+    conn = None
+    
+    try:
+        conn = products_test_db()
+        result = products.update_product_status(conn=conn, product_id=product_id, new_status="reserved", expected_status="available")
+        conn.commit()
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+    
+    updated_product = products.get_product_by_id(product_id)
+    
+    assert result is True
+    assert updated_product["status"] == "reserved"
+    
+    
+def test_update_product_status_does_not_update_when_status_does_not_match(products_test_db):
+    create_test_category(products_test_db)
+    product_id = create_test_product(status="reserved")
+    
+    conn = None
+    
+    try:
+        conn = products_test_db()
+        result = products.update_product_status(conn=conn, product_id=product_id, new_status="sold", expected_status="available")
+        conn.commit()
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+            
+    updated_product = products.get_product_by_id(product_id)
+    
+    assert result is False
+    assert updated_product["status"] == "reserved"
