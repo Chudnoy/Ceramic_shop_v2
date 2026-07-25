@@ -1,0 +1,36 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+	<h1 class="admin-page-title">Теги</h1>
+	<div class="admin-actions">
+    <a href="{{ url_for('admin.new_tag_route') }}" class="admin-button">
+        Добавить тег
+    </a>
+</div>
+
+	<div class="admin-table-wrapper">
+		<table class="admin-table">
+			<tr>
+				<th>Тег</th>
+				<th>Slug</th>
+				<th>Количество работ</th>
+				<th>Действия</th>
+			</tr>
+			{% for tag in tags %}
+				<tr>
+					<td>{{ tag.name }}</td>
+					<td>{{ tag.slug }}</td>
+					<td>{{ tag.products_count }}</td>
+					<td>
+						<a href="{{ url_for('admin.tag_details', tag_slug=tag.slug) }}">Подробнее</a>
+						|
+						<form action="{{ url_for('admin.delete_tag_route', tag_id=tag.id) }}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить тег?')">
+							<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+							<button type="submit" class="admin-link-button">Удалить</button>
+						</form>
+					</td>
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
+{% endblock %}

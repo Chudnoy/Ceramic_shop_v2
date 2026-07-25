@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+    <h1 class="admin-page-title">Архив работ</h1>
+
+    {% if products %}
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <tr>
+                    <th>Изображение</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Год</th>
+                    <th>Материалы</th>
+                    <th>Цена</th>
+                    <th>Статус</th>
+                    <th>Публикация</th>
+                    <th>Продажа</th>
+                    <th>Действия</th>
+                </tr>
+
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            {% if product.img %}
+                                <img
+                                    src="{{ product.img }}"
+                                    alt="{{ product.name }}"
+                                    class="admin-product-thumb"
+                                >
+                            {% else %}
+                                <span class="admin-muted">
+                                    Нет изображения
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ product.name }}</td>
+
+                        <td>
+                            {{ product.category_name if product.category_name else "—" }}
+                        </td>
+
+                        <td>
+                            {{ product.year if product.year else "—" }}
+                        </td>
+
+                        <td>
+                            {% if product.materials %}
+                                {% for item in product.materials.split(", ") %}
+                                    {{ loop.index }}. {{ item }}<br>
+                                {% endfor %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>{{ product.price }} руб.</td>
+
+                        <td>
+                            <span class="product-status product-status-{{ product.status }}">
+                                {{ product_statuses.get(product.status, product.status) }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if product.is_visible %}
+                                Будет отображаться после восстановления
+                            {% else %}
+                                Не опубликована
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if product.is_for_sale %}
+                                Для продажи
+                            {% else %}
+                                Не продаётся
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{{ url_for('admin.edit_product', product_id=product.id) }}"
+                            >
+                                Редактировать
+                            </a>
+
+                            |
+
+                            <form
+                                action="{{ url_for('admin.restore_product_route', product_id=product.id) }}"
+                                method="post"
+                                class="admin-inline-form"
+                                onsubmit="return confirm('Восстановить работу?')"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="admin-link-button"
+                                >
+                                    Восстановить
+                                </button>
+                            </form>
+
+                            |
+
+                            <form
+                                action="{{ url_for('admin.delete_product_route', product_id=product.id) }}"
+                                method="post"
+                                class="admin-inline-form"
+                                onsubmit="return confirm('Удалить работу навсегда? Отзывы и связи с тегами будут потеряны.')"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="admin-link-button"
+                                >
+                                    Удалить навсегда
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-message">
+            В архиве пока нет работ
+        </p>
+    {% endif %}
+{% endblock %}

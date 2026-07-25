@@ -14,6 +14,16 @@
         <label for="description">Описание</label>
         <textarea name="description" id="description" rows="4">{{ product.description }}</textarea>
     </div>
+    
+    <div class="admin-form-group">
+        <label for="materials">Материалы</label>
+        <input type="text" name="materials" id="materials" value="{{ product.materials }}">
+    </div>
+    
+    <div class="admin-form-group">
+        <label for="year">Год изготовления</label>
+        <input type="number" name="year" id="year" value="{{ product.year }}">
+    </div>
 
     <div class="admin-form-group">
         <label for="price">Цена</label>
@@ -46,6 +56,23 @@
     </div>
     
     <div class="admin-form-group">
+        <label>Теги</label>
+        <div class="admin-checkbox-list">
+            {% for tag in tags %}
+                <div class="admin-checkbox-group">
+                    <input type="checkbox" 
+                    name="tag_ids" 
+                    id="tag_{{ tag.id }}"
+                    value="{{ tag.id }}"
+                    {% if tag.id in selected_tag_ids %}checked{% endif %}
+                    >
+                    <label for="tag_{{ tag.id }}">{{tag.name}}</label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="admin-form-group">
         <label for="status">Статус товара</label>
         <select name="status" id="status" class="form-control" required>
             {% for status_key, status_label in product_statuses.items() %}
@@ -55,6 +82,21 @@
             {% endfor %}
         </select>
     </div>
+
+	<div class="admin-form-group admin-checkbox-group">
+		<input type="checkbox" name="is_visible" id="is_visible" value="1" {% if product.is_visible %}checked{% endif %}>
+		<label for="is_visible">Доступен на сайте</label>
+	</div>
+
+	<div class="admin-form-group admin-checkbox-group">
+		<input type="checkbox" name="is_for_sale" id="is_for_sale" value="1" {% if product.is_for_sale %}checked{% endif %}>
+		<label for="is_for_sale">Для продажи</label>
+	</div>
+	
+	<div class="admin-form-group admin-checkbox-group">
+		<input type="checkbox" name="is_featured" id="is_featured" value="1" {% if product.is_featured %}checked{% endif %}>
+		<label for="is_featured">Избранная работа</label>
+	</div>
 
     <button type="submit" class="admin-button">{{ submit_text }}</button>
 </form>

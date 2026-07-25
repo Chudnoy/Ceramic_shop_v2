@@ -49,8 +49,10 @@
                 <th>Изображение</th>
                 <th>Название</th>
                 <th>Категория</th>
+                <th>Год изготовления</th>
+                <th>Материалы</th>
                 <th>Цена</th>
-                <th>Статус</th>
+                <th>Состояние</th>
                 <th>Действия</th>
             </tr>
 
@@ -65,18 +67,81 @@
                 </td>
                 <td>{{ product.name }}</td>
                 <td>{{ product.category_name if product.category_name else '—' }}</td>
-                <td>{{ product.price }} руб.</td>
+                <td>{{ product.year if product.year else "—" }}</td>
                 <td>
-                    <span class="product-status product-status-{{product.status}}">
-                        {{ product_statuses.get(product.status, product.status) }}
-                    </span>
+                    {% if product.materials %}
+                        {% for item in product.materials.split(', ') %}
+                            {{ loop.index }}. {{ item }}<br>
+                        {% endfor %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ product.price }} руб.</td>
+                <td class="admin-product-state">
+                    <form
+                        action="{{ url_for('admin.update_product_state_route', product_id=product.id) }}"
+                        method="post"
+                        class="admin-product-state__form"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <label class="admin-product-state__field">
+                            <span>Статус</span>
+
+                            <select name="status">
+                                {% for status_value, status_label in product_statuses.items() %}
+                                    <option
+                                        value="{{ status_value }}"
+                                        {% if product.status == status_value %}selected{% endif %}
+                                    >
+                                        {{ status_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_visible"
+                                value="1"
+                                {% if product.is_visible %}checked{% endif %}
+                            >
+                            <span>На сайте</span>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_for_sale"
+                                value="1"
+                                {% if product.is_for_sale %}checked{% endif %}
+                            >
+                            <span>Продаётся</span>
+                        </label>
+
+                        <label class="admin-product-state__check">
+                            <input
+                                type="checkbox"
+                                name="is_featured"
+                                value="1"
+                                {% if product.is_featured %}checked{% endif %}
+                            >
+                            <span>На главной</span>
+                        </label>
+
+                        <button type="submit" class="admin-product-state__submit">
+                            Сохранить
+                        </button>
+                    </form>
                 </td>
                 <td>
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
                     |
-                    <form action="{{url_for('admin.delete_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('Удалить товар?')">
+                    <form action="{{url_for('admin.archive_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('переместить работу в архив?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="admin-link-button">Удалить</button>
+                        <button type="submit" class="admin-link-button">В архив</button>
                     </form>
                 </td>
             </tr>

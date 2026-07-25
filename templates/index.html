@@ -1,14 +1,108 @@
 {% extends 'base.html' %}
 
-{% block title %}Главная - керамическая мастерская{% endblock %}
+{% block title %}Полина Яланская - Керамические объекты{% endblock %}
 
 {% block content %}
-	<div class="hero">
-		<h1 class="hero-title">Добро пожаловать в мир керамики!</h1>
-		<p class="hero-text">
-			Уникальные изделия ручной работы.<br>
-			Каждая вещь создана с душой и любовью.
-		</p>
-		<a href="{{url_for('main.catalog')}}" class="btn btn-primary btn-hero">Перейти в каталог</a>
+	<section class="home-hero">
+		<div class="home-hero__text">
+			<p class="home-hero__kicker">керамические объекты · скульптура · инсталляции</p>
+			<h1 class="home-hero__title">
+				Полина<br>
+				Яланская
+			</h1>
+			<p class="home-hero__lead">
+				Дом как оболочка, память, защита и разрушение.
+			</p>
+			<p class="home-hero__description">
+				Художественная практика, в которой керамический объект становится
+			формой внутреннего пространства: хрупкого, защитного и уязвимого
+			одновременно.
+			</p>
+			<div class="home-hero__actions">
+				<a href="{{ url_for('main.catalog') }}" class="text-link">Смотреть работы</a>
+			</div>
+		</div>
+		<figure class="home-hero__visual">
+			<img 
+				src="{{ url_for('static', filename='uploads/dd787ed0_photo_5276173964168337339_y.jpg') }}" 
+				alt="керамический объект Полины Яланской" 
+				class="home-hero__image"
+				>
+			<figcaption class="home-hero__caption">каменная масса, глазури, фарфор</figcaption>
+		</figure>
+	</section>
+
+	<section class="home-statement">
+		<p class="home-section-label">о практике</p>
+
+		<div class="home-statement__content">
+			<p>
+				Полина Яланская работает с керамикой как с образом дома:
+				оболочки, гнезда, башни, внутреннего пространства.
+			</p>
+
+			<p>
+				Её объекты соединяют архитектурную форму, телесность материала
+				и ощущение хрупкости. Каменная масса, фарфор и глазури становятся
+				языком памяти, защиты и разрушения.
+			</p>
+		</div>
+	</section>
+
+	<section class="home-projects">
+	<div class="home-projects__heading">
+		<p class="home-section-label">избранные проекты</p>
+
+		<h2>
+			Работы о доме, памяти и форме.
+		</h2>
 	</div>
-	{% endblock %}
+
+	<div class="home-projects__grid">
+	    {% if products %}
+	        {% for product in products %}
+	            <article class="home-project-card">
+	                <a
+	                    href="{{ url_for('main.product_page', product_id=product.id) }}"
+	                    class="home-project-card__link"
+	                >
+	                    <div class="home-project-card__media">
+	                        {% if product.img %}
+	                            <img
+	                                src="{{ product.img }}"
+	                                alt="{{ product.name }}"
+	                                class="home-project-card__image"
+	                            >
+	                        {% else %}
+	                            <div class="home-project-card__placeholder">
+	                                Изображение отсутствует
+	                            </div>
+	                        {% endif %}
+	                    </div>
+	
+	                    <div class="home-project-card__content">
+	                        {% if product.year %}
+	                            <p class="home-project-card__year">
+	                                {{ product.year }}
+	                            </p>
+	                        {% endif %}
+	
+	                        <h3 class="home-project-card__title">
+	                            {{ product.name }}
+	                        </h3>
+	
+	                        <p class="home-project-card__description">
+	                            {{ product.description }}
+	                        </p>
+	                    </div>
+	                </a>
+	            </article>
+	        {% endfor %}
+	    {% else %}
+	        <p class="home-projects__empty">
+	            Избранные работы пока не добавлены.
+	        </p>
+	    {% endif %}
+	</div>
+</section>
+{% endblock %}

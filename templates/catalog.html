@@ -2,110 +2,187 @@
 
 {% block title %}
 	{% if current_category %}
-		{{current_category.name}} - Керамическая мастерская
+		{{current_category.name}} - Полина Яланская
+	{% elif search_query %}
+		{{ search_query }} - Полина Яланская
 	{% else %}
-		Каталог - Керамическая мастерская
+		Работы - Керамическая мастерская
 	{% endif %}
 {% endblock %}
 
 {% block content %}
-	<div class="category-nav">
-		<a href="{{url_for('main.catalog', sort_by=current_sort, order=current_order, q=search_query)}}" class="category-link {% if not current_category %}active{% endif %}">Все товары</a>
-		{% for category in categories %}
-			<a href="{{url_for('main.catalog', category=category.slug, sort_by=current_sort, order=current_order, q=search_query)}}" 
-				class="category-link {% if current_category and current_category.id == category.id %}active{% endif %}">
-				{{category.name}}
-			</a>
-		{% endfor %}
-	</div>
+	<section class="catalog-page">
+		<header class="catalog-header">
+    <p class="home-section-label">Работы</p>
 
-	<form action="{{url_for('main.catalog')}}" method="get" class="catalog-controls">
-		{% if category_slug %}
-			<input type="hidden" name="category" value="{{category_slug}}">
-		{% endif %}
-		<input type="text" name="q" value="{{ search_query}}" placeholder="Поиск по каталогу" class="search-input">
-		<select name="sort_by" id="sort_by">
-			<option value="name" {% if current_sort == 'name' %}selected{% endif %}>По алфавиту</option>
-			<option value="price" {% if current_sort == 'price' %}selected{% endif %}>По цене</option>
-		</select>
-		<select name="order" id="order">
-			<option value="ASC" {% if current_order == 'ASC' %}selected{% endif %}>От меньшего к большему</option>
-			<option value="DESC" {% if current_order == 'DESC' %}selected{% endif %}>От большего к меньшему</option>
-		</select>
-		<button type="submit">Подтвердить</button>
+    <div class="catalog-header__content">
+        {% if current_category %}
+            <h1 class="catalog-header__title">
+                {{ current_category.name }}
+            </h1>
+
+            {% if current_category.description %}
+                <p class="catalog-header__description">
+                    {{ current_category.description }}
+                </p>
+            {% endif %}
+        {% elif tag %}
+            <h1 class="catalog-header__title">
+                Работы по тегу «{{ tag.name }}»
+            </h1>
+
+            <p class="catalog-header__description">
+                Подборка работ, связанных с этим мотивом или темой.
+            </p>
+        {% else %}
+            <h1 class="catalog-header__title">Доступные работы</h1>
+
+            <p class="catalog-header__description">
+                Керамические объекты и малые формы. Некоторые работы доступны
+                для приобретения, другие представлены как часть художественной практики.
+            </p>
+        {% endif %}
+
+        {% if tag %}
+            <div class="catalog-header__filter">
+                <span class="catalog-header__eyebrow">
+                    Тег: {{ tag.name }}
+                </span>
+
+                <a class="catalog-header__reset" href="{{ url_for('main.catalog') }}">
+                    Все работы
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</header>
+		<section class="catalog-tools" aria-label="Фильтры и поиск">
+			<nav class="catalog-categories" aria-label="Категории работ">
+				<a href="{{ url_for('main.catalog', sort_by=current_sort, order=current_order, q=search_query) }}"
+				class="catalog-category {% if not current_category %}is-active{% endif %}">
+				Все работы
+			</a>
+
+			{% for category in categories %}
+				<a href="{{ url_for('main.catalog', category=category.slug, sort_by=current_sort, order=current_order, q=search_query) }}"
+					class="catalog-category {% if current_category and current_category.id == category.id %}is-active{% endif %}">
+					{{category.name}}
+				</a>
+			{% endfor %}
+			</nav>
+
+			<form action="{{ url_for('main.catalog') }}" method="get" class="catalog-filter-form">
+				{% if category_slug %}
+					<input type="hidden" name="category" value="{{ category_slug }}">
+				{% endif %}
+
+				<div class="catalog-search">
+					<label for="catalog-search" class="visually-hidden">Поиск по работам</label>
+					<input type="text" name="q" id="catalog-search" value="{{ search_query }}" placeholder="Поиск по работам" class="catalog-search__input">
+				</div>
+
+				<div class="catalog-selects">
+					<label for="sort_by" class="visually-hidden">Сортировка</label>
+					<select name="sort_by" id="sort_by" class="catalog-select">
+						<option value="name" {% if current_sort == 'name' %}selected{% endif %}>По названию</option>
+						<option value="price" {% if current_sort == 'price' %}selected{% endif %}>По стоимости</option>
+					</select>
+
+					<label for="order" class="visually-hidden">Порядок сортировки</label>
+					<select name="order" id="order" class="catalog-select">
+						<option value="ASC" {% if current_order == 'ASC' %}selected{% endif %}>По возрастанию</option>
+						<option value="DESC" {% if current_order == 'DESC' %}selected{% endif %}>По убыванию</option>
+					</select>
+				</div>
+				<button type="submit" class="catalog-filter-button">Применить</button>
+				{% if search_query %}
+					<a href="{{ url_for('main.catalog', category=category_slug, sort_by=current_sort, order=current_order)}}" 
+						class="catalog-reset-link">
+						Сбросить поиск
+					</a>
+				{% endif %}
+			</form>
+		</section>
+
 		{% if search_query %}
-			<a href="{{ url_for('main.catalog', category=category_slug, sort_by=current_sort, order=current_order) }}" class="catalog-reset-link">
-				Сбросить поиск
-			</a>
+			<p class="catalog-search-info">
+				Результаты по запросу «{{ search_query }}»
+			</p>
 		{% endif %}
-	</form>
-		
-	{% if current_category %}
-		<h1 class="page-title">{{current_category.name}}</h1>
-		{% if current_category.description %}
-			<p class="category-description">{{current_category.description}}</p>
-		{% endif %}
-	{% else %}
-		<h1 class="page-title">Все товары</h1>
-	{% endif %}
-	{% if search_query %}
-		<p class="search-info">
-			Результаты поиска по запросу {{ search_query }}
-		</p>
-	{% endif %}
 
-	{% if products %}
-		<div class="product-grid">
+		{% if products %}
+		<div class="works-grid">
 			{% for product in products %}
-				<div class="product-card">
-					{% if product.img %}
-						<img src="{{product.img}}" alt="{{product.name}}" class="product-image">
-					{% endif %}
-					<h3 class="product-title">{{product.name}}</h3>
-					<p class="product-description">{{product.description}}</p>
-					<p class="product-price">{{product.price}} руб.</p>
-					{% if product.status != 'available' %}
-						<p class="product-status product-status-{{ product.status }}">
-							{{product_statuses.get(product.status, product.status)}}
-						</p>
-					{% endif %}
-					{% if product.category_name %}
-						<p class="product-category">
-							Категория:
-							<a href="{{url_for('main.catalog', category=product.category_slug, sort_by=current_sort, order=current_order, q=search_query)}}" class="category-link">
-								{{product.category_name}}
-							</a>
-						</p>
-					{% endif %}
-					<div class="product-actions">
-						<a href="{{url_for('main.product_page', product_id=product.id)}}" class="btn btn-secondary">Подробнее</a>
-						{% if product.status == 'available' %}
-							<form action="{{url_for('main.add_to_cart_route', product_id=product.id)}}" method="post" class="add-to-cart-form">
-								<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-								<input type="number" name="quantity" min="1" value="1" class="quantity-input">
-								<button type="submit" class="btn btn-primary">В корзину</button>
-							</form>
+				<article class="work-card">
+					<a href="{{ url_for('main.product_page', product_id=product.id) }}" class="work-card__image-link">
+						{% if product.img %}
+							<img src="{{ product.img }}" alt="{{ product.name }}" class="work-card__image">
 						{% else %}
-							<span class="btn btn-secondary product-unavailable-button">
-								Недоступно
-							</span>
+							<div class="work-card__image-placeholder">
+								Нет изображения
+							</div>
+						{% endif %}
+					</a>
+
+					<div class="work-card__body">
+						<div class="work-card__meta">
+							{% if product.category_name %}
+								<span>{{ product.category_name }}</span>
+							{% endif %}
+
+							{% if product.status %}
+								<span>
+									{% if product.status == 'available' %}
+										доступно
+									{% elif product.status == 'sold' %}
+										продано
+									{% elif product.status == 'reserved' %}
+										зарезервировано
+									{% else %}
+										{{ product.status }}
+									{% endif %}
+								</span>
+							{% endif %}
+						</div>
+
+						<h2 class="work-card__title">
+							<a href="{{ url_for('main.product_page', product_id=product.id) }}">
+								{{ product.name }}
+							</a>
+						</h2>
+
+						{% if product.year or product.materials %}
+							<div class="work-card__details">
+								{% if product.year %}
+									<span class="work-card__year">{{ product.year }}</span>
+								{% endif %}
+
+								{% if product.materials %}
+									<span class="work-card__materials">{{ product.materials }}</span>
+								{% endif %}
+							</div>
+						{% endif %}
+						{% if product.description %}
+							<p class="work-card__description">
+								{{ product.description }}
+							</p>
 						{% endif %}
 					</div>
-				</div>
+				</article>
 			{% endfor %}
 		</div>
 	{% else %}
-		<p class="empty-message">
+		<div class="catalog-empty">
 			{% if search_query %}
-				По запросу {{ search_query }} ничего не найдено
+			    <p>По запросу «{{ search_query }}» ничего не найдено.</p>
+			{% elif tag %}
+			    <p>По этому тегу пока нет работ.</p>
 			{% elif current_category %}
-				В этой категории пока нет товаров
+			    <p>В этом разделе пока нет работ.</p>
 			{% else %}
-				Товаров пока нет
+			    <p>Работы пока не добавлены.</p>
 			{% endif %}
-		</p>
+		</div>
 	{% endif %}
-	<div class="catalog-footer">
-		<a href="{{url_for('main.show_cart')}}" class="btn btn-success">Перейти в корзину</a>
-	</div>
+	</section>
 {% endblock %}

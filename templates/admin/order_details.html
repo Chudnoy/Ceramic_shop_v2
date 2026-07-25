@@ -29,12 +29,12 @@
             <th>Сумма</th>
         </tr>
 
-        {% for product in order['items'].values() %}
+        {% for product in order['items'] %}
         <tr>
-            <td>{{ product['name'] }}</td>
-            <td>{{ product['price'] }} руб.</td>
+            <td>{{ product['product_name'] }}</td>
+            <td>{{ product['unit_price'] }} руб.</td>
             <td>{{ product['quantity'] }}</td>
-            <td>{{ product['price'] * product['quantity'] }} руб.</td>
+            <td>{{ product['unit_price'] * product['quantity'] }} руб.</td>
         </tr>
         {% endfor %}
     </table>
