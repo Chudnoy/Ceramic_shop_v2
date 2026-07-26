@@ -2,7 +2,7 @@ import uuid
 from database.connection import get_db_connection
 from database.orders import insert_order, update_order_details, update_order_status, delete_order
 
-from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id
+from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id, get_products_by_order_id
 
 from database.products import update_product_status
 
@@ -203,6 +203,82 @@ def update_order_with_items(order_id, data):
     finally:
         if conn is not None:
             conn.close()
+
+
+def confirm_order(order_id):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+
+        is_order_confirmed = update_order_status(
+            conn=conn,
+            order_id=order_id,
+            new_status='confirmed',
+            expected_status='new'
+        )
+
+        if not is_order_confirmed:
+            conn.rollback()
+            return False, 'Заказ не может быть подтверждён'
+
+        conn.commit()
+        return True, ''
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def complete_order(order_id):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        items = get_order_items_by_order_id()
+
+        is_order_completed = update_order_status(
+            conn=conn,
+            order_id=order_id,
+            new_status='completed',
+            expected_status='confirmed'
+        )
+
+        if not is_order_completed:
+            conn.rollback()
+            return False, 'Не удалось завершить заказ'
+
+        for item in items:
+            product_id = item['product_id']
+
+            if product_id is None:
+                continue
+
+            is_sold = update_product_status(
+                conn=conn,
+                product_id=product_id,
+                new_status='sold',
+                expected_status='reserved'
+            )
+
+            if not is_sold:
+                conn.rollback()
+                return False, f"Не удалось изменить статус работы «{item['product_name']}»"
+
+        conn.commit()
+        return True, ''
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+
             
             
 def cancel_order(order_id):

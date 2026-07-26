@@ -44,6 +44,31 @@ def get_order_items_by_order_id(conn, order_id):
                  (order_id,)).fetchall()
     return items
 
+def get_products_by_order_id(conn, order_id):
+    products = conn.execute(
+        """
+        SELECT
+            p.id,
+            p.name,
+            p.description,
+            p.price,
+            p.status,
+            p.img,
+            p.category_id,
+            p.year,
+            p.materials,
+            p.is_visible,
+            p.is_for_sale
+        FROM order_items AS oi
+        JOIN products AS p
+        ON p.id = oi.product_id
+        WHERE oi.order_id = ?,
+        """,
+        (order_id,)
+    ).fetchall()
+
+    return products
+
 
 def update_order_item_quantity(conn, order_id, item_id, quantity):
     cursor = conn.execute(

@@ -858,3 +858,101 @@ def test_delete_canceled_order_does_not_delete_active_order(order_service_test_d
 
     assert saved_product is not None
     assert saved_product['status'] == 'reserved'
+
+
+def test_confirm_order_transitions_new_to_confirmed(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+
+    create_test_product(conn=conn, status='reserved')
+    create_test_order(conn=conn, status='new')
+    create_test_order_item(conn=conn)
+
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setattr(
+            order_service,
+            'get_db_connection',
+            order_service_test_db
+        )
+
+    is_confirmed, error_message = order_service.confirm_order('order-1')
+
+    check_conn = order_service_test_db()
+    saved_order = check_conn.execute("SELECT status FROM orders WHERE id = ?", ('order-1',)).fetchone()
+    saved_product = check_conn.execute("SELECT status FROM products WHERE id = ?", ('product-1',)).fetchone()
+    check_conn.close()
+
+    assert is_confirmed is True
+    assert error_message == ''
+    assert saved_order is not None
+    assert saved_order['status'] == 'confirmed'
+    assert saved_product['status'] == 'reserved'
+
+
+def test_confirm_order_leaves_completed_or_canceled_unchanged(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+
+    create_test_product(conn=conn, status='sold')
+    create_test_product(
+        conn=conn,
+        product_id='product-2',
+        name='Чаша',
+        price=5000,
+        status='available'
+    )
+    create_test_order(
+        conn=conn,
+        order_id='order-1',
+        customer_name='Денис',
+        status='completed'
+    )
+    create_test_order(
+        conn=conn,
+        order_id='order-2',
+        customer_name='Другое',
+        status='canceled'
+    )
+    create_test_order_item(conn=conn)
+    create_test_order_item(
+        conn=conn,
+        product_id='product-2',
+        product_name='Чаша',
+        order_id='order-2'
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    monkeypatch.setattr(
+                order_service,
+                'get_db_connection',
+                order_service_test_db
+            )
+
+    is_confirmed_first, error_message_first = order_service.confirm_order('order-1')
+    is_confirmed_second, error_message_second = order_service.confirm_order('order-2')
+
+    check_conn = order_service_test_db()
+    first_order = check_conn.execute("SELECT * FROM orders WHERE id = ?", ('order-1',)).fetchone()
+    second_order = check_conn.execute("SELECT * FROM orders WHERE id = ?",('order-2',)).fetchone()
+    first_product = check_conn.execute("SELECT status FROM products WHERE id = ?",('product-1',)).fetchone()
+
+    second_product = check_conn.execute("SELECT status FROM products WHERE id = ?",('product-2',)).fetchone()
+    check_conn.close()
+
+    assert is_confirmed_first is False
+    assert error_message_first == 'Заказ не может быть подтверждён'
+    assert is_confirmed_second is False
+    assert error_message_second == 'Заказ не может быть подтверждён'
+
+    assert first_order is not None
+    assert second_order is not None
+    assert first_product is not None
+    assert second_product is not None
+
+    assert first_order['status'] == 'completed'
+    assert second_order['status'] == 'canceled'
+    assert first_product['status'] == 'sold'
+    assert second_product['status'] == 'available'
