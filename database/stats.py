@@ -16,7 +16,7 @@ def get_admin_stats():
 
     new_orders_count = conn.execute('SELECT COUNT(*) FROM orders WHERE status = ?', ('new',)).fetchone()[0]
 
-    processing_orders_count = conn.execute('SELECT COUNT(*) FROM orders WHERE status = ?', ('processing',)).fetchone()[0]
+    confirmed_orders_count = conn.execute("SELECT COUNT(*) FROM orders WHERE status = ?",("confirmed",)).fetchone()[0]
 
     completed_revenue = conn.execute('SELECT COALESCE(SUM(total), 0) FROM orders WHERE status = ?', ('completed',)).fetchone()[0]
 
@@ -28,7 +28,7 @@ def get_admin_stats():
         'products_count': products_count,
         'orders_count': orders_count,
         'new_orders_count': new_orders_count,
-        'processing_orders_count': processing_orders_count,
+        "confirmed_orders_count": confirmed_orders_count,
         'completed_revenue': completed_revenue,
         'total_revenue': total_revenue
     }
