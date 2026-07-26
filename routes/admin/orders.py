@@ -1,6 +1,6 @@
 from flask import request, render_template, flash, redirect, url_for
-from database.orders import get_all_orders, get_order_by_id, delete_order
-from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items, cancel_order
+from database.orders import get_all_orders, get_order_by_id
+from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items, cancel_order, delete_canceled_order
 
 from . import admin_bp
 
@@ -84,17 +84,10 @@ def cancel_order_route(order_id):
     
 @admin_bp.route("/admin/orders/delete/<order_id>", methods=["POST"])
 def delete_order_route(order_id):
-    """
-Обрабатывает удаление заказа из админки.
+    is_deleted, error_message = delete_canceled_order(order_id)
 
-Перед удалением проверяет, существует ли заказ. Если заказ найден, удаляет его
-из базы данных, показывает flash-сообщение и возвращает пользователя к списку
-заказов.
-"""
-    order = get_order_by_id(order_id)
-    if not order:
-        flash('Заказ не найден', 'error')
+    if not is_deleted:
+        flash(error_message, 'error')
         return redirect(url_for('admin.admin_orders'))
-    delete_order(order_id)
-    flash("Заказ удалён", "info")
+    flash("Отменённый заказ удалён", "info")
     return redirect(url_for("admin.admin_orders"))

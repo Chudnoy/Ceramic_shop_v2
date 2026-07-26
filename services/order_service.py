@@ -1,6 +1,6 @@
 import uuid
 from database.connection import get_db_connection
-from database.orders import insert_order, update_order_details, update_order_status
+from database.orders import insert_order, update_order_details, update_order_status, delete_order
 
 from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id
 
@@ -251,6 +251,28 @@ def cancel_order(order_id):
         if conn is not None:
             conn.rollback()
             
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def delete_canceled_order(order_id):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        is_deleted = delete_order(conn, order_id, 'canceled')
+
+        if not is_deleted:
+            conn.rollback()
+            return False, 'Удалить можно только отменённый заказ'
+
+        conn.commit()
+        return True, ""
+    except Exception:
+        if conn is not None:
+            conn.rollback()
         raise
     finally:
         if conn is not None:

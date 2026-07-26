@@ -788,3 +788,73 @@ def test_cancel_order_rolls_back_when_product_cannot_be_released(order_service_t
     assert first_saved_product["status"] == "reserved"
     assert second_saved_product["status"] == "available"
     assert saved_items_count == 2
+
+
+def test_delete_canceled_order_deletes_order_and_items_but_keeps_product(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+
+    create_test_product(conn=conn, status='available')
+    create_test_order(conn=conn, status='canceled')
+    create_test_order_item(conn=conn)
+
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setattr(
+        order_service,
+        'get_db_connection',
+        order_service_test_db
+    )
+
+    is_deleted, error_message = order_service.delete_canceled_order('order-1')
+
+    check_conn = order_service_test_db()
+    orders_count = check_conn.execute("SELECT COUNT(*) FROM orders WHERE id = ?", ('order-1',)).fetchone()[0]
+    order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ('order-1',)).fetchone()[0]
+    saved_product = check_conn.execute("SELECT status FROM products WHERE id = ?", ('product-1',)).fetchone()
+    check_conn.close()
+
+    assert is_deleted is True
+    assert error_message == ''
+
+    assert orders_count == 0
+    assert order_items_count == 0
+
+    assert saved_product is not None
+    assert saved_product['status'] == 'available'
+
+
+def test_delete_canceled_order_does_not_delete_active_order(order_service_test_db, monkeypatch):
+    conn = order_service_test_db()
+    
+    create_test_product(conn=conn, status='reserved')
+    create_test_order(conn=conn, status='new')
+    create_test_order_item(conn=conn)
+
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setattr(
+        order_service,
+        'get_db_connection',
+        order_service_test_db
+    )
+
+    is_deleted, error_message = order_service.delete_canceled_order('order-1')
+
+    check_conn = order_service_test_db()
+    saved_order = check_conn.execute("SELECT status FROM orders WHERE id = ?", ('order-1',)).fetchone()
+    order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ('order-1',)).fetchone()[0]
+    saved_product = check_conn.execute("SELECT status FROM products WHERE id = ?", ('product-1',)).fetchone()
+    check_conn.close()
+
+    assert is_deleted is False
+    assert error_message == "Удалить можно только отменённый заказ"
+
+    assert saved_order is not None
+    assert saved_order['status'] == 'new'
+
+    assert order_items_count == 1
+
+    assert saved_product is not None
+    assert saved_product['status'] == 'reserved'

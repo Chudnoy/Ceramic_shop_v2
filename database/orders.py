@@ -36,17 +36,10 @@ def update_order_details(conn, order_id, customer_name, customer_email, customer
     return cursor.rowcount > 0
     
     
-def delete_order(order_id):
-    """
-Удаляет заказ из таблицы orders по его id.
+def delete_order(conn, order_id, exprcted_status):
+    cursor = conn.execute("DELETE FROM orders WHERE id = ? AND status = ?", (order_id, exprcted_status))
 
-Используется в админке для удаления заказа. Функция удаляет только запись заказа
-из базы данных и не изменяет товары, которые входили в заказ.
-"""
-    conn = get_db_connection()
-    conn.execute("DELETE FROM orders WHERE id = ?", (order_id,))
-    conn.commit()
-    conn.close()
+    return cursor.rowcount > 0
     
     
 def get_all_orders(search_query='', status=''):
