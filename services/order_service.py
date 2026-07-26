@@ -175,7 +175,7 @@ def update_order_with_items(order_id, data):
             customer_phone=data['phone'],
             customer_address=data['address'],
             total=data['total'],
-            expexted_status='new'
+            expected_status='new'
         )
 
         if not is_order_updated:

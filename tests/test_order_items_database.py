@@ -411,7 +411,7 @@ def test_update_order_details_updates_order(order_items_test_db):
         customer_phone='98765',
         customer_address='new address',
         total=60000,
-        expexted_status='new'
+        expected_status='new'
     )
 
     conn.commit()

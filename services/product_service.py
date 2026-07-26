@@ -231,6 +231,9 @@ def delete_product_with_image(product_id, image_path):
     
     try:
         conn = get_db_connection()
+        if has_active_order_for_product(conn=conn, product_id=product_id):
+            conn.rollback()
+            return False, "Нельзя удалить работу, связанную с активным заказом"
         is_deleted = delete_product_data(conn, product_id)
         conn.commit()
     except Exception:

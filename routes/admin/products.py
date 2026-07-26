@@ -7,8 +7,7 @@ from database.categories import (
 from database.products import (
     get_all_products,
     get_product_by_id,
-    set_product_archived,
-    update_product_state
+    set_product_archived
 )
 from database.tags import (
     get_all_tags,

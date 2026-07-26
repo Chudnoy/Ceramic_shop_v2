@@ -22,7 +22,7 @@ def insert_order(
     )
 
 
-def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total, expexted_status):
+def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total, ecpected_status):
     cursor = conn.execute(
         """
         UPDATE orders
@@ -30,14 +30,14 @@ def update_order_details(conn, order_id, customer_name, customer_email, customer
             customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, total = ?
         WHERE id = ? AND status = ?
         """,
-        (customer_name, customer_email, customer_phone, customer_address, total, order_id, expexted_status)
+        (customer_name, customer_email, customer_phone, customer_address, total, order_id, ecpected_status)
     )
 
     return cursor.rowcount > 0
     
     
-def delete_order(conn, order_id, exprcted_status):
-    cursor = conn.execute("DELETE FROM orders WHERE id = ? AND status = ?", (order_id, exprcted_status))
+def delete_order(conn, order_id, expected_status):
+    cursor = conn.execute("DELETE FROM orders WHERE id = ? AND status = ?", (order_id, expected_status))
 
     return cursor.rowcount > 0
     
