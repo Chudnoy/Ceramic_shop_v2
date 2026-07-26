@@ -167,19 +167,35 @@ def test_created_product_can_be_retrieved(products_test_db):
     assert product["category_id"] == 1
     
     
-def test_update_product_state_changes_only_product_state(products_test_db):
-    
+def test_update_product_state_changes_only_product_state(
+        products_test_db
+):
     create_test_category(products_test_db)
     product_id = create_test_product()
-            
-    products.update_product_state(product_id=product_id, status="sold", is_visible=0, is_for_sale=0, is_featured=1)
-    
+
+    conn = products_test_db()
+
+    is_updated = products.update_product_state(
+        conn=conn,
+        product_id=product_id,
+        status="sold",
+        is_visible=0,
+        is_for_sale=0,
+        is_featured=1
+    )
+
+    conn.commit()
+    conn.close()
+
     product = products.get_product_by_id(product_id)
-    
+
+    assert is_updated is True
+
     assert product["status"] == "sold"
     assert product["is_visible"] == 0
     assert product["is_for_sale"] == 0
     assert product["is_featured"] == 1
+
     assert product["name"] == "Белая ваза"
     assert product["price"] == 9999
     

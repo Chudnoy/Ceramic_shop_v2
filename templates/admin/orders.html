@@ -49,36 +49,73 @@
                     <a href="{{ url_for('admin.order_details', order_id=order.id) }}">
                         Подробнее
                     </a>
-                
+
+                    {% if order.status == 'new' %}
+                        |
+
+                        <form action="{{ url_for('admin.confirm_order_route', order_id=order.id) }}"
+                            method="post"
+                            class="admin-inline-form"
+                            onsubmit="return confirm('Подтвердить заказ?')">
+
+                            <input type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}">
+
+                            <button type="submit" class="admin-link-button">
+                                Подтвердить
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if order.status == 'confirmed' %}
+                        |
+
+                        <form action="{{ url_for('admin.complete_order_route', order_id=order.id) }}"
+                            method="post"
+                            class="admin-inline-form"
+                            onsubmit="return confirm('Выполнить заказ и отметить работы как проданные?')">
+
+                            <input type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}">
+
+                            <button type="submit" class="admin-link-button">
+                                Выполнить
+                            </button>
+                        </form>
+                    {% endif %}
+
                     {% if order.status in ('new', 'confirmed') %}
                         |
-                
+
                         <form action="{{ url_for('admin.cancel_order_route', order_id=order.id) }}"
-                              method="post"
-                              class="admin-inline-form"
-                              onsubmit="return confirm('Отменить заказ и снять резерв с товаров?')">
-                
+                            method="post"
+                            class="admin-inline-form"
+                            onsubmit="return confirm('Отменить заказ и снять резерв с товаров?')">
+
                             <input type="hidden"
-                                   name="csrf_token"
-                                   value="{{ csrf_token() }}">
-                
+                                name="csrf_token"
+                                value="{{ csrf_token() }}">
+
                             <button type="submit" class="admin-link-button">
                                 Отменить
                             </button>
                         </form>
                     {% endif %}
+
                     {% if order.status == 'canceled' %}
                         |
-                    
+
                         <form action="{{ url_for('admin.delete_order_route', order_id=order.id) }}"
                             method="post"
                             class="admin-inline-form"
                             onsubmit="return confirm('Удалить отменённый заказ навсегда?')">
-                    
+
                             <input type="hidden"
                                 name="csrf_token"
                                 value="{{ csrf_token() }}">
-                    
+
                             <button type="submit" class="admin-link-button">
                                 Удалить
                             </button>

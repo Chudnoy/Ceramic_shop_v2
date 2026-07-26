@@ -22,15 +22,15 @@ def insert_order(
     )
 
 
-def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total):
+def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total, expexted_status):
     cursor = conn.execute(
         """
         UPDATE orders
         SET
             customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, total = ?
-        WHERE id = ?
+        WHERE id = ? AND status = ?
         """,
-        (customer_name, customer_email, customer_phone, customer_address, total, order_id)
+        (customer_name, customer_email, customer_phone, customer_address, total, order_id, expexted_status)
     )
 
     return cursor.rowcount > 0
@@ -102,3 +102,20 @@ def update_order_status(conn, order_id, new_status, expected_status):
     cursor = conn.execute("UPDATE orders SET status = ? WHERE id = ? AND status = ?", (new_status, order_id, expected_status))
     
     return cursor.rowcount > 0
+
+
+def has_active_order_for_product(conn, product_id):
+    active_order = conn.execute(
+        """
+        SELECT 1
+        FROM order_items
+        JOIN orders
+            ON orders.id = order_items.order_id
+        WHERE order_items.product_id = ?
+          AND orders.status IN ('new', 'confirmed')
+        LIMIT 1
+        """,
+        (product_id,)
+    ).fetchone()
+
+    return active_order is not None

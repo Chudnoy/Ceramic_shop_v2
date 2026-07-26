@@ -47,11 +47,12 @@ def update_product_data(
     """, (name, description, price, category_id, img_path, status, year, materials, is_visible, is_for_sale, is_featured, product_id))
     
     
-def update_product_state(product_id, status, is_visible, is_for_sale, is_featured):
-    conn = get_db_connection()
-    conn.execute("UPDATE products SET status = ?, is_visible = ?, is_for_sale = ?, is_featured = ? WHERE id = ?", (status, is_visible, is_for_sale, is_featured, product_id))
-    conn.commit()
-    conn.close()
+def update_product_state(conn, product_id, status, is_visible, is_for_sale, is_featured):
+    cursor = conn.execute(
+        """UPDATE products SET status = ?, is_visible = ?, is_for_sale = ?, is_featured = ? WHERE id = ?""", 
+        (status, is_visible, is_for_sale, is_featured, product_id))
+
+    return cursor.rowcount > 0
     
     
 def delete_product_data(conn, product_id):

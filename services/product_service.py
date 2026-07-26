@@ -1,9 +1,10 @@
 from validation import validate_product
 from database.connection import get_db_connection
-from database.products import insert_product, update_product_data, delete_product_data
+from database.products import insert_product, update_product_data, delete_product_data, update_product_state
 from database.tags import get_all_tags, replace_product_tags
 from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id
+from database.orders import has_active_order_for_product
 
 
 PRODUCT_STATUSES = {
@@ -249,3 +250,44 @@ def delete_product_with_image(product_id, image_path):
         return True, "Товар удалён, но файл изображения удалить не удалось"
         
     return True, ""
+
+
+def update_product_state_with_order_check(product_id, data):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+
+        has_active_order = has_active_order_for_product(
+            conn=conn,
+            product_id=product_id
+        )
+
+        if has_active_order and data["status"] != "reserved":
+            conn.rollback()
+            return False, "Нельзя изменить статус работы, связанной с активным заказом"
+
+        is_updated = update_product_state(
+            conn=conn,
+            product_id=product_id,
+            status=data["status"],
+            is_visible=data["is_visible"],
+            is_for_sale=data["is_for_sale"],
+            is_featured=data["is_featured"]
+        )
+
+        if not is_updated:
+            conn.rollback()
+            return False, "Работа не найдена"
+
+        conn.commit()
+        return True, ""
+
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        raise
+
+    finally:
+        if conn is not None:
+            conn.close()

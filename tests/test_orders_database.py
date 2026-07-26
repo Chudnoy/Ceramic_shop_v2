@@ -157,3 +157,73 @@ def test_update_order_status_does_not_update_when_status_does_not_match(orders_t
     assert result is False
     assert order is not None
     assert order["status"] == "completed"
+
+
+def test_has_active_order_for_product_returns_true_for_confirmed_order(
+        orders_test_db
+):
+    conn = orders_test_db()
+
+    create_test_product(
+        conn=conn,
+        product_id="product-1",
+        status="reserved"
+    )
+
+    create_test_order(
+        conn=conn,
+        order_id="order-1",
+        status="confirmed"
+    )
+
+    create_test_order_item(
+        conn=conn,
+        order_id="order-1",
+        product_id="product-1"
+    )
+
+    conn.commit()
+
+    result = orders.has_active_order_for_product(
+        conn=conn,
+        product_id="product-1"
+    )
+
+    conn.close()
+
+    assert result is True
+
+
+def test_has_active_order_for_product_returns_false_for_canceled_order(
+        orders_test_db
+):
+    conn = orders_test_db()
+
+    create_test_product(
+        conn=conn,
+        product_id="product-1",
+        status="available"
+    )
+
+    create_test_order(
+        conn=conn,
+        order_id="order-1",
+        status="canceled"
+    )
+
+    create_test_order_item(
+        conn=conn,
+        order_id="order-1",
+        product_id="product-1"
+    )
+
+    conn.commit()
+
+    result = orders.has_active_order_for_product(
+        conn=conn,
+        product_id="product-1"
+    )
+
+    conn.close()
+
+    assert result is False

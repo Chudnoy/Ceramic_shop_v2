@@ -45,9 +45,12 @@
 </div>
 
 <div class="admin-actions">
-    <a href="{{ url_for('admin.edit_order', order_id=order.id) }}" class="admin-button">
-        Редактировать
-    </a>
+    {% if order.status == "new" %}
+        <a href="{{ url_for('admin.edit_order', order_id=order.id) }}"
+        class="admin-button">
+            Редактировать
+        </a>
+    {% endif %}
     <a href="{{ url_for('admin.admin_orders') }}" class="admin-button admin-button-secondary">
         Назад к заказам
     </a>

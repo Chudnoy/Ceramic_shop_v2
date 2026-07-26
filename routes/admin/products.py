@@ -21,7 +21,8 @@ from services.product_service import (
     process_product_tag_ids,
     create_product_with_tags,
     update_product_with_tags,
-    delete_product_with_image
+    delete_product_with_image,
+    update_product_state_with_order_check
 )
 
 from . import admin_bp
@@ -250,14 +251,23 @@ def update_product_state_route(product_id):
         flash("Работа не найдена", "error")
         return redirect(url_for("admin.admin_products"))
         
-    is_valid, message, cleaned_data = process_product_state_form(request.form)
-    
+    is_valid, message, cleaned_data = process_product_state_form(
+        request.form
+    )
+
     if not is_valid:
         flash(message, "error")
         return redirect(url_for("admin.admin_products"))
-        
-    update_product_state(product_id, cleaned_data["status"], cleaned_data["is_visible"], cleaned_data["is_for_sale"], cleaned_data["is_featured"])
-    
+
+    is_updated, update_message = update_product_state_with_order_check(
+        product_id=product_id,
+        data=cleaned_data
+    )
+
+    if not is_updated:
+        flash(update_message, "error")
+        return redirect(url_for("admin.admin_products"))
+
     flash("Состояние работы обновлено", "success")
     return redirect(url_for("admin.admin_products"))
     

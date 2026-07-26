@@ -174,12 +174,13 @@ def update_order_with_items(order_id, data):
             customer_email=data['email'],
             customer_phone=data['phone'],
             customer_address=data['address'],
-            total=data['total']
+            total=data['total'],
+            expexted_status='new'
         )
 
         if not is_order_updated:
             conn.rollback()
-            return False, 'Заказ не найден'
+            return False, 'Заказ не найден или уже нельзя редактировать'
         
         for item in data['items']:
             is_item_updated = update_order_item_quantity(
@@ -239,7 +240,10 @@ def complete_order(order_id):
 
     try:
         conn = get_db_connection()
-        items = get_order_items_by_order_id()
+        items = get_order_items_by_order_id(
+            conn=conn,
+            order_id=order_id
+        )
 
         is_order_completed = update_order_status(
             conn=conn,
