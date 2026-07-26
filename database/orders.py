@@ -22,15 +22,15 @@ def insert_order(
     )
 
 
-def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total, status):
+def update_order_details(conn, order_id, customer_name, customer_email, customer_phone, customer_address, total):
     cursor = conn.execute(
         """
         UPDATE orders
         SET
-            customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, total = ?, status = ?
+            customer_name = ?, customer_email = ?, customer_phone = ?, customer_address = ?, total = ?
         WHERE id = ?
         """,
-        (customer_name, customer_email, customer_phone, customer_address, total, status, order_id)
+        (customer_name, customer_email, customer_phone, customer_address, total, order_id)
     )
 
     return cursor.rowcount > 0
@@ -105,14 +105,7 @@ def get_order_by_id(order_id):
             conn.close()
     
     
-def update_order_status(order_id, status):
-    """
-Обновляет только статус заказа.
-
-Используется для быстрого изменения статуса заказа из админского списка без
-редактирования остальных данных заказа.
-"""
-    conn = get_db_connection()
-    conn.execute('UPDATE orders SET status = ? WHERE id = ?', (status, order_id))
-    conn.commit()
-    conn.close()
+def update_order_status(conn, order_id, new_status, expected_status):
+    cursor = conn.execute("UPDATE orders SET status = ? WHERE id = ? AND status = ?", (new_status, order_id, expected_status))
+    
+    return cursor.rowcount > 0

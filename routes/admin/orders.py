@@ -1,6 +1,6 @@
 from flask import request, render_template, flash, redirect, url_for
-from database.orders import get_all_orders, get_order_by_id, update_order_status, delete_order
-from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items
+from database.orders import get_all_orders, get_order_by_id, delete_order
+from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items, cancel_order
 
 from . import admin_bp
 
@@ -67,30 +67,18 @@ def edit_order(order_id):
         flash('Заказ обновлён', 'success')
         return redirect(url_for('admin.admin_orders'))
     
-    return render_template("admin/order_form.html", order=order, order_statuses=ORDER_STATUSES)
+    return render_template("admin/order_form.html", order=order)
     
     
-@admin_bp.route("/admin/orders/<order_id>/status", methods=["POST"])
-def update_order_status_route(order_id):
-    """
-Обрабатывает быстрое изменение статуса заказа.
+@admin_bp.route("/admin/orders/<order_id>/cancel", methods=["POST"])
+def cancel_order_route(order_id):
+    is_canceled, error_message = cancel_order(order_id)
 
-Получает новый статус из формы, проверяет существование заказа и допустимость
-статуса. Если всё корректно, обновляет статус заказа и возвращает пользователя
-к списку заказов.
-"""
-    status = request.form.get("status", "new")
-    order = get_order_by_id(order_id)
-    if not order:
-        flash('Заказ не найден', 'error')
-        return redirect(url_for('admin.admin_orders'))
-    if status not in ORDER_STATUSES:
-        flash("Некорректный статус заказа", "error")
+    if not is_canceled:
+        flash(error_message, "error")
         return redirect(url_for("admin.admin_orders"))
 
-    update_order_status(order_id, status)
-
-    flash("Статус заказа обновлён", "success")
+    flash("Заказ отменён, резерв товаров снят", "success")
     return redirect(url_for("admin.admin_orders"))
     
     

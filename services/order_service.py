@@ -1,8 +1,10 @@
 import uuid
 from database.connection import get_db_connection
-from database.orders import insert_order, update_order_details
+from database.orders import insert_order, update_order_details, update_order_status
+
 from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id
-from database.products import update_product_status, get_products_by_ids
+
+from database.products import update_product_status
 
 
 ORDER_STATUSES = {
@@ -11,6 +13,7 @@ ORDER_STATUSES = {
     "completed": "Выполнен",
     "canceled": "Отменён",
 }
+CANCELLABLE_ORDER_STATUSES = ("new", "confirmed")
 
 
 def process_order_form(form, old_items):
@@ -18,16 +21,12 @@ def process_order_form(form, old_items):
     email = form.get("email", "").strip()
     phone = form.get("phone", "").strip()
     address = form.get("address", "").strip()
-    status = form.get('status', 'new')
 
     if not name:
         return False, 'Имя обязательно для заполнения', None
 
     if not email or '@' not in email:
         return False, 'Введён некорректный email', None
-
-    if status not in ORDER_STATUSES:
-        return False, 'Некорректный статус заказа', None
 
     items = []
     total = 0
@@ -58,7 +57,6 @@ def process_order_form(form, old_items):
         'address': address, 
         'items': items, 
         'total': total, 
-        'status': status
         }
 
     return True, '', cleaned_data
@@ -176,8 +174,7 @@ def update_order_with_items(order_id, data):
             customer_email=data['email'],
             customer_phone=data['phone'],
             customer_address=data['address'],
-            total=data['total'],
-            status=data['status']
+            total=data['total']
         )
 
         if not is_order_updated:
@@ -202,6 +199,58 @@ def update_order_with_items(order_id, data):
     except Exception:
         if conn is not None:
             conn.rollback()
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+            
+            
+def cancel_order(order_id):
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        
+        items = get_order_items_by_order_id(conn, order_id)
+        
+        is_order_canceled = False
+        for expected_status in CANCELLABLE_ORDER_STATUSES:
+            is_order_canceled = update_order_status(
+                conn=conn,
+                order_id=order_id,
+                new_status="canceled",
+                expected_status=expected_status
+            )
+            if is_order_canceled:
+                break
+        
+        if not is_order_canceled:
+            conn.rollback()
+            return False, "Заказ не найден или уже не может быть отменён"
+        
+        for item in items:
+            product_id = item["product_id"]
+            
+            if product_id is None:
+                continue
+                
+            is_released = update_product_status(
+                    conn=conn,
+                    product_id=product_id,
+                    new_status="available",
+                    expected_status="reserved"
+            )
+            
+            if not is_released:
+                conn.rollback()
+                return False, f"Не удалось освободить работу «{item['product_name']}»"
+                
+        conn.commit()
+        return True, ""
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+            
         raise
     finally:
         if conn is not None:
