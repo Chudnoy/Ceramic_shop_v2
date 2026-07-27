@@ -20,39 +20,41 @@
 </form>
 {% if orders %}
     <div class="admin-table-wrapper">
-        <table class="admin-table">
-            <tr>
-                <th>ID</th>
-                <th>Клиент</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th>Итого</th>
-                <th>Статус</th>
-                <th>Дата</th>
-                <th>Действия</th>
-            </tr>
+        <table class="admin-table admin-table--orders">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Клиент</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Итого</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
 
-            {% for order in orders %}
-            <tr>
-                <td>{{ order.id[:8] }}</td>
-                <td>{{ order.customer_name }}</td>
-                <td>{{ order.customer_email }}</td>
-                <td>{{ order.customer_phone if order.customer_phone else '—' }}</td>
-                <td>{{ order.total }} руб.</td>
-                <td>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                <td data-label="ID"><code class="admin-order-id">{{ order.id[:8] }}</code></td>
+                <td data-label="Клиент"><strong>{{ order.customer_name }}</strong></td>
+                <td data-label="Email">{{ order.customer_email }}</td>
+                <td data-label="Телефон">{{ order.customer_phone if order.customer_phone else '—' }}</td>
+                <td data-label="Итого" class="admin-price">{{ order.total }} руб.</td>
+                <td data-label="Статус">
                     <span class="admin-status admin-status-{{ order.status }}">
                         {{ order_statuses.get(order.status, order.status) }}
                     </span>
                 </td>
-                <td>{{ order.created_at }}</td>
-                <td>
+                <td data-label="Дата">{{ order.created_at }}</td>
+                <td data-label="Действия">
+                    <div class="admin-row-actions">
                     <a href="{{ url_for('admin.order_details', order_id=order.id) }}">
                         Подробнее
                     </a>
 
                     {% if order.status == 'new' %}
-                        |
-
                         <form action="{{ url_for('admin.confirm_order_route', order_id=order.id) }}"
                             method="post"
                             class="admin-inline-form"
@@ -69,8 +71,6 @@
                     {% endif %}
 
                     {% if order.status == 'confirmed' %}
-                        |
-
                         <form action="{{ url_for('admin.complete_order_route', order_id=order.id) }}"
                             method="post"
                             class="admin-inline-form"
@@ -87,8 +87,6 @@
                     {% endif %}
 
                     {% if order.status in ('new', 'confirmed') %}
-                        |
-
                         <form action="{{ url_for('admin.cancel_order_route', order_id=order.id) }}"
                             method="post"
                             class="admin-inline-form"
@@ -98,15 +96,13 @@
                                 name="csrf_token"
                                 value="{{ csrf_token() }}">
 
-                            <button type="submit" class="admin-link-button">
+                            <button type="submit" class="admin-link-button admin-link-button-warning">
                                 Отменить
                             </button>
                         </form>
                     {% endif %}
 
                     {% if order.status == 'canceled' %}
-                        |
-
                         <form action="{{ url_for('admin.delete_order_route', order_id=order.id) }}"
                             method="post"
                             class="admin-inline-form"
@@ -116,14 +112,16 @@
                                 name="csrf_token"
                                 value="{{ csrf_token() }}">
 
-                            <button type="submit" class="admin-link-button">
+                            <button type="submit" class="admin-link-button admin-link-button-danger">
                                 Удалить
                             </button>
                         </form>
                     {% endif %}
+                    </div>
                 </td>
-            </tr>
-            {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 {% else %}

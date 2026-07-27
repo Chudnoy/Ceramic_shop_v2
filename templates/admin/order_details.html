@@ -21,23 +21,29 @@
 <div class="admin-detail-card">
     <h2>Состав заказа</h2>
 
-    <table class="admin-table">
-        <tr>
-            <th>Товар</th>
-            <th>Цена</th>
-            <th>Количество</th>
-            <th>Сумма</th>
-        </tr>
+    <div class="admin-table-wrapper admin-table-wrapper--nested">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
 
-        {% for product in order['items'] %}
-        <tr>
-            <td>{{ product['product_name'] }}</td>
-            <td>{{ product['unit_price'] }} руб.</td>
-            <td>{{ product['quantity'] }}</td>
-            <td>{{ product['unit_price'] * product['quantity'] }} руб.</td>
-        </tr>
-        {% endfor %}
-    </table>
+            <tbody>
+                {% for product in order['items'] %}
+                <tr>
+                    <td data-label="Товар"><strong>{{ product['product_name'] }}</strong></td>
+                    <td data-label="Цена">{{ product['unit_price'] }} руб.</td>
+                    <td data-label="Количество">{{ product['quantity'] }}</td>
+                    <td data-label="Сумма" class="admin-price">{{ product['unit_price'] * product['quantity'] }} руб.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <p class="admin-total">
         Итого: {{ order.total }} руб.

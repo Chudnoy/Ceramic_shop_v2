@@ -1,41 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#17262d">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <title>Админка</title>
+    <title>{% block title %}Админка{% endblock %} — Ceramic Shop</title>
 </head>
 
 <body class="admin-body">
+    <a href="#admin-content" class="admin-skip-link">Перейти к содержимому</a>
+
     <header class="admin-header">
         <div class="admin-header-inner">
-            <a href="{{ url_for('admin.admin') }}" class="admin-logo">Админка</a>
+            <a href="{{ url_for('admin.admin') }}" class="admin-logo">
+                <span class="admin-logo-mark" aria-hidden="true">C</span>
+                <span class="admin-logo-copy">
+                    <strong>Ceramic Shop</strong>
+                    <small>рабочий кабинет</small>
+                </span>
+            </a>
 
-            <nav class="admin-nav">
-                <a href="{{ url_for('admin.admin') }}">Главная</a>
-                <a href="{{ url_for('admin.admin_products') }}">Товары</a>
-                <a href="{{ url_for('admin.admin_orders') }}">Заказы</a>
-				<a href="{{ url_for('admin.admin_categories') }}">Категории</a>
-				<a href="{{ url_for('admin.admin_tags_route') }}">Теги</a>
-                <a href="{{ url_for('admin.admin_archived_products') }}">Архив</a>
-                {% if session.get('is_admin') %}
-                    <form action="{{ url_for('admin.logout') }}" method="post" class="admin-inline-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="admin-nav-button">Выйти</button>
-                    </form>
-                {% endif %}
-            </nav>
+            {% if session.get('is_admin') %}
+            <div class="admin-menu">
+                <input
+                    type="checkbox"
+                    id="admin-menu-control"
+                    class="admin-menu-control"
+                    aria-label="Открыть или закрыть меню"
+                >
+                <label for="admin-menu-control" class="admin-menu-toggle">
+                    <span>Разделы</span>
+                    <span class="admin-menu-toggle-icon" aria-hidden="true"></span>
+                </label>
+
+                <nav class="admin-nav" aria-label="Навигация по админке">
+                    <a
+                        href="{{ url_for('admin.admin') }}"
+                        {% if request.endpoint == 'admin.admin' %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">01</span>
+                        Главная
+                    </a>
+                    <a
+                        href="{{ url_for('admin.admin_products') }}"
+                        {% if request.endpoint in ('admin.admin_products', 'admin.new_product', 'admin.edit_product', 'admin.update_product_state_route') %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">02</span>
+                        Товары
+                    </a>
+                    <a
+                        href="{{ url_for('admin.admin_orders') }}"
+                        {% if request.endpoint in ('admin.admin_orders', 'admin.order_details', 'admin.edit_order', 'admin.confirm_order_route', 'admin.complete_order_route', 'admin.cancel_order_route', 'admin.delete_order_route') %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">03</span>
+                        Заказы
+                    </a>
+                    <a
+                        href="{{ url_for('admin.admin_categories') }}"
+                        {% if request.endpoint in ('admin.admin_categories', 'admin.new_category_route', 'admin.edit_category_route', 'admin.delete_category_route') %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">04</span>
+                        Категории
+                    </a>
+                    <a
+                        href="{{ url_for('admin.admin_tags_route') }}"
+                        {% if request.endpoint in ('admin.admin_tags_route', 'admin.new_tag_route', 'admin.edit_tag_route', 'admin.delete_tag_route', 'admin.tag_details') %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">05</span>
+                        Теги
+                    </a>
+                    <a
+                        href="{{ url_for('admin.admin_archived_products') }}"
+                        {% if request.endpoint in ('admin.admin_archived_products', 'admin.restore_product_route', 'admin.delete_product_route') %}class="is-active" aria-current="page"{% endif %}
+                    >
+                        <span class="admin-nav-marker" aria-hidden="true">06</span>
+                        Архив
+                    </a>
+
+                    <div class="admin-nav-footer">
+                        <a href="{{ url_for('main.catalog') }}" class="admin-site-link">
+                            Открыть сайт
+                            <span aria-hidden="true">↗</span>
+                        </a>
+
+                        <form action="{{ url_for('admin.logout') }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="admin-nav-button">Выйти из кабинета</button>
+                        </form>
+                    </div>
+                </nav>
+            </div>
+            {% else %}
+                <a href="{{ url_for('main.catalog') }}" class="admin-login-site-link">
+                    На сайт <span aria-hidden="true">↗</span>
+                </a>
+            {% endif %}
         </div>
     </header>
 
-    <main class="admin-main">
+    <main class="admin-main" id="admin-content">
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
-                <div class="admin-flashes">
+                <div class="admin-flashes" aria-live="polite">
                     {% for category, message in messages %}
-                        <div class="admin-flash admin-flash-{{ category }}">
+                        <div class="admin-flash admin-flash-{{ category }}" role="status">
                             {{ message }}
                         </div>
                     {% endfor %}

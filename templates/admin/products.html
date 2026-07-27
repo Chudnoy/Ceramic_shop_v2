@@ -44,31 +44,34 @@
 
 {% if products %}
     <div class="admin-table-wrapper">
-        <table class="admin-table">
-            <tr>
-                <th>Изображение</th>
-                <th>Название</th>
-                <th>Категория</th>
-                <th>Год изготовления</th>
-                <th>Материалы</th>
-                <th>Цена</th>
-                <th>Состояние</th>
-                <th>Действия</th>
-            </tr>
+        <table class="admin-table admin-table--products">
+            <thead>
+                <tr>
+                    <th>Изображение</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Год изготовления</th>
+                    <th>Материалы</th>
+                    <th>Цена</th>
+                    <th>Состояние</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
 
-            {% for product in products %}
-            <tr>
-                <td>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                <td data-label="Изображение" class="admin-table-image-cell">
                     {% if product.img %}
                         <img src="{{ product.img }}" alt="{{ product.name }}" class="admin-product-thumb">
                     {% else %}
                         <span class="admin-muted">Нет фото</span>
                     {% endif %}
                 </td>
-                <td>{{ product.name }}</td>
-                <td>{{ product.category_name if product.category_name else '—' }}</td>
-                <td>{{ product.year if product.year else "—" }}</td>
-                <td>
+                <td data-label="Название"><strong>{{ product.name }}</strong></td>
+                <td data-label="Категория">{{ product.category_name if product.category_name else '—' }}</td>
+                <td data-label="Год">{{ product.year if product.year else "—" }}</td>
+                <td data-label="Материалы">
                     {% if product.materials %}
                         {% for item in product.materials.split(', ') %}
                             {{ loop.index }}. {{ item }}<br>
@@ -77,8 +80,8 @@
                         —
                     {% endif %}
                 </td>
-                <td>{{ product.price }} руб.</td>
-                <td class="admin-product-state">
+                <td data-label="Цена" class="admin-price">{{ product.price }} руб.</td>
+                <td data-label="Состояние" class="admin-product-state">
                     <form
                         action="{{ url_for('admin.update_product_state_route', product_id=product.id) }}"
                         method="post"
@@ -136,16 +139,18 @@
                         </button>
                     </form>
                 </td>
-                <td>
+                <td data-label="Действия">
+                    <div class="admin-row-actions">
                     <a href="{{ url_for('admin.edit_product', product_id=product.id) }}">Редактировать</a>
-                    |
                     <form action="{{url_for('admin.archive_product_route', product_id=product.id)}}" method="post" class="admin-inline-form" onsubmit="return confirm('переместить работу в архив?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="admin-link-button">В архив</button>
+                        <button type="submit" class="admin-link-button admin-link-button-warning">В архив</button>
                     </form>
+                    </div>
                 </td>
-            </tr>
-            {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 {% else %}

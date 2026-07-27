@@ -5,23 +5,26 @@
 
     {% if products %}
         <div class="admin-table-wrapper">
-            <table class="admin-table">
-                <tr>
-                    <th>Изображение</th>
-                    <th>Название</th>
-                    <th>Категория</th>
-                    <th>Год</th>
-                    <th>Материалы</th>
-                    <th>Цена</th>
-                    <th>Статус</th>
-                    <th>Публикация</th>
-                    <th>Продажа</th>
-                    <th>Действия</th>
-                </tr>
-
-                {% for product in products %}
+            <table class="admin-table admin-table--archive">
+                <thead>
                     <tr>
-                        <td>
+                        <th>Изображение</th>
+                        <th>Название</th>
+                        <th>Категория</th>
+                        <th>Год</th>
+                        <th>Материалы</th>
+                        <th>Цена</th>
+                        <th>Статус</th>
+                        <th>Публикация</th>
+                        <th>Продажа</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td data-label="Изображение" class="admin-table-image-cell">
                             {% if product.img %}
                                 <img
                                     src="{{ product.img }}"
@@ -35,17 +38,17 @@
                             {% endif %}
                         </td>
 
-                        <td>{{ product.name }}</td>
+                        <td data-label="Название"><strong>{{ product.name }}</strong></td>
 
-                        <td>
+                        <td data-label="Категория">
                             {{ product.category_name if product.category_name else "—" }}
                         </td>
 
-                        <td>
+                        <td data-label="Год">
                             {{ product.year if product.year else "—" }}
                         </td>
 
-                        <td>
+                        <td data-label="Материалы">
                             {% if product.materials %}
                                 {% for item in product.materials.split(", ") %}
                                     {{ loop.index }}. {{ item }}<br>
@@ -55,15 +58,15 @@
                             {% endif %}
                         </td>
 
-                        <td>{{ product.price }} руб.</td>
+                        <td data-label="Цена" class="admin-price">{{ product.price }} руб.</td>
 
-                        <td>
+                        <td data-label="Статус">
                             <span class="product-status product-status-{{ product.status }}">
                                 {{ product_statuses.get(product.status, product.status) }}
                             </span>
                         </td>
 
-                        <td>
+                        <td data-label="Публикация">
                             {% if product.is_visible %}
                                 Будет отображаться после восстановления
                             {% else %}
@@ -71,7 +74,7 @@
                             {% endif %}
                         </td>
 
-                        <td>
+                        <td data-label="Продажа">
                             {% if product.is_for_sale %}
                                 Для продажи
                             {% else %}
@@ -79,14 +82,13 @@
                             {% endif %}
                         </td>
 
-                        <td>
+                        <td data-label="Действия">
+                            <div class="admin-row-actions">
                             <a
                                 href="{{ url_for('admin.edit_product', product_id=product.id) }}"
                             >
                                 Редактировать
                             </a>
-
-                            |
 
                             <form
                                 action="{{ url_for('admin.restore_product_route', product_id=product.id) }}"
@@ -108,8 +110,6 @@
                                 </button>
                             </form>
 
-                            |
-
                             <form
                                 action="{{ url_for('admin.delete_product_route', product_id=product.id) }}"
                                 method="post"
@@ -124,14 +124,16 @@
 
                                 <button
                                     type="submit"
-                                    class="admin-link-button"
+                                    class="admin-link-button admin-link-button-danger"
                                 >
                                     Удалить навсегда
                                 </button>
                             </form>
+                            </div>
                         </td>
                     </tr>
-                {% endfor %}
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     {% else %}

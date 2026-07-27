@@ -1,17 +1,24 @@
 {% extends 'admin/base.html' %}
 
+{% block title %}Вход{% endblock %}
+
 {% block content %}
-	<h1 class="admin-page-title">Вход в админку</h1>
-	<form action="" method="post" class="admin-form">
+	<section class="admin-login-panel">
+		<p class="admin-eyebrow">Ceramic Shop</p>
+		<h1 class="admin-page-title">Вход в админку</h1>
+		<p class="admin-page-subtitle">Введите данные администратора, чтобы продолжить работу.</p>
+
+	<form action="" method="post" class="admin-form admin-login-form">
 		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 		<div class="admin-form-group">
 			<label for="login">Логин</label>
-			<input type="text" name="login" id="login">
+			<input type="text" name="login" id="login" autocomplete="username">
 		</div>
 		<div class="admin-form-group">
 			<label for="password">Пароль</label>
-			<input type="password" name="password" id="password">
+			<input type="password" name="password" id="password" autocomplete="current-password">
 		</div>
 		<button type="submit" class="admin-button">Войти</button>
 	</form>
+	</section>
 {% endblock %}
