@@ -175,17 +175,27 @@ def update_product_with_tags(
             tag_ids,
             file
 ):
-    image_success, image_error, new_image_path = save_image(file)
-    
-    if not image_success:
-        return False, image_error
-        
-    final_image_path = new_image_path or old_image_path
     
     conn = None
+    new_image_path = None
     
     try:
         conn = get_db_connection()
+        
+        has_active_order = has_active_order_for_product(
+            conn=conn,
+            product_id=product_id
+        )
+
+        if has_active_order and data["status"] != "reserved":
+            return False, "Нельзя изменить статус работы, связанной с активным заказом"
+            
+        image_success, image_error, new_image_path = save_image(file)
+    
+        if not image_success:
+            return False, image_error
+        
+        final_image_path = new_image_path or old_image_path
         
         update_product_data(
             conn=conn,
