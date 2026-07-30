@@ -151,3 +151,21 @@ def get_cart_count(session):
 """
     cart = get_cart(session)
     return sum(cart.values())
+    
+    
+def remove_ordered_items_from_cart(session, product_ids):
+    cart = get_cart(session)
+    was_removed = False
+
+    for product_id in product_ids:
+        if product_id in cart:
+            del cart[product_id]
+            was_removed = True
+
+    if not was_removed:
+        return False
+
+    session["cart"] = cart
+    session.modified = True
+
+    return True

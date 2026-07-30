@@ -1,7 +1,8 @@
 import pytest
 
 from app import app
-import routes.admin.dashboard as dashboard 
+import routes.admin.dashboard as dashboard
+import routes.main as main_routes
 
 @pytest.fixture
 def client():
@@ -110,3 +111,269 @@ def test_protected_admin_routes_redirect_to_login(client, admin_url):
     response = client.get(admin_url)
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/admin/login")
+    
+    
+def test_checkout_requires_confirmation_when_cart_contains_unavailable_items(client, monkeypatch):
+    
+    with client.session_transaction() as test_session:
+        test_session["cart"] = {
+            "product-1": 1,
+            "product-2": 1
+        }
+        test_session["csrf_token"] = "test_token"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "build_cart_summary",
+        lambda _session: {
+            "cart": {
+                "product-1": 1,
+                "product-2": 1
+            },
+            "available_products": [
+                {
+                "id": "product-1",
+                "name": "Башня",
+                "price": 30000
+                }
+            ],
+            "has_unavailable_items": True
+        }
+    )
+    
+    def fail_if_create_order_with_items_called(*args, **kwargs):
+        raise AssertionError("create_order_with_items не должен вызываться без подтверждения")
+        
+    monkeypatch.setattr(
+        main_routes,
+        "create_order_with_items",
+        fail_if_create_order_with_items_called
+    )
+    
+    response = client.post(
+        "/checkout",
+        data={
+            "customer_name": "Денис",
+            "customer_email": "denis@example.com",
+            "customer_phone": "",
+            "customer_address": "",
+            "csrf_token": "test_token"
+        }
+    )
+    
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/checkout")
+    
+    with client.session_transaction() as session_after_request:
+        assert session_after_request["cart"] == {
+            "product-1": 1,
+            "product-2": 1
+        }
+        
+        
+def test_checkout_creates_partial_order_after_confirmation(client, monkeypatch):
+    
+    with client.session_transaction() as test_session:
+        test_session["cart"] = {
+            "product-1": 1,
+            "product-2": 1
+        }
+        test_session["csrf_token"] = "test_token"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "build_cart_summary",
+        lambda _session: {
+            "cart": {
+                "product-1": 1,
+                "product-2": 1
+            },
+            "available_products": [
+                {
+                "id": "product-1",
+                "name": "Башня",
+                "price": 30000
+                }
+            ],
+            "has_unavailable_items": True
+        }
+    )
+    
+    received_order = {}
+    
+    def successful_create_order(data, items):
+        received_order["data"] = data
+        received_order["items"] = items
+        return True, "", "order-12345678"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "create_order_with_items",
+        successful_create_order
+    )
+    
+    response = client.post(
+        "/checkout",
+        data={
+            "customer_name": "Денис",
+            "customer_email": "denis@example.com",
+            "customer_phone": "",
+            "customer_address": "",
+            "csrf_token": "test_token",
+            "confirm_partial_order": "1"
+        }
+    )
+    
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/order_success/order-12345678")
+    
+    assert received_order["items"] == [
+        {
+            "product_id": "product-1",
+            "product_name": "Башня",
+            "unit_price": 30000,
+            "quantity": 1
+        }
+    ]
+    
+    with client.session_transaction() as session_after_request:
+        assert session_after_request["cart"] == {
+            "product-2": 1
+        }
+        
+        
+def test_checkout_preserves_cart_when_order_creation_fails(client, monkeypatch):
+    
+    with client.session_transaction() as test_session:
+        test_session["cart"] = {
+            "product-1": 1,
+            "product-2": 1
+        }
+        test_session["csrf_token"] = "test_token"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "build_cart_summary",
+        lambda _session: {
+            "cart": {
+                "product-1": 1,
+                "product-2": 1
+            },
+            "available_products": [
+                {
+                "id": "product-1",
+                "name": "Башня",
+                "price": 30000
+                }
+            ],
+            "has_unavailable_items": True
+        }
+    )
+    
+    def failed_create_order(data, items):
+        return False, "Не удалось создать заказ", None
+        
+    monkeypatch.setattr(
+        main_routes,
+        "create_order_with_items",
+        failed_create_order
+    )
+    
+    response = client.post(
+        "/checkout",
+        data={
+            "customer_name": "Денис",
+            "customer_email": "denis@example.com",
+            "customer_phone": "",
+            "customer_address": "",
+            "csrf_token": "test_token",
+            "confirm_partial_order": "1"
+        }
+    )
+    
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/cart")
+    
+    with client.session_transaction() as session_after_request:
+        assert session_after_request["cart"] == {
+            "product-1": 1,
+            "product-2": 1
+        }
+        
+        
+def test_checkout_creates_full_order_without_partial_confirmation_when_all_products_available(client,monkeypatch):
+    with client.session_transaction() as test_session:
+        test_session["cart"] = {
+            "product-1": 1,
+            "product-2": 1
+        }
+        test_session["csrf_token"] = "test_token"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "build_cart_summary",
+        lambda _session: {
+            "cart": {
+                "product-1": 1,
+                "product-2": 1
+            },
+            "available_products": [
+                {
+                    "id": "product-1",
+                    "name": "Башня",
+                    "price": 30000
+                },
+                {
+                    "id": "product-2",
+                    "name": "Чаша",
+                    "price": 20000
+                }
+            ],
+            "has_unavailable_items": False
+        }
+    )
+    
+    received_order = {}
+    
+    def successful_create_order(data, items):
+        received_order["data"] = data
+        received_order["items"] = items
+        return True, "", "order-12345678"
+        
+    monkeypatch.setattr(
+        main_routes,
+        "create_order_with_items",
+        successful_create_order
+    )
+    
+    response = client.post(
+        "/checkout",
+        data={
+            "customer_name": "Денис",
+            "customer_email": "denis@example.com",
+            "customer_phone": "",
+            "customer_address": "",
+            "csrf_token": "test_token"
+        }
+    )
+    
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/order_success/order-12345678")
+    
+    assert received_order["items"] == [
+        {
+            "product_id": "product-1",
+            "product_name": "Башня",
+            "unit_price": 30000,
+            "quantity": 1
+        },
+        {
+            "product_id": "product-2",
+            "product_name": "Чаша",
+            "unit_price": 20000,
+            "quantity": 1
+        }
+    ]
+    
+    with client.session_transaction() as session_after_request:
+        assert session_after_request["cart"] == {}

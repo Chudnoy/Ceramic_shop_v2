@@ -227,3 +227,78 @@ def test_has_active_order_for_product_returns_false_for_canceled_order(
     conn.close()
 
     assert result is False
+    
+    
+@pytest.mark.parametrize(
+    "order_status",
+    ["new", "confirmed"]
+)
+def test_has_active_order_for_product_returns_true_for_active_statuses(orders_test_db, order_status):
+    conn = orders_test_db()
+    create_test_product(conn=conn)
+    create_test_order(conn=conn, status=order_status)
+    create_test_order_item(conn=conn)
+    conn.commit()
+    conn.close()
+    
+    check_conn = orders_test_db()
+    result = orders.has_active_order_for_product(conn=check_conn, product_id="product-1")
+    conn.close()
+    
+    assert result is True
+    
+    
+@pytest.mark.parametrize(
+    "order_status",
+    ["completed", "canceled"]
+)
+def test_has_active_order_for_product_returns_false_for_inactive_statuses(orders_test_db, order_status):
+    conn = orders_test_db()
+    create_test_product(conn=conn)
+    create_test_order(conn=conn, status=order_status)
+    create_test_order_item(conn=conn)
+    conn.commit()
+    conn.close()
+    
+    check_conn = orders_test_db()
+    result = orders.has_active_order_for_product(conn=check_conn, product_id="product-1")
+    check_conn.close()
+    
+    assert result is False
+    
+    
+def test_has_active_order_for_product_ignores_active_order_for_another_product(orders_test_db):
+    conn = orders_test_db()
+
+    create_test_product(
+        conn=conn,
+        product_id="product-1"
+    )
+    create_test_product(
+        conn=conn,
+        product_id="product-2"
+    )
+
+    create_test_order(
+        conn=conn,
+        order_id="order-1",
+        status="new"
+    )
+
+    create_test_order_item(
+        conn=conn,
+        order_id="order-1",
+        product_id="product-2"
+    )
+
+    conn.commit()
+    conn.close()
+
+    check_conn = orders_test_db()
+    result = orders.has_active_order_for_product(
+        conn=check_conn,
+        product_id="product-1"
+    )
+    check_conn.close()
+
+    assert result is False

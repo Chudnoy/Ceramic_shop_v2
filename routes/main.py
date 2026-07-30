@@ -25,7 +25,7 @@ from database.tags import (
     get_tag_by_slug,
     get_tags_for_product
 )
-from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items
+from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items, remove_ordered_items_from_cart
 from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
 from validation import validate_review
@@ -336,13 +336,7 @@ def checkout_form():
     
 @main_bp.route("/checkout", methods=["POST"])
 def checkout_process():
-    """
-Обрабатывает отправку формы оформления заказа.
-
-Повторно собирает актуальную сводку корзины перед созданием заказа.
-Заказ создаётся только из работ, которые на момент отправки формы доступны
-для покупки. Недоступные работы из корзины в заказ не включаются.
-"""
+    
     cart_summary = build_cart_summary(session)
     cart = cart_summary['cart']
     available_products = cart_summary["available_products"]
@@ -369,7 +363,11 @@ def checkout_process():
         flash(create_error, "error")
         return redirect(url_for("main.show_cart"))
     
-    clear_cart(session)
+    ordered_product_ids = [item["product_id"] for item in items]
+    remove_ordered_items_from_cart(
+        session=session,
+        product_ids=ordered_product_ids
+    )
     
     flash(f"Заказ {order_id[:8]} оформлен!", "success")
     

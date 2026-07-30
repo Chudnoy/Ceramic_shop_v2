@@ -115,6 +115,13 @@
 							выбранные работы. Окончательные детали заказа будут
 							согласованы после подтверждения.
 						</p>
+						
+						{% if has_unavailable_items %}
+							<input type="checkbox" name="confirm_partial_order" id="confirm_partial_order" value="1" />
+							<label for="confirm_partial_order">
+								Я понимаю, что некоторые работы недоступны, и подтверждаю оформление только доступных позиций.
+							</label>
+						{% endif %}
 
 						<button
 							type="submit"
