@@ -73,6 +73,11 @@ def build_cart_summary(session):
     available_products = []
     total = 0
     has_unavailable_items = False
+    
+    found_product_ids = {product["id"] for product in products}
+    
+    if len(found_product_ids) < len(product_ids):
+        has_unavailable_items = True
 
     for product in products:
         product_dict = dict(product)

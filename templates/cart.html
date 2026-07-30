@@ -17,37 +17,38 @@
 			</div>
 		</header>
 
-		{% if products %}
-			{% if has_unavailable_items %}
-				<div class="cart-notice">
-					<div class="cart-notice__text">
-						<p class="cart-notice__title">
-							Некоторые работы больше недоступны
-						</p>
+		{% if has_unavailable_items %}
+			<div class="cart-notice">
+				<div class="cart-notice__text">
+					<p class="cart-notice__title">
+						Некоторые позиции больше недоступны
+					</p>
 
-						<p class="cart-notice__description">
-							Они останутся видны в корзине, но не будут включены
-							в заказ и не учитываются в итоговой сумме.
-						</p>
-					</div>
-
-					<form
-						action="{{ url_for('main.remove_unavailable_route') }}"
-						method="post"
-					>
-						<input
-							type="hidden"
-							name="csrf_token"
-							value="{{ csrf_token() }}"
-						>
-
-						<button type="submit" class="cart-text-button">
-							Удалить недоступные
-						</button>
-					</form>
+					<p class="cart-notice__description">
+						Некоторые работы стали недоступны или были удалены
+						из каталога. Они не будут включены в заказ и не
+						учитываются в итоговой сумме.
+					</p>
 				</div>
-			{% endif %}
 
+				<form
+					action="{{ url_for('main.remove_unavailable_route') }}"
+					method="post"
+				>
+					<input
+						type="hidden"
+						name="csrf_token"
+						value="{{ csrf_token() }}"
+					>
+
+					<button type="submit" class="cart-text-button">
+						Удалить недоступные
+					</button>
+				</form>
+			</div>
+		{% endif %}
+
+		{% if products %}
 			<div class="cart-layout">
 				<div class="cart-items">
 					{% for product in products %}
@@ -126,14 +127,19 @@
 
 								<div class="cart-item__meta">
 									<div class="cart-item__meta-entry">
-										<span class="cart-item__meta-label">Количество</span>
+										<span class="cart-item__meta-label">
+											Количество
+										</span>
+
 										<span class="cart-item__meta-value">
 											{{ product.cart_quantity }}
 										</span>
 									</div>
 
 									<div class="cart-item__meta-entry">
-										<span class="cart-item__meta-label">Стоимость</span>
+										<span class="cart-item__meta-label">
+											Стоимость
+										</span>
 
 										{% if product.is_available_for_order %}
 											<span class="cart-item__meta-value">
@@ -152,7 +158,9 @@
 				</div>
 
 				<aside class="cart-summary">
-					<p class="cart-summary__label">Итого</p>
+					<p class="cart-summary__label">
+						Итого
+					</p>
 
 					<p class="cart-summary__total">
 						{{ total }} руб.
@@ -195,16 +203,43 @@
 					</form>
 				</aside>
 			</div>
+
+		{% elif has_unavailable_items %}
+			<div class="cart-empty">
+				<p class="cart-empty__label">
+					Доступных работ нет
+				</p>
+
+				<h2 class="cart-empty__title">
+					Работы из корзины больше недоступны
+				</h2>
+
+				<p class="cart-empty__description">
+					Удалите недоступные позиции с помощью кнопки выше,
+					чтобы обновить корзину и её счётчик.
+				</p>
+
+				<a
+					href="{{ url_for('main.catalog') }}"
+					class="cart-primary-action"
+				>
+					Смотреть работы
+				</a>
+			</div>
+
 		{% else %}
 			<div class="cart-empty">
-				<p class="cart-empty__label">Корзина пуста</p>
+				<p class="cart-empty__label">
+					Корзина пуста
+				</p>
 
 				<h2 class="cart-empty__title">
 					Здесь пока нет выбранных работ
 				</h2>
 
 				<p class="cart-empty__description">
-					Вернитесь к каталогу, чтобы продолжить знакомство с работами.
+					Вернитесь к каталогу, чтобы продолжить знакомство
+					с работами.
 				</p>
 
 				<a
