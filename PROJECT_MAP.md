@@ -1,339 +1,208 @@
-# Карта проекта "Ceramic_shop"
-
-## Добавление товара в корзину
-
-### Что делает сценарий
-
-Пользователь нажимает "Добавить в корзину".  
-Если товар существует, доступен и количество корректное, товар добавляется в `session["cart"]`.  
-Если что-то не так, пользователь получает сообщение об ошибке.
-
-### Какие файлы участвуют
-
-- `templates/catalog.html`
-- `templates/product_page.html`
-- `routes/main.py`
-- `services/cart_service.py`
-- `db.py`
-- `static/js/main.js`
-
-### Цепочка данных
-
-1. Форма в `catalog.html` или `product_page.html` отправляет POST-запрос на `add_to_cart_route(product_id)`.
-
-2. `add_to_cart_route` получает:
-   - `product_id` из URL;
-   - `quantity` из формы;
-   - признак AJAX-запроса из заголовка `X-Requested-With`.
-
-3. Route проверяет:
-   - что `quantity` — положительное число;
-   - что товар существует в БД через `get_product_by_id(product_id)`;
-   - что `product["status"] == "available"`.
-
-4. Если проверка не проходит:
-   - при AJAX возвращается JSON с ошибкой;
-   - при обычном POST показывается flash-сообщение и происходит redirect.
-
-5. Если всё хорошо, route вызывает:
-
-   `add_to_cart_serv(session, product_id, quantity)`
-
-6. `add_to_cart_serv` обновляет `session["cart"]`: увеличивает количество товара на `quantity`.
-
-7. После успешного добавления:
-   - `get_cart_count(session)` считает новое количество товаров в корзине;
-   - при AJAX route возвращает JSON с `cart_count`;
-   - `main.js` обновляет бейдж корзины и показывает сообщение;
-   - при обычном POST пользователь получает flash-сообщение и redirect.
-
-### Какие данные передаются
-
-- `product_id` — id товара из URL.
-- `quantity` — количество из формы.
-- `product` — товар из БД.
-- `product["status"]` — статус товара.
-- `session["cart"]` — корзина пользователя.
-- `cart_count` — общее количество товаров в корзине.
-
-### Главное правило
-
-В корзину можно добавить только товар со статусом `available`.
-
-
-
-## Редактирование заказа
-
-### Что делает сценарий
-
-- Администратор нажимает кнопку сохранения в форме редактирования заказа.
-- Если все поля формы были заполнены верно, то отредактированный заказ  в бд
-- Если где-то была ошибка, то администратору показывается сообщение об ошибке и происходит редирект в ту же форму
-
-### Какие файлы участвуют
-
-- `templates/admin/order_form.html`
-- `routes/admin.py`
-- `db.py`
-- `services/order_service.py`
-
-### Цепочка данных
-
-1. Форма в `templates/admin/order_form.html` отправляет POST запрос на `edit_order(order_id)`
-2. Route получает:
-    - `order_id` из URL
-3. Route проверяет:
-    - наличие заказа с помощью `get_order_by_id(order_id)`
-4. Запускается валидирующая функция `process_order_form(form, old_items)`, которая:
-    - Получает:
-        * `name`, `email`, `phone`, `address`, `status` из формы;
-        * старый состав заказа из `order['items']`, чтобы понять, какие товары уже были в заказе и пересчитать количества/сумму;
-    - Проверяет:
-        * что имя введено;
-        * что email введён и корректен;
-        * что статус находится в `ORDER_STATUSES`;
-    - Если проверка не проходит:
-        * возвращает кортеж по типу "(`False`, `<сообщение об ошибке>`, `None`)"
-    - В случае успеха:
-        * пересчитывает состав заказа и сумму заказа;
-        * заново формирует словарь с информацией о заказе (`cleaned_data`);
-        * возвращает кортеж по типу "(`True`, <пустая строка>, `cleaned_data`)";
-5. Если проверка не прошла:
-    - администратору показывается сообщение об ошибке, полученное из `process_order_form`;
-    - происходит редирект на страницу редактирования этого же заказа (`edit_order(order_id)`)
-6. Если проверка прошла:
-    - вызывается функция `update_order(order_id, name, email, phone, address, items, total, status)`, использующая:
-        * `order_id` из адреса;
-        * данные из словаря, вернувшегося из `process_order_form`;
-7. Заказ обновляется в базе данных;
-8. Администратору показывается сообщение об успехе
-9. Происходит редирект на `admin.admin_orders`
-
-### Какие данные передаются
-
-- `order_id` — id заказа из URL;
-- `name`, `email`, `phone`, `address`, `status` — данные из формы;
-- `order` — заказ из БД;
-- `order['items']` — состав заказа;
-- `ORDER_STATUSES` — словарь с допустимыми статусами заказа;
-- `cleaned_data` \ `data` — проверенные и отредактированные данные заказа;
-- `items` — обновлённый состав заказа;
-- `total` — пересчитанная сумма заказа;
-- `<сообщение об ошибке>` — сообщение для показа администратору в случае ошибки
-
-### Главное правило
-
-В БД можно сохранить изменения заказа только после проверки формы и пересчёта состава заказа.
-
-
-## Вход в админку
-
-### Что делает сценарий
-
-- администратор вводит логин и пароль;
-- если данные верны, в `session` сохраняется признак авторизации;
-- после этого администратор может открывать админские разделы сайта
-
-### Какие файлы участвуют
-
-- `templates/admin/login.html`
-- `templates/admin/index.html`
-- `routes/admin.py`
-- `app.py`
-
-### Цепочка данных
-
-1. Администратор вводит логин и пароль, нажимает на `Войти`
-2. Форма в `templates/admin/login.html` отправляет POST запрос на `login()`
-3. Route получает данные из формы
-4. Route проверяет:
-    - что логин совпадает с `ADMIN_LOGIN`;
-    - что введённый пароль подходит к хешу `ADMIN_PASSWORD_HASH` через `check_password_hash`;
-5. Если есть ошибки, то:
-    - администратору показывается сообщение об ошибке;
-    - заново рендерится страница логина (не редирект)
-6. Если всё верно, то:
-    - флаг `session.permanent` ставится в `True` (продлевается срок жизни `session` на время, указанное в `app.permanent_session_lifetime` внутри `app.py`);
-    - сохраняется признак авторизации в `session`;
-    - администратору показывается сообщение об успешном входе;
-    - происходит редирект на `admin.admin`
-
-### Какие данные передаются
-
-- логин и пароль — из формы на странице авторизации;
-- `ADMIN_LOGIN`, `ADMIN_PASSWORD_HASH` — данные из `.env`;
-- `session['is_admin']` — признак авторизации в админке;
-- `session.permanent`, `app.permanent_session_lifetime` — данные о допустимом сроке жизни `session`
-
-### Главное правило
-
-Без авторизации можно попасть только на страницу входа в админку. Все остальные маршруты админки защищены через `before_request`
-
-
-## CSRF-защита POST-запросов
-
-### Что делает механизм
-
-Защищает POST-запросы от отправки с чужих сайтов.  
-Каждая форма получает скрытый `csrf_token`.  
-Перед выполнением любого POST-запроса приложение проверяет, совпадает ли токен из формы с токеном в `session`.
-
-### Какие файлы участвуют
-
-- `app.py`
-- `services/csrf_service.py`
-- все шаблоны с `<form method="post">`
-
-### Цепочка данных
-
-1. Шаблон вызывает `csrf_token()` внутри формы.
-2. `csrf_token()` вызывает `get_csrf_token()`.
-3. Если в `session` ещё нет `csrf_token`, он создаётся через `secrets.token_urlsafe(32)`.
-4. Токен вставляется в форму как hidden input.
-5. При отправке формы токен приходит в `request.form`.
-6. Перед POST-запросом срабатывает `protect_from_csrf()`.
-7. `protect_from_csrf()` вызывает `validate_csrf_from_form()`.
-8. `validate_csrf_from_form()` сравнивает токен из формы с токеном в `session`.
-9. Если токены совпадают, route выполняется.
-10. Если токен отсутствует или неверный, запрос останавливается.
-
-### Какие данные передаются
-
-- `session["csrf_token"]` — токен, сохранённый на серверной стороне session.
-- `csrf_token` из формы — токен, отправленный браузером.
-- `request.form` — данные POST-формы.
-- `X-Requested-With` — заголовок, по которому AJAX-запрос получает JSON-ошибку вместо redirect.
-
-### Главное правило
-
-Любой POST-запрос должен прийти с корректным `csrf_token`.  
-Если токена нет или он неправильный, действие не выполняется.
-
-
-## Удаление недоступных товаров из корзины
-
-### Что делает сценарий
-
-Пользователь удаляет из корзины товары, которые больше нельзя оформить в заказ.
-
-Из `session["cart"]` удаляются:
-- товары со статусами `reserved`, `sold`, `hidden`;
-- товары, которых уже нет в базе данных.
-
-В корзине остаются только товары со статусом `available`.
-
-### Какие файлы участвуют
-
-- `templates/cart.html`
-- `routes/main.py`
-- `services/cart_service.py`
-- `db.py`
-
-### Цепочка данных
-
-1. На странице корзины `cart.html` кнопка `Удалить недоступные товары` показывается только если `has_unavailable_items == True`.
-
-2. Пользователь нажимает кнопку.
-
-3. Форма отправляет POST-запрос на маршрут:
-
-   `remove_unavailable_route()`
-
-4. Route вызывает функцию:
-
-   `remove_unavailable_items(session)`
-
-5. `remove_unavailable_items` получает текущую корзину из `session["cart"]`.
-
-6. Если корзина пустая, функция сразу возвращает `False`.
-
-7. Функция берёт id товаров из корзины и загружает найденные товары из БД через:
-
-   `get_products_by_ids(...)`
-
-8. Из найденных товаров функция собирает множество `available_product_ids`.
-
-   В это множество попадают только товары, у которых:
-
-   `product["status"] == "available"`
-
-9. После этого функция проходит по id товаров в корзине.
-
-10. Если id товара не входит в `available_product_ids`, товар удаляется из `session["cart"]`.
-
-11. Если был удалён хотя бы один товар, флаг `removed` становится `True`.
-
-12. Если что-то было удалено:
-    - обновляется `session["cart"]`;
-    - выставляется `session.modified = True`;
-    - функция возвращает `True`.
-
-13. Если ничего не было удалено, функция возвращает `False`.
-
-14. Route показывает пользователю сообщение:
-    - если `True` — недоступные товары удалены;
-    - если `False` — недоступных товаров нет.
-
-15. После этого происходит redirect на:
-
-    `show_cart()`
-
-### Какие данные передаются
-
-- `session["cart"]` — текущая корзина пользователя.
-- `product_ids` — id товаров, которые лежат в корзине.
-- `cart_products` — товары из БД, найденные по id из корзины.
-- `available_product_ids` — множество id товаров, которые можно оставить в корзине.
-- `removed` — флаг, показывающий, было ли реально удаление.
-- `flash`-сообщения — результат операции для пользователя.
-
-### Главное правило
-
-После выполнения сценария в корзине должны остаться только товары, которые существуют в БД и имеют статус `available`.
-
-
-## Управление категориями в админке
-
-### Что делает сценарий
-
-Администратор может просматривать, создавать, редактировать и удалять категории товаров.
-
-Категорию нельзя удалить, если к ней привязаны товары.
-
-### Какие файлы участвуют
-
-- `templates/admin/categories.html`
-- `templates/admin/category_form.html`
-- `routes/admin.py`
-- `services/category_service.py`
-- `validation.py`
-- `db.py`
-
-### Цепочка данных
-
-1. Администратор открывает раздел категорий.
-2. `admin_categories()` получает категории через `get_all_categories_with_product_count()`.
-3. Шаблон показывает список категорий и количество товаров в каждой.
-4. При создании или редактировании форма отправляет POST-запрос.
-5. Route передаёт `request.form` в `process_category_form()`.
-6. `process_category_form()` достаёт поля формы и вызывает `validate_category()`.
-7. `validate_category()` очищает данные и проверяет `name` и `slug`.
-8. Route дополнительно проверяет уникальность `slug` через `get_category_by_slug()`.
-9. Если всё корректно, route вызывает `create_category()` или `update_category()`.
-10. При удалении route получает категорию по `slug` и вызывает `delete_category()`.
-11. `delete_category()` удаляет категорию только если в ней нет товаров.
-12. После действия пользователь возвращается к списку категорий.
-
-### Какие данные передаются
-
-- `name` — название категории.
-- `slug` — строка для URL и фильтрации каталога.
-- `description` — описание категории.
-- `products_count` — количество товаров в категории.
-- `session["csrf_token"]` — защитный токен POST-форм.
-- `flash`-сообщения — результат действия для пользователя.
-
-### Главное правило
-
-Категория может быть удалена только если к ней не привязан ни один товар.
-`slug` категории должен быть уникальным.
+# PROJECT MAP — Ceramic Shop v2
+
+## 1. Точки входа
+
+```text
+app.py
+├── Flask app
+├── main_bp
+├── admin_bp
+├── CSRF before_request
+├── cart_count context_processor
+└── csrf_token context_processor
+```
+
+## 2. Публичные сценарии
+
+### Каталог
+
+```text
+GET catalog
+→ routes/main.py
+→ database/products.py
+→ filters/search/sort
+→ template
+```
+
+### Страница работы
+
+```text
+GET product
+→ product by id
+→ category
+→ tags
+→ reviews
+→ template
+```
+
+### Корзина
+
+```text
+GET cart
+→ build_cart_summary(session)
+→ get_products_by_ids
+→ unavailable reason
+→ available_products
+→ total
+→ template
+```
+
+### Checkout
+
+```text
+POST /checkout
+→ build_cart_summary
+→ process_checkout_form
+→ confirm_partial_order
+→ build_order_item_list
+→ create_order_with_items
+    ├── INSERT orders
+    ├── INSERT order_items
+    ├── available → reserved
+    └── COMMIT / ROLLBACK
+→ удалить из session только заказанные ID
+→ order_success
+```
+
+## 3. Административные сценарии
+
+### Работа
+
+```text
+POST create
+→ process_product_form
+→ process_product_tag_ids
+→ create_product_with_tags
+    ├── save image
+    ├── INSERT product
+    ├── replace tags
+    ├── COMMIT
+    └── rollback + delete new image
+```
+
+```text
+POST edit
+→ active order check
+→ save optional image
+→ UPDATE product
+→ replace tags
+→ COMMIT
+→ delete old image
+```
+
+```text
+POST delete
+→ archived check
+→ active order check
+→ delete product data
+→ COMMIT
+→ delete image
+```
+
+### Заказ
+
+```text
+new
+├── edit
+├── confirm
+└── cancel
+
+confirmed
+├── complete
+└── cancel
+
+completed
+└── read only
+
+canceled
+└── delete
+```
+
+## 4. Сервисы
+
+### `cart_service.py`
+
+- получение и изменение session-корзины;
+- сводка;
+- удаление недоступных;
+- счётчик;
+- удаление оформленных позиций.
+
+### `product_service.py`
+
+- обработка форм;
+- причина недоступности;
+- создание с тегами;
+- редактирование с тегами и изображением;
+- удаление;
+- защита активным заказом.
+
+### `order_service.py`
+
+- checkout data;
+- позиции;
+- создание и резерв;
+- редактирование нового заказа;
+- confirm;
+- complete и sell;
+- cancel и release;
+- удаление canceled.
+
+### `image_service.py`
+
+- валидация;
+- случайное имя;
+- сохранение;
+- удаление.
+
+### `csrf_service.py`
+
+- генерация и проверка токена.
+
+## 5. Database-модули
+
+```text
+connection.py  → соединение и PRAGMA
+schema.py      → таблицы и стартовые данные
+products.py    → products
+categories.py  → categories
+tags.py        → tags + product_tags
+reviews.py     → reviews
+orders.py      → orders + active-order query
+order_items.py → позиции
+stats.py       → dashboard
+```
+
+## 6. Транзакционные границы
+
+```text
+create_product_with_tags
+update_product_with_tags
+delete_product_with_image
+update_product_state_with_order_check
+create_order_with_items
+update_order_with_items
+confirm_order
+complete_order
+cancel_order
+delete_canceled_order
+```
+
+## 7. Главные инварианты
+
+```text
+недоступная работа не входит в заказ
+заказ и все позиции создаются целиком
+активный заказ резервирует работу
+отмена снимает резерв
+выполнение продаёт работу
+активный заказ нельзя удалить
+работу активного заказа нельзя вывести из reserved
+историческая позиция переживает удаление работы
+частичный заказ требует явного согласия
+ошибка создания заказа не очищает корзину
+```
+
+## 8. Текущие риски
+
+См. `scenarios/14_KNOWN_ISSUES.md`.

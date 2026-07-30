@@ -355,7 +355,7 @@ def checkout_process():
         flash(error_message, "error")
         return redirect(url_for("main.checkout_form"))
         
-    if cart_summary["has_unavailable_items"] and not request.form.get("confirm_partial_order") != "1":
+    if cart_summary["has_unavailable_items"] and request.form.get("confirm_partial_order") != "1":
         flash("Подтвердите оформление заказа только из доступных работ", "info")
         return redirect(url_for("main.checkout_form"))
         

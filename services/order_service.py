@@ -2,7 +2,7 @@ import uuid
 from database.connection import get_db_connection
 from database.orders import insert_order, update_order_details, update_order_status, delete_order
 
-from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id, get_products_by_order_id
+from database.order_items import insert_order_items, update_order_item_quantity, get_order_items_by_order_id
 
 from database.products import update_product_status
 
