@@ -331,7 +331,7 @@ def checkout_form():
     if cart_summary["has_unavailable_items"]:
         flash("Некоторые работы больше недоступны и не будут включены в заказ", "info")
 
-    return render_template("checkout.html", products=available_products, total=cart_summary['total'], cart=cart_summary['cart'])
+    return render_template("checkout.html", products=available_products, total=cart_summary['total'], cart=cart_summary['cart'], has_unavailable_items=cart_summary["has_unavailable_items"])
     
     
 @main_bp.route("/checkout", methods=["POST"])
@@ -353,6 +353,10 @@ def checkout_process():
     
     if not is_valid:
         flash(error_message, "error")
+        return redirect(url_for("main.checkout_form"))
+        
+    if cart_summary["has_unavailable_items"] and not request.form.get("confirm_partial_order"):
+        flash("Подтвердите оформление заказа только из доступных работ", "info")
         return redirect(url_for("main.checkout_form"))
         
     items = build_order_item_list(cart, available_products)
