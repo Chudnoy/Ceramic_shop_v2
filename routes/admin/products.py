@@ -21,7 +21,9 @@ from services.product_service import (
     create_product_with_tags,
     update_product_with_tags,
     delete_product_with_image,
-    update_product_state_with_order_check
+    update_product_state_with_order_check,
+    archive_product_with_order_check,
+    restore_archived_product
 )
 
 from . import admin_bp
@@ -86,38 +88,28 @@ def admin_archived_products():
 
 @admin_bp.route("/admin/products/archive/<product_id>", methods=["POST"])
 def archive_product_route(product_id):
-    product = get_product_by_id(product_id)
-
-    if not product:
-        flash("Работа не найдена", "error")
+    
+    was_archived, error_message, product_name = archive_product_with_order_check(product_id)
+    
+    if not was_archived:
+        flash(error_message, "error")
         return redirect(url_for("admin.admin_products"))
 
-    if product["is_archived"] == 1:
-        flash("Работа уже находится в архиве","info")
-        return redirect(url_for("admin.admin_archived_products"))
+    flash(f"Работа «{product_name}» перемещена в архив","success")
 
-    set_product_archived(product_id, 1)
-
-    flash(f"Работа «{product['name']}» перемещена в архив","success")
-
-    return redirect(url_for("admin.admin_archived_products"))
+    return redirect(url_for("admin.admin_products"))
     
     
 @admin_bp.route("/admin/archived_products/restore/<product_id>", methods=["POST"])
 def restore_product_route(product_id):
-    product = get_product_by_id(product_id)
-
-    if not product:
-        flash("Работа не найдена", "error")
+    
+    was_restored, error_message, product_name = restore_archived_product(product_id)
+    
+    if not was_restored:
+        flash(error_message, "error")
         return redirect(url_for("admin.admin_archived_products"))
 
-    if product["is_archived"] != 1:
-        flash("Работа не находится в архиве","error")
-        return redirect(url_for("admin.admin_products"))
-
-    set_product_archived(product_id, 0)
-
-    flash(f"Работа «{product['name']}» восстановлена","success")
+    flash(f"Работа «{product_name}» восстановлена","success")
 
     return redirect(url_for("admin.admin_archived_products"))
 

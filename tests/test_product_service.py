@@ -14,6 +14,16 @@ def product_service_test_db(tmp_path, monkeypatch):
         conn.execute("PRAGMA foreign_keys = ON")
         return conn
         
+    def get_test_product_by_id(product_id):
+        conn = get_test_db_connection()
+        try:
+            return conn.execute(
+                "SELECT * FROM products WHERE id = ?",
+                (product_id,)
+            ).fetchone()
+        finally:
+            conn.close()
+        
     conn = get_test_db_connection()
     conn.execute("""
         CREATE TABLE products (
@@ -28,7 +38,8 @@ def product_service_test_db(tmp_path, monkeypatch):
             materials TEXT,
             is_visible INTEGER,
             is_for_sale INTEGER,
-            is_featured INTEGER
+            is_featured INTEGER,
+            is_archived INTEGER
         )
     """)
     conn.execute("""
@@ -70,6 +81,12 @@ def product_service_test_db(tmp_path, monkeypatch):
         get_test_db_connection
     )
     
+    monkeypatch.setattr(
+        product_service,
+        "get_product_by_id",
+        get_test_product_by_id
+    )
+    
     return get_test_db_connection
     
     
@@ -86,17 +103,94 @@ def create_test_product(
     materials="ceramic",
     is_visible=1,
     is_for_sale=1,
-    is_featured=0
+    is_featured=0,
+    is_archived=0
 ):
     conn.execute(
         """
         INSERT INTO products
-        (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured)
+        (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured, is_archived)
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (product_id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured)
+        (product_id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured, is_archived)
     )
+    
+    
+def create_test_order(
+            conn,
+            order_id="order-1",
+            customer_name="Денис",
+            customer_email="denis@gmail.com",
+            customer_phone=None,
+            customer_address=None,
+            total=30000,
+            status="new"
+            ):
+    conn.execute(
+        """
+        INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_address, total, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (order_id, customer_name, customer_email, customer_phone, customer_address, total, status)
+    )
+    
+    
+def create_test_order_item(
+            conn,
+            order_id="order-1",
+            product_id="product-1",
+            product_name="Башня",
+            unit_price=30000,
+            quantity=1
+            ):
+    conn.execute(
+        """
+        INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (order_id, product_id, product_name, unit_price, quantity)
+    )
+
+
+def create_test_order_with_item(
+        conn,
+        order_status="new",
+        product_status="reserved",
+        order_id="order-1",
+        product_id="product-1",
+        product_name="Башня",
+        unit_price=30000,
+        quantity=1,
+):
+    create_test_product(
+        conn=conn,
+        product_id=product_id,
+        name=product_name,
+        price=unit_price,
+        status=product_status,
+    )
+    create_test_order(
+        conn=conn,
+        order_id=order_id,
+        total=unit_price * quantity,
+        status=order_status
+    )
+    create_test_order_item(
+        conn=conn,
+        order_id=order_id,
+        product_id=product_id,
+        product_name=product_name,
+        unit_price=unit_price,
+        quantity=quantity
+    )
+    
+    
+def get_saved_product(conn, product_id="product-1"):
+    return conn.execute(
+        "SELECT * FROM products WHERE id = ?",
+        (product_id,)
+    ).fetchone()
 
 
 def test_process_product_state_form_accepts_valid_data():
@@ -237,7 +331,7 @@ def test_process_product_form_looks_up_cleaned_category_id(monkeypatch):
     assert received_category_ids == [2]
     
     
-def test_process_product_form_does_not_look_up_category_when_status_invalid(product_service_test_db):
+def test_process_product_form_does_not_look_up_category_when_status_invalid(monkeypatch):
     form = make_valid_product_form()
     form["status"] = "banana"
     received_category_ids = []
@@ -245,6 +339,12 @@ def test_process_product_form_does_not_look_up_category_when_status_invalid(prod
     def fake_get_category_by_id(category_id):
         received_category_ids.append(category_id)
         return {"id": category_id}
+        
+    monkeypatch.setattr(
+        product_service,
+        "get_category_by_id",
+        fake_get_category_by_id
+    )
     
     is_valid, message, cleaned_data = product_service.process_product_form(form)
     
@@ -477,7 +577,7 @@ def test_update_product_with_tags_rejects_status_change_when_product_has_active_
     assert result == (False, "Нельзя изменить статус работы, связанной с активным заказом")
     
     check_conn = product_service_test_db()
-    product_after_error = check_conn.execute("SELECT name, img, status FROM products WHERE id = ?", ("product-1",)).fetchone()
+    product_after_error = check_conn.execute("SELECT name, description, price, img, status FROM products WHERE id = ?", ("product-1",)).fetchone()
     check_conn.close()
     
     assert product_after_error["name"] == "Башня"
@@ -485,3 +585,21 @@ def test_update_product_with_tags_rejects_status_change_when_product_has_active_
     assert product_after_error["description"] == "Интерьерный объект"
     assert product_after_error["img"] == "путь к картинке"
     assert product_after_error["status"] == "reserved"
+    
+    
+def test_archive_product_archives_product(product_service_test_db):
+    
+    conn = product_service_test_db()
+    create_test_product(conn=conn)
+    conn.commit()
+    conn.close()
+    
+    was_archived, error_message, product_name = product_service.archive_product_with_order_check("product-1")
+    
+    check_conn = product_service_test_db()
+    saved_product = get_saved_product(conn=check_conn)
+    
+    assert was_archived is True
+    assert error_message == ""
+    assert product_name == "Башня"
+    assert saved_product["is_archived"] == 1

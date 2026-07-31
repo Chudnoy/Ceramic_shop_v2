@@ -201,19 +201,44 @@ def test_update_product_state_changes_only_product_state(
     
     
 def test_set_product_archived_changes_only_archive_setting(products_test_db):
-    
     create_test_category(products_test_db)
     product_id = create_test_product()
-            
+
     assert products.get_product_by_id(product_id)["is_archived"] == 0
-    products.set_product_archived(product_id, 1)
-    assert products.get_product_by_id(product_id)["is_archived"] == 1
-    products.set_product_archived(product_id, 0)
-    
-    product = products.get_product_by_id(product_id)
-    assert product["is_archived"] == 0
-    assert product["is_visible"] == 1
-    assert product["is_for_sale"] == 1
+
+    conn = products_test_db()
+
+    was_archived = products.set_product_archived(
+        conn=conn,
+        product_id=product_id,
+        is_archived=1
+    )
+
+    conn.commit()
+    conn.close()
+
+    archived_product = products.get_product_by_id(product_id)
+
+    assert was_archived is True
+    assert archived_product["is_archived"] == 1
+
+    conn = products_test_db()
+
+    was_restored = products.set_product_archived(
+        conn=conn,
+        product_id=product_id,
+        is_archived=0
+    )
+
+    conn.commit()
+    conn.close()
+
+    restored_product = products.get_product_by_id(product_id)
+
+    assert was_restored is True
+    assert restored_product["is_archived"] == 0
+    assert restored_product["is_visible"] == 1
+    assert restored_product["is_for_sale"] == 1
     
     
 def test_update_product_changes_all_product_data_except_id(products_test_db):
@@ -397,7 +422,16 @@ def test_get_all_products_returns_only_visible_non_archived_products(products_te
             materials="Глина"
             )
             
-    products.set_product_archived(third_id, 1)
+    conn = products_test_db()
+
+    products.set_product_archived(
+        conn=conn,
+        product_id=third_id,
+        is_archived=1
+    )
+    
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products()
     
@@ -433,7 +467,16 @@ def test_get_all_products_returns_non_archived_products(products_test_db):
             is_visible=1
             )
             
-    products.set_product_archived(third_id, 1)
+    conn = products_test_db()
+
+    products.set_product_archived(
+        conn=conn,
+        product_id=third_id,
+        is_archived=1
+    )
+
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(only_visible=False)
     
@@ -468,8 +511,22 @@ def test_get_all_products_returns_only_archived_products(products_test_db):
             is_visible=0
             )
             
-    products.set_product_archived(first_id, 1)
-    products.set_product_archived(third_id, 1)
+    conn = products_test_db()
+
+    products.set_product_archived(
+        conn=conn,
+        product_id=first_id,
+        is_archived=1
+    )
+
+    products.set_product_archived(
+        conn=conn,
+        product_id=third_id,
+        is_archived=1
+    )
+    
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(only_visible=False, is_archived=True)
     

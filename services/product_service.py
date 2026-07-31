@@ -1,6 +1,6 @@
 from validation import validate_product
 from database.connection import get_db_connection
-from database.products import insert_product, update_product_data, delete_product_data, update_product_state
+from database.products import insert_product, update_product_data, delete_product_data, update_product_state, get_product_by_id
 from database.tags import get_all_tags, replace_product_tags
 from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id
@@ -301,6 +301,74 @@ def update_product_state_with_order_check(product_id, data):
             conn.rollback()
         raise
 
+    finally:
+        if conn is not None:
+            conn.close()
+            
+            
+def archive_product_with_order_check(product_id):
+    
+    product = get_product_by_id(product_id)
+    
+    if not product:
+            return False, "Работа не найдена", None
+        
+    if product["is_archived"] == 1:
+        return False, f"Работа «{product['name']}» уже находится в архиве", None
+        
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        
+        if has_active_order_for_product(conn, product_id):
+            return False, "Нельзя перемещать в архив работу, принадлежащую активному заказу", None
+        
+        is_updated = set_product_archived(conn, product_id, 1)
+        
+        if not is_updated:
+            conn.rollback()
+            return False, "Работа не найдена", None
+            
+        conn.commit()
+        return True, "", product["name"]
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        
+        raise
+    finally:
+        if conn is not None:
+            conn.close()
+            
+            
+def restore_archived_product(product_id):
+    product = get_product_by_id(product_id)
+    
+    if not product:
+            return False, "Работа не найдена", None
+        
+    if product["is_archived"] == 0:
+        return False, f"Работа «{product['name']}» уже восстановлена из архива", None
+        
+    conn = None
+    
+    try:
+        conn = get_db_connection()
+        
+        is_updated = set_product_archived(conn, product_id, 0)
+        
+        if not is_updated:
+            conn.rollback()
+            return False, "Работа не найдена", None
+            
+        conn.commit()
+        return True, "", product["name"]
+    except Exception:
+        if conn is not None:
+            conn.rollback()
+        
+        raise
     finally:
         if conn is not None:
             conn.close()
