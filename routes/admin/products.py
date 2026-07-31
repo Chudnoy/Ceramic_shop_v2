@@ -5,7 +5,8 @@ from database.categories import (
     get_category_by_slug
 )
 from database.products import (
-    get_all_products
+    get_all_products,
+    get_product_by_id
 )
 from database.tags import (
     get_all_tags,

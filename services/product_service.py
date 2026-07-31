@@ -311,7 +311,7 @@ def archive_product_with_order_check(product_id):
     product = get_product_by_id(product_id)
     
     if not product:
-            return False, "Работа не найдена", None
+        return False, "Работа не найдена", None
         
     if product["is_archived"] == 1:
         return False, f"Работа «{product['name']}» уже находится в архиве", None
@@ -346,7 +346,7 @@ def restore_archived_product(product_id):
     product = get_product_by_id(product_id)
     
     if not product:
-            return False, "Работа не найдена", None
+        return False, "Работа не найдена", None
         
     if product["is_archived"] == 0:
         return False, f"Работа «{product['name']}» уже восстановлена из архива", None
