@@ -2,6 +2,7 @@ import pytest
 
 from app import app
 import routes.admin.dashboard as dashboard
+import routes.admin.products as admin_products
 import routes.main as main_routes
 
 @pytest.fixture
@@ -377,3 +378,91 @@ def test_checkout_creates_full_order_without_partial_confirmation_when_all_produ
     
     with client.session_transaction() as session_after_request:
         assert session_after_request["cart"] == {}
+        
+
+@pytest.mark.parametrize(
+    "archive_result",
+    [
+        (True, "", "Башня"),
+        (False, "Нельзя перемещать в архив работу, принадлежащую активному заказу", None)
+    ],
+    ids=["successful_archive", "failed_archive"]
+)
+def test_archive_product_route_redirects_to_products_after_success(client, monkeypatch, archive_result):
+    
+    with client.session_transaction() as test_session:
+        test_session["is_admin"] = True
+        test_session["csrf_token"] = "test_token"
+    
+    received = {}
+    
+    def archive_stub(product_id):
+        received["product_id"] = product_id
+        return archive_result
+        
+    monkeypatch.setattr(
+        admin_products,
+        "archive_product_with_order_check",
+        archive_stub
+    )
+    
+    response = client.post(
+        "/admin/products/archive/product-1",
+        data={
+            "csrf_token": "test_token"
+        }
+    )
+    
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/admin/products")
+    assert received["product_id"] == "product-1"
+    
+    
+@pytest.mark.parametrize(
+    "restore_result",
+    [
+        pytest.param(
+            (True, "", "Башня"),
+            id="successful_restore"
+        ),
+        pytest.param(
+            (
+                False,
+                "Работа «Башня» уже восстановлена из архива",
+                None
+            ),
+            id="failed_restore"
+        ),
+    ]
+)
+def test_restore_product_route_redirects_to_archive(
+        client,
+        monkeypatch,
+        restore_result
+):
+    with client.session_transaction() as test_session:
+        test_session["is_admin"] = True
+        test_session["csrf_token"] = "test_token"
+
+    received = {}
+
+    def restore_stub(product_id):
+        received["product_id"] = product_id
+        return restore_result
+
+    monkeypatch.setattr(
+        admin_products,
+        "restore_archived_product",
+        restore_stub
+    )
+
+    response = client.post(
+        "/admin/archived_products/restore/product-1",
+        data={"csrf_token": "test_token"}
+    )
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(
+        "/admin/products/archive"
+    )
+    assert received["product_id"] == "product-1"
