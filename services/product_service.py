@@ -1,6 +1,6 @@
 from validation import validate_product
 from database.connection import get_db_connection
-from database.products import insert_product, update_product_data, delete_product_data, update_product_state, get_product_by_id
+from database.products import insert_product, update_product_data, delete_product_data, update_product_state, get_product_by_id, set_product_archived
 from database.tags import get_all_tags, replace_product_tags
 from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id

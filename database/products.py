@@ -271,20 +271,9 @@ def get_products_by_tag_slug(tag_slug, only_visible=True):
     return products
     
     
-def set_product_archived(product_id, is_archived):
-    """
-    Изменяет состояние архива работы.
-
-    is_archived:
-    1 — работа находится в архиве;
-    0 — работа активна.
-
-    Функция не изменяет is_visible и is_for_sale, поэтому после восстановления
-    сохраняются прежние настройки публикации и продажи.
-    """
-    conn = get_db_connection()
-
-    conn.execute(
+def set_product_archived(conn, product_id, is_archived):
+    
+    cursor = conn.execute(
         """
         UPDATE products
         SET is_archived = ?
@@ -292,9 +281,8 @@ def set_product_archived(product_id, is_archived):
         """,
         (is_archived, product_id)
     )
-
-    conn.commit()
-    conn.close()
+    
+    return cursor.rowcount > 0
     
     
 def update_product_status(conn, product_id, new_status, expected_status):

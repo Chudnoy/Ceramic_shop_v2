@@ -598,6 +598,7 @@ def test_archive_product_archives_product(product_service_test_db):
     
     check_conn = product_service_test_db()
     saved_product = get_saved_product(conn=check_conn)
+    check_conn.close()
     
     assert was_archived is True
     assert error_message == ""
