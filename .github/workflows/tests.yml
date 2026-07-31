@@ -8,6 +8,11 @@ jobs:
     test:
         runs-on: ubuntu-latest
 
+        env:
+            SECRET_KEY: test-secret-key
+            ADMIN_LOGIN: test-admin
+            ADMIN_PASSWORD_HASH: 'pbkdf2:sha256:600000$testsalt$8794df2ebdc6b926ab6e23a449fe0c3f300d6c5a6e02e2472229c6e409f555d3'
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -19,6 +24,6 @@ jobs:
 
             - name: Install dependencies
               run: pip install -r requirements-dev.txt
-              
+
             - name: Run tests
               run: python -m pytest
