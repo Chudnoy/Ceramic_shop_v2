@@ -162,6 +162,7 @@ def create_test_order_with_item(
         product_name="Башня",
         unit_price=30000,
         quantity=1,
+        is_archived=0
 ):
     create_test_product(
         conn=conn,
@@ -169,6 +170,7 @@ def create_test_order_with_item(
         name=product_name,
         price=unit_price,
         status=product_status,
+        is_archived=is_archived
     )
     create_test_order(
         conn=conn,
@@ -587,20 +589,137 @@ def test_update_product_with_tags_rejects_status_change_when_product_has_active_
     assert product_after_error["status"] == "reserved"
     
     
-def test_archive_product_archives_product(product_service_test_db):
-    
+@pytest.mark.parametrize(
+    "service_function",
+    [
+        product_service.archive_product_with_order_check,
+        product_service.restore_archived_product,
+    ]
+)
+def test_product_archive_action_returns_error_when_product_not_found(product_service_test_db, service_function):
     conn = product_service_test_db()
-    create_test_product(conn=conn)
+    create_test_product(
+        conn=conn,
+        product_id="12345"
+    )
     conn.commit()
     conn.close()
-    
-    was_archived, error_message, product_name = product_service.archive_product_with_order_check("product-1")
-    
+
+    is_success, error_message, product_name = service_function("product-1")
+
+    check_conn = product_service_test_db()
+    saved_product = get_saved_product(conn=check_conn, product_id="12345")
+    check_conn.close()
+
+    assert is_success is False
+    assert error_message == "Работа не найдена"
+    assert product_name is None
+    assert saved_product["is_archived"] == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "service_function",
+        "initial_is_archived",
+        "expected_is_archived",
+    ),
+    [
+        (
+            product_service.archive_product_with_order_check,
+            0,
+            1,
+        ),
+        (
+            product_service.restore_archived_product,
+            1,
+            0,
+        ),
+    ]
+)
+def test_product_archive_action_updates_archived_state(
+        product_service_test_db,
+        service_function,
+        initial_is_archived,
+        expected_is_archived
+):
+    conn = product_service_test_db()
+    create_test_product(
+        conn=conn,
+        is_archived=initial_is_archived
+    )
+    conn.commit()
+    conn.close()
+
+    is_success, error_message, product_name = service_function("product-1")
+
     check_conn = product_service_test_db()
     saved_product = get_saved_product(conn=check_conn)
     check_conn.close()
-    
-    assert was_archived is True
+
+    assert is_success is True
     assert error_message == ""
     assert product_name == "Башня"
-    assert saved_product["is_archived"] == 1
+    assert saved_product["is_archived"] == expected_is_archived
+
+
+@pytest.mark.parametrize(
+    (
+        "service_function",
+        "initial_is_archived",
+        "expected_error_message",
+    ),
+    [
+        (
+            product_service.archive_product_with_order_check,
+            1,
+            "Работа «Башня» уже находится в архиве",
+        ),
+        (
+            product_service.restore_archived_product,
+            0,
+            "Работа «Башня» уже восстановлена из архива",
+        ),
+    ]
+)
+def test_product_archive_action_returns_error_for_invalid_state(
+        product_service_test_db,
+        service_function,
+        initial_is_archived,
+        expected_error_message
+):
+    conn = product_service_test_db()
+    create_test_product(
+        conn=conn,
+        is_archived=initial_is_archived
+    )
+    conn.commit()
+    conn.close()
+
+    is_success, error_message, product_name = service_function("product-1")
+
+    check_conn = product_service_test_db()
+    saved_product = get_saved_product(conn=check_conn)
+    check_conn.close()
+
+    assert is_success is False
+    assert error_message == expected_error_message
+    assert product_name is None
+    assert saved_product["is_archived"] == initial_is_archived
+
+
+def test_archive_product_returns_error_when_product_has_active_order(product_service_test_db):
+    conn = product_service_test_db()
+    create_test_order_with_item(conn=conn)
+    conn.commit()
+    conn.close()
+
+    was_archived, error_message, product_name = product_service.archive_product_with_order_check("product-1")
+
+    check_conn = product_service_test_db()
+    saved_product = get_saved_product(conn=check_conn)
+    check_conn.close()
+
+    assert was_archived is False
+    assert error_message == "Нельзя перемещать в архив работу, принадлежащую активному заказу"
+    assert product_name is None
+    assert saved_product["is_archived"] == 0
