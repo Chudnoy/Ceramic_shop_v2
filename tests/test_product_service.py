@@ -1,87 +1,80 @@
 import pytest
-from flask import Flask
 from werkzeug.datastructures import MultiDict
 
-import database.connection as connection
 import services.product_service as product_service
 
 
 @pytest.fixture
-def product_service_test_db(tmp_path, monkeypatch):
-    app = Flask(__name__)
+def product_service_test_db(db_connection, monkeypatch):
     
-    db_path = tmp_path / "test_shop.db"
-    app.config["DATABASE"] = str(db_path)
-    
-    with app.app_context():
-        def get_test_product_by_id(product_id):
-            conn = connection.get_db_connection()
-            try:
-                return conn.execute(
-                    "SELECT * FROM products WHERE id = ?",
-                    (product_id,)
-                ).fetchone()
-            finally:
-                conn.close()
-            
-        conn = connection.get_db_connection()
-        conn.execute("""
-            CREATE TABLE products (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT,
-                price INTEGER NOT NULL,
-                img TEXT,
-                category_id INTEGER,
-                status TEXT,
-                year INTEGER,
-                materials TEXT,
-                is_visible INTEGER,
-                is_for_sale INTEGER,
-                is_featured INTEGER,
-                is_archived INTEGER
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE orders (
-                id TEXT PRIMARY KEY,
-                customer_name TEXT NOT NULL,
-                customer_email TEXT NOT NULL,
-                customer_phone TEXT,
-                customer_address TEXT,
-                total INTEGER NOT NULL,
-                status TEXT NOT NULL DEFAULT 'new',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE order_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                order_id TEXT NOT NULL,
-                product_id TEXT,
-                product_name TEXT NOT NULL,
-                unit_price INTEGER NOT NULL,
-                quantity INTEGER NOT NULL,
-                
-                FOREIGN KEY (order_id)
-                    REFERENCES orders(id)
-                    ON DELETE CASCADE,
-                
-                FOREIGN KEY (product_id)
-                    REFERENCES products(id)
-                    ON DELETE SET NULL
-            )
-        """)
-        conn.commit()
-        conn.close()
+    def get_test_product_by_id(product_id):
+        conn = db_connection()
+        try:
+            return conn.execute(
+                "SELECT * FROM products WHERE id = ?",
+                (product_id,)
+            ).fetchone()
+        finally:
+            conn.close()
         
-        monkeypatch.setattr(
-            product_service,
-            "get_product_by_id",
-            get_test_product_by_id
+    conn = db_connection()
+    conn.execute("""
+        CREATE TABLE products (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            price INTEGER NOT NULL,
+            img TEXT,
+            category_id INTEGER,
+            status TEXT,
+            year INTEGER,
+            materials TEXT,
+            is_visible INTEGER,
+            is_for_sale INTEGER,
+            is_featured INTEGER,
+            is_archived INTEGER
         )
-        
-        yield connection.get_db_connection
+    """)
+    conn.execute("""
+        CREATE TABLE orders (
+            id TEXT PRIMARY KEY,
+            customer_name TEXT NOT NULL,
+            customer_email TEXT NOT NULL,
+            customer_phone TEXT,
+            customer_address TEXT,
+            total INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'new',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id TEXT NOT NULL,
+            product_id TEXT,
+            product_name TEXT NOT NULL,
+            unit_price INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            
+            FOREIGN KEY (order_id)
+                REFERENCES orders(id)
+                ON DELETE CASCADE,
+            
+            FOREIGN KEY (product_id)
+                REFERENCES products(id)
+                ON DELETE SET NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+    
+    monkeypatch.setattr(
+        product_service,
+        "get_product_by_id",
+        get_test_product_by_id
+    )
+    
+    yield db_connection
     
     
 def create_test_product(

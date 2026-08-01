@@ -1,4 +1,3 @@
-import sqlite3
 import pytest
 
 import database.order_items as order_items
@@ -6,16 +5,8 @@ import services.order_service as order_service
 
 
 @pytest.fixture
-def order_service_test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test_shop.db"
-    
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        return conn
-        
-    conn = get_test_db_connection()
+def order_service_test_db(db_connection):
+    conn = db_connection()
     
     conn.execute("""
         CREATE TABLE products (
@@ -58,14 +49,8 @@ def order_service_test_db(tmp_path, monkeypatch):
     
     conn.commit()
     conn.close()
-
-    monkeypatch.setattr(
-        order_service,
-        "get_db_connection",
-        get_test_db_connection
-    )
     
-    return get_test_db_connection
+    yield db_connection
     
     
 def create_test_product(
