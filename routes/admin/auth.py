@@ -1,17 +1,8 @@
 import os
-from flask import session, request, redirect, url_for, flash, render_template
+from flask import session, request, redirect, url_for, flash, render_template, current_app
 from werkzeug.security import check_password_hash
 
 from . import admin_bp
-
-ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN")
-ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH")
-
-if not ADMIN_LOGIN:
-    raise RuntimeError("ADMIN_LOGIN не задан")
-
-if not ADMIN_PASSWORD_HASH:
-    raise RuntimeError("ADMIN_PASSWORD_HASH не задан")
 
 @admin_bp.before_request
 def require_admin_login():
@@ -48,8 +39,11 @@ def login():
     if request.method == 'POST':
         login_value = request.form.get('login', '').strip()
         password = request.form.get('password', '')
+        
+        admin_login = current_app.config["ADMIN_LOGIN"]
+        admin_password_hash = current_app.config["ADMIN_PASSWORD_HASH"]
 
-        if login_value == ADMIN_LOGIN and ADMIN_PASSWORD_HASH and check_password_hash(ADMIN_PASSWORD_HASH, password):
+        if login_value == admin_login and check_password_hash(admin_password_hash, password):
             session.permanent = True
             session['is_admin'] = True
             flash('Вы вошли в админку', 'success')

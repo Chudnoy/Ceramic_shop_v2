@@ -1,14 +1,28 @@
 import pytest
+from werkzeug.security import generate_password_hash
 
-from app import app
+from app import create_app
 import routes.admin.dashboard as dashboard
 import routes.admin.products as admin_products
 import routes.main as main_routes
 
+
+TEST_ADMIN_PASSWORD_HASH = generate_password_hash("test-password")
+
+
 @pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    return app.test_client()
+def test_app():
+    return create_app({
+        "TESTING": True,
+        "SECRET_KEY": "test-secret-key",
+        "ADMIN_LOGIN": "test-admin",
+        "ADMIN_PASSWORD_HASH": TEST_ADMIN_PASSWORD_HASH
+    })
+
+
+@pytest.fixture
+def client(test_app):
+    return test_app.test_client()
     
     
 def test_admin_login_page_opens(client):
