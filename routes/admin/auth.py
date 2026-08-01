@@ -1,4 +1,3 @@
-import os
 from flask import session, request, redirect, url_for, flash, render_template, current_app
 from werkzeug.security import check_password_hash
 

@@ -31,7 +31,8 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY=os.environ.get('SECRET_KEY'),
         ADMIN_LOGIN=os.environ.get("ADMIN_LOGIN"),
-        ADMIN_PASSWORD_HASH=os.environ.get("ADMIN_PASSWORD_HASH")
+        ADMIN_PASSWORD_HASH=os.environ.get("ADMIN_PASSWORD_HASH"),
+        DATABASE=os.path.join(PROJECT_DIR, "shop.db")
     )
     
     if test_config is not None:
@@ -81,5 +82,6 @@ def create_app(test_config=None):
     
 if __name__ == "__main__":
     app = create_app()
-    init_db()
+    with app.app_context():
+        init_db()
     app.run(host="0.0.0.0", port=8000, debug=True)

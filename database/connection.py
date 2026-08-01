@@ -1,10 +1,6 @@
-import os
 import sqlite3
+from flask import current_app
 
-
-DATABASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(DATABASE_DIR)
-DB_PATH = os.path.join(PROJECT_DIR, "shop.db") 
 
 def get_db_connection():
     """
@@ -14,16 +10,8 @@ def get_db_connection():
 как словари: row["name"], row["price"], row["status"]. Это упрощает работу с
 данными в routes, services и шаблонах.
 """
-    conn = sqlite3.connect(DB_PATH)
+    database_path = current_app.config["DATABASE"]
+    conn = sqlite3.connect(database_path)
     conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn
-    
-#conn = get_db_connection()
-#columns = conn.execute("PRAGMA table_info(order_items)").fetchall()
-#foreign_keys = conn.execute("PRAGMA foreign_key_list(order_items)").fetchall()
-#for column in columns:
-#    print(dict(column))
-#for foreign_key in foreign_keys:
-#    print(dict(foreign_key))
-#conn.close()
