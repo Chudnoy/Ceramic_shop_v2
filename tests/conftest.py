@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash
 
 from app import create_app
 import database.connection as connection
+import database.schema as schema
 
 
 TEST_ADMIN_PASSWORD_HASH = generate_password_hash("test-password")
@@ -34,3 +35,8 @@ def app_context(test_app):
 @pytest.fixture
 def db_connection(app_context):
     return connection.get_db_connection
+
+
+@pytest.fixture
+def empty_db(db_connection):
+    schema.create_schema()

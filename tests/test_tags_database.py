@@ -1,50 +1,10 @@
 import pytest
-import sqlite3
+
 import database.tags as tags
 
 @pytest.fixture
-def tags_test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test_shop.db"
-    
-    conn = sqlite3.connect(db_path)
-    conn.execute("""
-        CREATE TABLE tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            slug TEXT NOT NULL UNIQUE
-    )""")
-    
-    conn.execute("""
-        CREATE TABLE products (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
-        )
-    """)
-    
-    conn.execute("""
-        CREATE TABLE product_tags (
-            product_id INTEGER NOT NULL,
-            tag_id INTEGER NOT NULL,
-            PRIMARY KEY (product_id,  tag_id),
-            FOREIGN KEY (product_id) REFERENCES products(id),
-            FOREIGN KEY (tag_id) REFERENCES tags(id)
-    )""")
-    conn.commit()
-    conn.close()
-    
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.row_factory = sqlite3.Row
-        return conn
-        
-    monkeypatch.setattr(
-            tags,
-            "get_db_connection",
-            get_test_db_connection
-    )
-    
-    return get_test_db_connection
+def tags_test_db(empty_db, db_connection):
+    return db_connection
     
     
 def replace_test_product_tags(product_id, tag_ids):
@@ -89,7 +49,7 @@ def test_add_tag_to_product_ensures_unique_product_tag_pair(tags_test_db):
     tags.create_tag("Природа", "nature")
     
     conn = tags_test_db()
-    conn.execute("INSERT INTO products (id, name) VALUES (?, ?)", (1, "Белая ваза"))
+    conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Белая ваза", 2000))
     conn.commit()
     conn.close()
     
@@ -107,10 +67,10 @@ def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
     
     conn = tags_test_db()
     products = [
-            (1, "Ваза"),
-            (2, "Чашка")
+            (1, "Ваза", 1000),
+            (2, "Чашка", 2000)
     ]
-    conn.executemany("INSERT INTO products (id, name) VALUES (?, ?)", products)
+    conn.executemany("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", products)
     conn.commit()
     conn.close()
     
@@ -137,7 +97,7 @@ def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
 def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
     
     conn = tags_test_db()
-    conn.execute("INSERT INTO products (id, name) VALUES (?, ?)", (1, "Ваза"))
+    conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Ваза", 1000))
     conn.commit()
     
     product = conn.execute("SELECT * FROM products WHERE id = ?", (1,)).fetchone()
@@ -166,7 +126,7 @@ def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
 def test_update_product_tags_deletes_tags_when_tags_list_is_empty(tags_test_db):
     
     conn = tags_test_db()
-    conn.execute("INSERT INTO products (id, name) VALUES (?, ?)", (1, "Ваза"))
+    conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Ваза", 1000))
     conn.commit()
     conn.close()
     
@@ -190,10 +150,10 @@ def test_get_tags_with_product_count_returns_correct_product_counts(tags_test_db
     
     conn = tags_test_db()
     products = [
-            (1, "Ваза"),
-            (2, "Чашка")
+            (1, "Ваза", 2000),
+            (2, "Чашка", 3000)
     ]
-    conn.executemany("INSERT INTO products (id, name) VALUES (?, ?)", products)
+    conn.executemany("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", products)
     conn.commit()
     conn.close()
     
@@ -216,11 +176,11 @@ def test_get_product_count_by_tag_id_returns_correct_product_counts(tags_test_db
     
     conn = tags_test_db()
     products = [
-            (1, "Ваза"),
-            (2, "Чашка"),
-            (3, "Тарелка")
+            (1, "Ваза", 1000),
+            (2, "Чашка", 2000),
+            (3, "Тарелка", 3000)
     ]
-    conn.executemany("INSERT INTO products (id, name) VALUES (?, ?)", products)
+    conn.executemany("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", products)
     conn.commit()
     conn.close()
     

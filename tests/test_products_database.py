@@ -1,99 +1,12 @@
 import pytest
-import sqlite3
+
 import database.products as products
 import database.tags as tags
 import database.reviews as reviews
 
 @pytest.fixture
-def products_test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test_shop.db"
-    
-    conn = sqlite3.connect(db_path)
-    conn.execute("""
-        CREATE TABLE categories (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL UNIQUE,
-            slug TEXT NOT NULL UNIQUE,
-            description TEXT
-        )
-    """)
-    
-    conn.execute("""
-        CREATE TABLE tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            slug TEXT NOT NULL UNIQUE
-        )
-    """)
-    
-    conn.execute("""
-        CREATE TABLE products (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            price INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'available',
-            img TEXT,
-            category_id INTEGER,
-            year INTEGER,
-            materials TEXT NOT NULL DEFAULT 'Каменная масса',
-            is_visible INTEGER NOT NULL DEFAULT 1,
-            is_for_sale INTEGER NOT NULL DEFAULT 1,
-            is_archived INTEGER NOT NULL DEFAULT 0,
-            is_featured INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY (category_id) REFERENCES categories(id)
-        )
-    """)
-    
-    conn.execute("""
-        CREATE TABLE product_tags (
-            product_id TEXT NOT NULL,
-            tag_id INTEGER NOT NULL,
-            PRIMARY KEY (product_id, tag_id),
-            FOREIGN KEY (product_id) REFERENCES products(id),
-            FOREIGN KEY (tag_id) REFERENCES tags(id)
-        )
-    """)
-    
-    conn.execute("""
-        CREATE TABLE reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            rating INTEGER NOT NULL,
-            comment TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (product_id) REFERENCES products(id)
-        )
-    """)
-    conn.commit()
-    conn.close()
-    
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.row_factory = sqlite3.Row
-        return conn
-        
-    monkeypatch.setattr(
-            products,
-            "get_db_connection",
-            get_test_db_connection
-    )
-    
-    monkeypatch.setattr(
-            tags,
-            "get_db_connection",
-            get_test_db_connection
-    )
-    
-    monkeypatch.setattr(
-            reviews,
-            "get_db_connection",
-            get_test_db_connection
-    )
-    
-    return get_test_db_connection
+def products_test_db(empty_db, db_connection):
+    return db_connection
     
     
 def create_test_product(

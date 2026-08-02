@@ -1,62 +1,11 @@
-import sqlite3
 import pytest
+
 import database.order_items as order_items
 from database import orders
 
 @pytest.fixture
-def order_items_test_db(tmp_path):
-    db_path = tmp_path / "test_shop.db"
-    
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        return conn
-        
-    conn = get_test_db_connection()
-    
-    conn.execute("""
-        CREATE TABLE products (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            price INTEGER NOT NULL
-            )
-        """)
-    conn.execute("""
-        CREATE TABLE orders (
-            id TEXT PRIMARY KEY,
-            customer_name TEXT NOT NULL,
-            customer_email TEXT NOT NULL,
-            customer_phone TEXT,
-            customer_address TEXT,
-            total INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'new',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-    conn.execute("""
-        CREATE TABLE order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT NOT NULL,
-            product_id TEXT,
-            product_name TEXT NOT NULL,
-            unit_price INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            
-            FOREIGN KEY (order_id)
-                REFERENCES orders(id)
-                ON DELETE CASCADE,
-                
-            FOREIGN KEY (product_id)
-                REFERENCES products(id)
-                ON DELETE SET NULL
-            )
-    """)
-    
-    conn.commit()
-    conn.close()
-    
-    return get_test_db_connection
+def order_items_test_db(empty_db, db_connection):
+    return db_connection
     
     
 def create_test_product(
@@ -369,7 +318,7 @@ def test_get_order_items_by_order_id_returns_only_requested_order_items(order_it
     assert saved_items[1]['quantity'] == 2
 
 
-def test_get_order_by_id_returns_order_with_items(order_items_test_db, monkeypatch):
+def test_get_order_by_id_returns_order_with_items(order_items_test_db):
     conn = order_items_test_db()
 
     create_test_product(conn)
@@ -378,12 +327,6 @@ def test_get_order_by_id_returns_order_with_items(order_items_test_db, monkeypat
 
     conn.commit()
     conn.close()
-
-    monkeypatch.setattr(
-        orders,
-        'get_db_connection',
-        order_items_test_db
-    )
 
     saved_order = orders.get_order_by_id('order-1')
 

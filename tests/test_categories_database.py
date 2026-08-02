@@ -1,42 +1,10 @@
 import pytest
-import sqlite3
+
 import database.categories as categories
 
 @pytest.fixture
-def categories_test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test_shop.db"
-    
-    conn = sqlite3.connect(db_path)
-    conn.execute("""
-        CREATE TABLE categories (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            slug TEXT NOT NULL,
-            description TEXT
-        )
-    """)
-    
-    conn.execute("""CREATE TABLE products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            category_id INTEGER,
-            FOREIGN KEY (category_id) REFERENCES categories(id)
-    )""")
-    conn.commit()
-    conn.close()
-    
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.row_factory = sqlite3.Row
-        return conn
-        
-    monkeypatch.setattr(
-            categories,
-            "get_db_connection",
-            get_test_db_connection,
-    )
-    
-    return get_test_db_connection
+def categories_test_db(empty_db, db_connection):
+    return db_connection
     
     
 def test_delete_category_rejects_deleting_when_it_has_products(categories_test_db):
@@ -45,7 +13,7 @@ def test_delete_category_rejects_deleting_when_it_has_products(categories_test_d
     category_id = categories.get_category_by_slug("vases")["id"]
     
     conn = categories_test_db()
-    conn.execute("INSERT INTO products (category_id) VALUES (?)", (category_id,))
+    conn.execute("INSERT INTO products (id, name, price, category_id) VALUES (?, ?, ?, ?)", ('product-1', 'тестовая работа', 1000, category_id,))
     conn.commit()
     conn.close()
     
@@ -65,10 +33,10 @@ def test_get_all_categories_with_product_count_returns_correct_counts(categories
     
     conn = categories_test_db()
     products = [
-            (vases_category_id,),
-            (vases_category_id,)
+            ('product-1', 'Работа-1', 1000, vases_category_id,),
+            ('product-2', 'Работа-2', 2000, vases_category_id,)
     ]
-    conn.executemany("INSERT INTO products (category_id) VALUES (?)", products)
+    conn.executemany("INSERT INTO products (id, name, price, category_id) VALUES (?, ? ,?, ?)", products)
     conn.commit()
     conn.close()
     
@@ -89,10 +57,10 @@ def test_get_all_categories_with_product_count_returns_correct_counts_after_dele
     
     conn = categories_test_db()
     products = [
-            (1, vases_category_id),
-            (2, vases_category_id)
+            ('product-1', 'Работа-1', 1000, vases_category_id,),
+            ('product-2', 'Работа-2', 2000, vases_category_id,)
     ]
-    conn.executemany("INSERT INTO products (id, category_id) VALUES (?, ?)", products)
+    conn.executemany("INSERT INTO products (id, name, price, category_id) VALUES (?, ? ,?, ?)", products)
     conn.commit()
     conn.close()
     
@@ -101,7 +69,7 @@ def test_get_all_categories_with_product_count_returns_correct_counts_after_dele
     old_cups_category = next(category for category in old_all_categories if category["slug"] == "cups")
     
     conn = categories_test_db()
-    conn.execute("DELETE FROM products WHERE id = ?", (1,))
+    conn.execute("DELETE FROM products WHERE id = ?", ('product-1',))
     conn.commit()
     conn.close()
     
