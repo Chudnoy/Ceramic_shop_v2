@@ -1,20 +1,12 @@
 import database.tags as tags
 
-def replace_test_product_tags(product_id, tag_ids):
-    conn = tags.get_db_connection()
+def replace_test_product_tags(conn, product_id, tag_ids):
     
-    try:
-        tags.replace_product_tags(
-                conn=conn,
-                product_id=product_id,
-                tag_ids=tag_ids
-        )
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+    tags.replace_product_tags(
+            conn=conn,
+            product_id=product_id,
+            tag_ids=tag_ids
+    )
     
     
 def test_update_tag_updates_fields(empty_db):
@@ -107,8 +99,11 @@ def test_update_product_tags_replaces_old_tags_with_new_tags(empty_db, db_connec
     old_product_tags = [tag["name"] for tag in tags.get_tags_for_product(product["id"])]
     
     assert old_product_tags == ["Дом", "Природа"]
-    
-    replace_test_product_tags(product["id"], [tags.get_tag_by_slug("wind")["id"], tags.get_tag_by_slug("house")["id"]])
+
+    conn = db_connection()
+    replace_test_product_tags(conn, product["id"], [tags.get_tag_by_slug("wind")["id"], tags.get_tag_by_slug("house")["id"]])
+    conn.commit()
+    conn.close()
     
     new_product_tags = [tag["name"] for tag in tags.get_tags_for_product(product["id"])]
     
@@ -130,8 +125,11 @@ def test_update_product_tags_deletes_tags_when_tags_list_is_empty(empty_db, db_c
     tags.add_tag_to_product(1, tags.get_tag_by_slug("house")["id"])
     
     old_product_tags = [tag["name"] for tag in tags.get_tags_for_product(1)]
-    
-    replace_test_product_tags(1, [])
+
+    conn = db_connection()
+    replace_test_product_tags(conn, 1, [])
+    conn.commit()
+    conn.close()
     
     new_product_tags = tags.get_tags_for_product(1)
     

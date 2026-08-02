@@ -2,11 +2,6 @@ import pytest
 
 import database.order_items as order_items
 import services.order_service as order_service
-
-
-@pytest.fixture
-def order_service_test_db(empty_db, db_connection):
-    return db_connection
     
     
 def create_test_product(
@@ -131,8 +126,8 @@ def make_order_item(
     }
 
 
-def test_create_order_with_items_rolls_back_when_item_insert_fails(order_service_test_db, monkeypatch):
-    conn = order_service_test_db()
+def test_create_order_with_items_rolls_back_when_item_insert_fails(empty_db, db_connection, monkeypatch):
+    conn = db_connection()
     
     create_test_product(conn)
     
@@ -167,7 +162,7 @@ def test_create_order_with_items_rolls_back_when_item_insert_fails(order_service
     with pytest.raises(RuntimeError, match="Ошибка вставки второй позиции"):
         order_service.create_order_with_items(make_checkout_data(), items)
         
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     orders_count = check_conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
     order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
     check_conn.close()
@@ -176,8 +171,8 @@ def test_create_order_with_items_rolls_back_when_item_insert_fails(order_service
     assert order_items_count == 0
     
     
-def test_create_order_with_items_creates_order_and_all_items(order_service_test_db):
-    conn = order_service_test_db()
+def test_create_order_with_items_creates_order_and_all_items(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(
         conn,
@@ -206,7 +201,7 @@ def test_create_order_with_items_creates_order_and_all_items(order_service_test_
             items=items,
         )
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
 
     saved_order = check_conn.execute(
         """
@@ -292,8 +287,8 @@ def test_build_order_item_list_creates_items_from_available_products():
     ]
 
 
-def test_update_order_with_items_updates_order_and_all_items(order_service_test_db):
-    conn = order_service_test_db()
+def test_update_order_with_items_updates_order_and_all_items(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(
         conn=conn,
@@ -360,7 +355,7 @@ def test_update_order_with_items_updates_order_and_all_items(order_service_test_
 
     is_updated, error_message = order_service.update_order_with_items(order_id='order-1', data=data)
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = check_conn.execute(
         """
         SELECT
@@ -400,10 +395,8 @@ def test_update_order_with_items_updates_order_and_all_items(order_service_test_
     assert saved_items[1]['quantity'] == 3
 
 
-def test_update_order_with_items_rolls_back_when_item_is_not_found(
-    order_service_test_db,
-):
-    conn = order_service_test_db()
+def test_update_order_with_items_rolls_back_when_item_is_not_found(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(
         conn=conn,
@@ -469,7 +462,7 @@ def test_update_order_with_items_rolls_back_when_item_is_not_found(
         )
     )
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
 
     saved_order = check_conn.execute(
         """
@@ -504,8 +497,8 @@ def test_update_order_with_items_rolls_back_when_item_is_not_found(
     assert saved_item["quantity"] == 1
     
     
-def test_create_order_with_items_reserves_all_products(order_service_test_db):
-    conn = order_service_test_db()
+def test_create_order_with_items_reserves_all_products(empty_db, db_connection):
+    conn = db_connection()
     create_test_product(
             conn=conn,
             product_id="product-1",
@@ -531,7 +524,7 @@ def test_create_order_with_items_reserves_all_products(order_service_test_db):
         items=items
     )
     
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_products = check_conn.execute("SELECT id, status FROM products ORDER BY id").fetchall()
     check_conn.close()
     
@@ -546,8 +539,8 @@ def test_create_order_with_items_reserves_all_products(order_service_test_db):
     assert saved_products[1]["status"] == "reserved"
     
     
-def test_create_order_with_items_rolls_back_when_product_cannot_be_reserved(order_service_test_db):
-    conn = order_service_test_db()
+def test_create_order_with_items_rolls_back_when_product_cannot_be_reserved(empty_db, db_connection):
+    conn = db_connection()
     create_test_product(
             conn=conn,
             product_id="product-1",
@@ -575,7 +568,7 @@ def test_create_order_with_items_rolls_back_when_product_cannot_be_reserved(orde
         items=items
     )
     
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     orders_count = check_conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
     order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
     saved_products = check_conn.execute("SELECT id, status FROM products ORDER BY id").fetchall()
@@ -595,8 +588,8 @@ def test_create_order_with_items_rolls_back_when_product_cannot_be_reserved(orde
     assert saved_products[1]["status"] == "reserved"
     
     
-def test_cancel_order_cancels_order_and_releases_product(order_service_test_db):
-    conn = order_service_test_db()
+def test_cancel_order_cancels_order_and_releases_product(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="new",
@@ -607,7 +600,7 @@ def test_cancel_order_cancels_order_and_releases_product(order_service_test_db):
     
     is_canceled, error_message = order_service.cancel_order("order-1")
     
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     saved_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ("order-1",)).fetchone()[0]
@@ -621,8 +614,8 @@ def test_cancel_order_cancels_order_and_releases_product(order_service_test_db):
     assert saved_items_count == 1
     
     
-def test_cancel_order_does_not_cancel_completed_order(order_service_test_db):
-    conn = order_service_test_db()
+def test_cancel_order_does_not_cancel_completed_order(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="completed",
@@ -633,7 +626,7 @@ def test_cancel_order_does_not_cancel_completed_order(order_service_test_db):
     
     is_canceled, error_message = order_service.cancel_order("order-1")
     
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     saved_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ("order-1",)).fetchone()[0]
@@ -647,8 +640,8 @@ def test_cancel_order_does_not_cancel_completed_order(order_service_test_db):
     assert saved_items_count == 1
     
     
-def test_cancel_order_rolls_back_when_product_cannot_be_released(order_service_test_db):
-    conn = order_service_test_db()
+def test_cancel_order_rolls_back_when_product_cannot_be_released(empty_db, db_connection):
+    conn = db_connection()
     
     create_test_product(conn=conn, status="reserved")
     create_test_product(
@@ -674,7 +667,7 @@ def test_cancel_order_rolls_back_when_product_cannot_be_released(order_service_t
     
     is_canceled, error_message = order_service.cancel_order("order-1")
     
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     first_saved_product = get_saved_product(check_conn, "product-1")
     second_saved_product = get_saved_product(check_conn, "product-2")
@@ -690,8 +683,8 @@ def test_cancel_order_rolls_back_when_product_cannot_be_released(order_service_t
     assert saved_items_count == 2
 
 
-def test_delete_canceled_order_deletes_order_and_items_but_keeps_product(order_service_test_db):
-    conn = order_service_test_db()
+def test_delete_canceled_order_deletes_order_and_items_but_keeps_product(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="canceled",
@@ -702,7 +695,7 @@ def test_delete_canceled_order_deletes_order_and_items_but_keeps_product(order_s
 
     is_deleted, error_message = order_service.delete_canceled_order('order-1')
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     orders_count = check_conn.execute("SELECT COUNT(*) FROM orders WHERE id = ?", ('order-1',)).fetchone()[0]
     order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ('order-1',)).fetchone()[0]
     saved_product = check_conn.execute("SELECT status FROM products WHERE id = ?", ('product-1',)).fetchone()
@@ -718,8 +711,8 @@ def test_delete_canceled_order_deletes_order_and_items_but_keeps_product(order_s
     assert saved_product['status'] == 'available'
 
 
-def test_delete_canceled_order_does_not_delete_active_order(order_service_test_db):
-    conn = order_service_test_db()
+def test_delete_canceled_order_does_not_delete_active_order(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="new",
@@ -730,7 +723,7 @@ def test_delete_canceled_order_does_not_delete_active_order(order_service_test_d
 
     is_deleted, error_message = order_service.delete_canceled_order('order-1')
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     order_items_count = check_conn.execute("SELECT COUNT(*) FROM order_items WHERE order_id = ?", ('order-1',)).fetchone()[0]
     saved_product = get_saved_product(check_conn)
@@ -748,8 +741,8 @@ def test_delete_canceled_order_does_not_delete_active_order(order_service_test_d
     assert saved_product['status'] == 'reserved'
 
 
-def test_confirm_order_transitions_new_to_confirmed(order_service_test_db):
-    conn = order_service_test_db()
+def test_confirm_order_transitions_new_to_confirmed(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="new",
@@ -760,7 +753,7 @@ def test_confirm_order_transitions_new_to_confirmed(order_service_test_db):
 
     is_confirmed, error_message = order_service.confirm_order("order-1")
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     check_conn.close()
@@ -783,11 +776,12 @@ def test_confirm_order_transitions_new_to_confirmed(order_service_test_db):
     ]
 )
 def test_confirm_order_leaves_non_new_order_unchanged(
-        order_service_test_db,
+        empty_db,
+        db_connection,
         order_status,
         product_status
 ):
-    conn = order_service_test_db()
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status=order_status,
@@ -798,7 +792,7 @@ def test_confirm_order_leaves_non_new_order_unchanged(
 
     is_confirmed, error_message = order_service.confirm_order("order-1")
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     check_conn.close()
@@ -812,10 +806,8 @@ def test_confirm_order_leaves_non_new_order_unchanged(
     assert saved_product["status"] == product_status
 
 
-def test_complete_order_sets_order_to_completed_and_product_to_sold(
-        order_service_test_db
-):
-    conn = order_service_test_db()
+def test_complete_order_sets_order_to_completed_and_product_to_sold(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="confirmed",
@@ -826,7 +818,7 @@ def test_complete_order_sets_order_to_completed_and_product_to_sold(
 
     is_completed, error_message = order_service.complete_order("order-1")
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     check_conn.close()
@@ -840,8 +832,8 @@ def test_complete_order_sets_order_to_completed_and_product_to_sold(
     assert saved_product["status"] == "sold"
 
 
-def test_complete_order_does_not_complete_new_order(order_service_test_db):
-    conn = order_service_test_db()
+def test_complete_order_does_not_complete_new_order(empty_db, db_connection):
+    conn = db_connection()
     create_test_order_with_item(
         conn=conn,
         order_status="new",
@@ -852,7 +844,7 @@ def test_complete_order_does_not_complete_new_order(order_service_test_db):
 
     is_completed, error_message = order_service.complete_order("order-1")
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     saved_product = get_saved_product(check_conn)
     check_conn.close()
@@ -866,10 +858,8 @@ def test_complete_order_does_not_complete_new_order(order_service_test_db):
     assert saved_product["status"] == "reserved"
 
 
-def test_complete_order_rolls_back_when_product_cannot_be_sold(
-        order_service_test_db
-):
-    conn = order_service_test_db()
+def test_complete_order_rolls_back_when_product_cannot_be_sold(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(
         conn=conn,
@@ -911,7 +901,7 @@ def test_complete_order_rolls_back_when_product_cannot_be_sold(
 
     is_completed, error_message = order_service.complete_order("order-1")
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
     saved_order = get_saved_order(check_conn)
     first_product = get_saved_product(check_conn, "product-1")
     second_product = get_saved_product(check_conn, "product-2")
@@ -928,10 +918,8 @@ def test_complete_order_rolls_back_when_product_cannot_be_sold(
     assert second_product["status"] == "available"
 
 
-def test_update_order_with_items_does_not_update_confirmed_order(
-        order_service_test_db
-):
-    conn = order_service_test_db()
+def test_update_order_with_items_does_not_update_confirmed_order(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_order_with_item(
         conn=conn,
@@ -967,7 +955,7 @@ def test_update_order_with_items_does_not_update_confirmed_order(
         )
     )
 
-    check_conn = order_service_test_db()
+    check_conn = db_connection()
 
     saved_order = get_saved_order(check_conn)
 

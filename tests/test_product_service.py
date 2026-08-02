@@ -2,28 +2,6 @@ import pytest
 from werkzeug.datastructures import MultiDict
 
 import services.product_service as product_service
-
-
-@pytest.fixture
-def product_service_test_db(empty_db, db_connection, monkeypatch):
-    
-    def get_test_product_by_id(product_id):
-        conn = db_connection()
-        try:
-            return conn.execute(
-                "SELECT * FROM products WHERE id = ?",
-                (product_id,)
-            ).fetchone()
-        finally:
-            conn.close()
-    
-    monkeypatch.setattr(
-        product_service,
-        "get_product_by_id",
-        get_test_product_by_id
-    )
-    
-    return db_connection
     
     
 def create_test_product(

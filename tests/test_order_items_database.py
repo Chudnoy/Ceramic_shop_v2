@@ -2,10 +2,6 @@ import pytest
 
 import database.order_items as order_items
 from database import orders
-
-@pytest.fixture
-def order_items_test_db(empty_db, db_connection):
-    return db_connection
     
     
 def create_test_product(
@@ -59,8 +55,8 @@ def create_test_order_item(
     )
     
     
-def test_order_items_are_deleted_when_order_is_deleted(order_items_test_db):
-    conn = order_items_test_db()
+def test_order_items_are_deleted_when_order_is_deleted(empty_db, db_connection):
+    conn = db_connection()
     create_test_product(conn)
     create_test_order(conn)
     create_test_order_item(conn)
@@ -71,7 +67,7 @@ def test_order_items_are_deleted_when_order_is_deleted(order_items_test_db):
     conn.commit()
     conn.close()
     
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     
     order_items_count = check_conn.execute("SELECT COUNT (*) FROM order_items WHERE order_id = ?", ("order-1",)).fetchone()[0]
     
@@ -84,8 +80,8 @@ def test_order_items_are_deleted_when_order_is_deleted(order_items_test_db):
     assert product_count == 1
     
     
-def test_order_item_keeps_history_when_product_is_deleted(order_items_test_db):
-    conn = order_items_test_db()
+def test_order_item_keeps_history_when_product_is_deleted(empty_db, db_connection):
+    conn = db_connection()
     create_test_product(conn)
     create_test_order(conn)
     create_test_order_item(conn)
@@ -97,7 +93,7 @@ def test_order_item_keeps_history_when_product_is_deleted(order_items_test_db):
     conn.commit()
     conn.close()
     
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     order_item = check_conn.execute("""
             SELECT product_id, product_name, unit_price, quantity
             FROM order_items
@@ -112,8 +108,8 @@ def test_order_item_keeps_history_when_product_is_deleted(order_items_test_db):
     assert order_item["quantity"] == 1
     
     
-def test_insert_order_item_creates_item(order_items_test_db):
-    conn = order_items_test_db()
+def test_insert_order_item_creates_item(empty_db, db_connection):
+    conn = db_connection()
     
     create_test_product(conn)
     create_test_order(conn)
@@ -130,7 +126,7 @@ def test_insert_order_item_creates_item(order_items_test_db):
     conn.commit()
     conn.close()
     
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     order_item = check_conn.execute(
             """
             SELECT id, order_id, product_id, product_name, unit_price, quantity
@@ -150,8 +146,8 @@ def test_insert_order_item_creates_item(order_items_test_db):
     assert order_item["quantity"] == 1
     
     
-def test_insert_order_items_creates_all_items(order_items_test_db):
-    conn = order_items_test_db()
+def test_insert_order_items_creates_all_items(empty_db, db_connection):
+    conn = db_connection()
     
     create_test_product(
             conn,
@@ -192,7 +188,7 @@ def test_insert_order_items_creates_all_items(order_items_test_db):
     conn.commit()
     conn.close()
     
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     saved_items = check_conn.execute("""
             SELECT id, order_id, product_id, product_name, unit_price, quantity
             FROM order_items
@@ -213,8 +209,8 @@ def test_insert_order_items_creates_all_items(order_items_test_db):
     assert saved_items[1]["quantity"] == 2
     
     
-def test_insert_order_creates_order(order_items_test_db):
-    conn = order_items_test_db()
+def test_insert_order_creates_order(empty_db, db_connection):
+    conn = db_connection()
     
     orders.insert_order(
             conn=conn,
@@ -230,7 +226,7 @@ def test_insert_order_creates_order(order_items_test_db):
     conn.commit()
     conn.close()
     
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     saved_order = check_conn.execute(
             """
                 SELECT id, customer_name, customer_email, customer_phone, customer_address, total, status
@@ -251,8 +247,8 @@ def test_insert_order_creates_order(order_items_test_db):
     assert saved_order["status"] == "new"
     
 
-def test_get_order_items_by_order_id_returns_only_requested_order_items(order_items_test_db):
-    conn = order_items_test_db()
+def test_get_order_items_by_order_id_returns_only_requested_order_items(empty_db, db_connection):
+    conn = db_connection()
     
     create_test_product(
         conn=conn,
@@ -305,7 +301,7 @@ def test_get_order_items_by_order_id_returns_only_requested_order_items(order_it
     conn.commit()
     conn.close()
 
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     saved_items = order_items.get_order_items_by_order_id(conn=check_conn, order_id='order-1')
     check_conn.close()
 
@@ -318,8 +314,8 @@ def test_get_order_items_by_order_id_returns_only_requested_order_items(order_it
     assert saved_items[1]['quantity'] == 2
 
 
-def test_get_order_by_id_returns_order_with_items(order_items_test_db):
-    conn = order_items_test_db()
+def test_get_order_by_id_returns_order_with_items(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(conn)
     create_test_order(conn)
@@ -340,8 +336,8 @@ def test_get_order_by_id_returns_order_with_items(order_items_test_db):
     assert saved_order['items'][0]['quantity'] == 1
 
 
-def test_update_order_details_updates_order(order_items_test_db):
-    conn = order_items_test_db()
+def test_update_order_details_updates_order(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_order(conn)
     conn.commit()
@@ -360,7 +356,7 @@ def test_update_order_details_updates_order(order_items_test_db):
     conn.commit()
     conn.close()
 
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     saved_order = check_conn.execute(
         """
         SELECT
@@ -382,8 +378,8 @@ def test_update_order_details_updates_order(order_items_test_db):
     assert saved_order['status'] == 'new'
 
 
-def test_update_order_item_quantity_updates_requested_item(order_items_test_db):
-    conn = order_items_test_db()
+def test_update_order_item_quantity_updates_requested_item(empty_db, db_connection):
+    conn = db_connection()
 
     create_test_product(conn)
     create_test_order(conn)
@@ -401,7 +397,7 @@ def test_update_order_item_quantity_updates_requested_item(order_items_test_db):
     conn.commit()
     conn.close()
 
-    check_conn = order_items_test_db()
+    check_conn = db_connection()
     saved_item = check_conn.execute("SELECT quantity FROM order_items WHERE id = ?", (1, )).fetchone()
     check_conn.close()
 
