@@ -1,18 +1,11 @@
-import pytest
-
 import database.categories as categories
-
-@pytest.fixture
-def categories_test_db(empty_db, db_connection):
-    return db_connection
     
-    
-def test_delete_category_rejects_deleting_when_it_has_products(categories_test_db):
+def test_delete_category_rejects_deleting_when_it_has_products(empty_db, db_connection):
     
     categories.create_category("Вазы", "vases", "")
     category_id = categories.get_category_by_slug("vases")["id"]
     
-    conn = categories_test_db()
+    conn = db_connection()
     conn.execute("INSERT INTO products (id, name, price, category_id) VALUES (?, ?, ?, ?)", ('product-1', 'тестовая работа', 1000, category_id,))
     conn.commit()
     conn.close()
@@ -24,14 +17,14 @@ def test_delete_category_rejects_deleting_when_it_has_products(categories_test_d
     assert category is not None
     
     
-def test_get_all_categories_with_product_count_returns_correct_counts(categories_test_db):
+def test_get_all_categories_with_product_count_returns_correct_counts(empty_db, db_connection):
     
     categories.create_category("Вазы", "vases", "Красивые вазы")
     categories.create_category("Чашки", "cups", "Красивые чашки")
     
     vases_category_id = categories.get_category_by_slug("vases")["id"]
     
-    conn = categories_test_db()
+    conn = db_connection()
     products = [
             ('product-1', 'Работа-1', 1000, vases_category_id,),
             ('product-2', 'Работа-2', 2000, vases_category_id,)
@@ -49,13 +42,13 @@ def test_get_all_categories_with_product_count_returns_correct_counts(categories
     assert correct_categories["cups"]["products_count"] == 0
     
     
-def test_get_all_categories_with_product_count_returns_correct_counts_after_deleting_one_of_products(categories_test_db):
+def test_get_all_categories_with_product_count_returns_correct_counts_after_deleting_one_of_products(empty_db, db_connection):
     categories.create_category("Вазы", "vases", "Красивые вазы")
     categories.create_category("Чашки", "cups", "Красивые чашки")
     
     vases_category_id = categories.get_category_by_slug("vases")["id"]
     
-    conn = categories_test_db()
+    conn = db_connection()
     products = [
             ('product-1', 'Работа-1', 1000, vases_category_id,),
             ('product-2', 'Работа-2', 2000, vases_category_id,)
@@ -68,7 +61,7 @@ def test_get_all_categories_with_product_count_returns_correct_counts_after_dele
     old_vases_category = next(category for category in old_all_categories if category["slug"] == "vases")
     old_cups_category = next(category for category in old_all_categories if category["slug"] == "cups")
     
-    conn = categories_test_db()
+    conn = db_connection()
     conn.execute("DELETE FROM products WHERE id = ?", ('product-1',))
     conn.commit()
     conn.close()
@@ -86,7 +79,7 @@ def test_get_all_categories_with_product_count_returns_correct_counts_after_dele
     
     
 
-def test_create_category_and_get_by_slug(categories_test_db):
+def test_create_category_and_get_by_slug(empty_db):
     
     categories.create_category(
         "Скульптура", 
@@ -103,14 +96,14 @@ def test_create_category_and_get_by_slug(categories_test_db):
     assert category["description"] == "Объёмные художественные работы"
     
     
-def test_get_category_by_slug_returns_none_for_unknown_slug(categories_test_db):
+def test_get_category_by_slug_returns_none_for_unknown_slug(empty_db):
     
     category = categories.get_category_by_slug("banana")
     
     assert category is None
     
     
-def test_get_category_by_id_returns_correct_category(categories_test_db):
+def test_get_category_by_id_returns_correct_category(empty_db):
     
     categories.create_category("Вазы", "vases", "")
     categories.create_category("Чашки", "cups", "")
@@ -126,7 +119,7 @@ def test_get_category_by_id_returns_correct_category(categories_test_db):
     assert category["slug"] == "cups"
     
     
-def test_update_category_updates_fields_and_slug(categories_test_db):
+def test_update_category_updates_fields_and_slug(empty_db):
     
     categories.create_category("Вазы", "vases", "Красивые вазы")
     old_category_id = categories.get_category_by_slug("vases")["id"]
@@ -143,7 +136,7 @@ def test_update_category_updates_fields_and_slug(categories_test_db):
     assert new_category["description"] == "Красивые чашки"
     
     
-def test_delete_category_returns_true_and_removes_record(categories_test_db):
+def test_delete_category_returns_true_and_removes_record(empty_db):
     
     categories.create_category("Вазы", "vases", "Красивые вазы")
     category_id = categories.get_category_by_slug("vases")["id"]
@@ -154,7 +147,7 @@ def test_delete_category_returns_true_and_removes_record(categories_test_db):
     assert categories.get_category_by_id(category_id) is None
     
     
-def test_delete_category_returns_false_for_unknown_id(categories_test_db):
+def test_delete_category_returns_false_for_unknown_id(empty_db):
     
     is_deleted = categories.delete_category(987)
     

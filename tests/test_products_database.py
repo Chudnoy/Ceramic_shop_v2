@@ -1,69 +1,54 @@
-import pytest
-
 import database.products as products
 import database.tags as tags
 import database.reviews as reviews
-
-@pytest.fixture
-def products_test_db(empty_db, db_connection):
-    return db_connection
     
     
 def create_test_product(
-            name="Белая ваза",
-            price=9999,
-            description="Красивая белая ваза",
-            img_path="путь к картинке",
-            category_id=1,
-            status="available",
-            year=2009,
-            materials="ceramic",
-            is_visible=1,
-            is_for_sale=1,
-            is_featured=0
-            ):
-    conn = products.get_db_connection()
-    try:
-        
-        product_id = products.insert_product(
-            conn=conn,
-            name=name,
-            price=price,
-            description=description,
-            img_path=img_path,
-            category_id=category_id,
-            status=status,
-            year=year,
-            materials=materials,
-            is_visible=is_visible,
-            is_for_sale=is_for_sale,
-            is_featured=is_featured
-            )
-        conn.commit()
-        return product_id
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+        conn,
+        name="Белая ваза",
+        price=9999,
+        description="Красивая белая ваза",
+        img_path="путь к картинке",
+        category_id=1,
+        status="available",
+        year=2009,
+        materials="ceramic",
+        is_visible=1,
+        is_for_sale=1,
+        is_featured=0
+        ):
+    product_id = products.insert_product(
+        conn=conn,
+        name=name,
+        price=price,
+        description=description,
+        img_path=img_path,
+        category_id=category_id,
+        status=status,
+        year=year,
+        materials=materials,
+        is_visible=is_visible,
+        is_for_sale=is_for_sale,
+        is_featured=is_featured
+        )
+    return product_id
     
     
 def create_test_category(
-                products_test_db,
-                category_id=1,
-                name="Вазы",
-                slug="vases"
-                ):
-    conn = products_test_db()
-    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (category_id, name, slug))
+        conn,
+        name="Вазы",
+        slug="vases"
+        ):
+    conn.execute("INSERT INTO categories (name, slug) VALUES (?, ?)", (name, slug))
+    
+    
+def test_created_product_can_be_retrieved(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
     conn.commit()
     conn.close()
-    
-    
-def test_created_product_can_be_retrieved(products_test_db):
-    
-    create_test_category(products_test_db)
-    product_id = create_test_product()
             
     product = products.get_product_by_id(product_id)
     
@@ -80,13 +65,11 @@ def test_created_product_can_be_retrieved(products_test_db):
     assert product["category_id"] == 1
     
     
-def test_update_product_state_changes_only_product_state(
-        products_test_db
-):
-    create_test_category(products_test_db)
-    product_id = create_test_product()
+def test_update_product_state_changes_only_product_state(empty_db, db_connection):
 
-    conn = products_test_db()
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
 
     is_updated = products.update_product_state(
         conn=conn,
@@ -113,13 +96,17 @@ def test_update_product_state_changes_only_product_state(
     assert product["price"] == 9999
     
     
-def test_set_product_archived_changes_only_archive_setting(products_test_db):
-    create_test_category(products_test_db)
-    product_id = create_test_product()
+def test_set_product_archived_changes_only_archive_setting(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
+    conn.commit()
+    conn.close()
 
     assert products.get_product_by_id(product_id)["is_archived"] == 0
 
-    conn = products_test_db()
+    conn = db_connection()
 
     was_archived = products.set_product_archived(
         conn=conn,
@@ -135,7 +122,7 @@ def test_set_product_archived_changes_only_archive_setting(products_test_db):
     assert was_archived is True
     assert archived_product["is_archived"] == 1
 
-    conn = products_test_db()
+    conn = db_connection()
 
     was_restored = products.set_product_archived(
         conn=conn,
@@ -154,19 +141,22 @@ def test_set_product_archived_changes_only_archive_setting(products_test_db):
     assert restored_product["is_for_sale"] == 1
     
     
-def test_update_product_changes_all_product_data_except_id(products_test_db):
-    
-    create_test_category(products_test_db)
-    product_id = create_test_product()
+def test_update_product_changes_all_product_data_except_id(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
     
     create_test_category(
-                    products_test_db,
-                    category_id=2,
-                    name="Чашки",
-                    slug="cups"
-                    )
+        conn,
+        name="Чашки",
+        slug="cups"
+        )
+
+    conn.commit()
+    conn.close()
     
-    conn = products.get_db_connection()
+    conn = db_connection()
     try:
         products.update_product_data(
                         conn=conn,
@@ -206,10 +196,13 @@ def test_update_product_changes_all_product_data_except_id(products_test_db):
     assert product["is_featured"] == 1
     
     
-def test_get_product_with_category_returns_correct_data(products_test_db):
-    
-    create_test_category(products_test_db)
-    product_id = create_test_product()
+def test_get_product_with_category_returns_correct_data(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
+    conn.commit()
+    conn.close()
     
     product = products.get_product_with_category(product_id)
     
@@ -231,32 +224,37 @@ def test_get_product_with_category_returns_correct_data(products_test_db):
     assert products.get_product_with_category(999) is None
     
     
-def test_get_products_by_category_returns_products_only_in_its_category(products_test_db):
-    create_test_category(products_test_db)
+def test_get_products_by_category_returns_products_only_in_its_category(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
     create_test_category(
-                products_test_db,
-                category_id=2,
-                name="Чашки",
-                slug="cups"
-                )
-    create_test_product()
+        conn,
+        name="Чашки",
+        slug="cups"
+        )
+    create_test_product(conn)
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011
+        )
     create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=2,
-            year=2025,
-            materials="Глина"
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=2,
+        year=2025,
+        materials="Глина"
+        )
+    conn.commit()
+    conn.close()
             
     vases_products = products.get_products_by_category(1)
     
@@ -267,26 +265,32 @@ def test_get_products_by_category_returns_products_only_in_its_category(products
     assert all(product["category_name"] == "Вазы" for product in vases_products)
     
     
-def test_get_products_by_ids_returns_correct_products(products_test_db):
-    create_test_category(products_test_db)
-    white_vase_id = create_test_product()
+def test_get_products_by_ids_returns_correct_products(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    white_vase_id = create_test_product(conn)
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011
+        )
     kids_cup_id = create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина"
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина"
+        )
+    conn.commit()
+    conn.close()
             
     two_products = products.get_products_by_ids([white_vase_id, kids_cup_id])
     two_products_names = {product["name"] for product in two_products}
@@ -310,32 +314,33 @@ def test_get_products_by_ids_returns_empty_list_without_db_call(monkeypatch):
     assert result == []
     
     
-def test_get_all_products_returns_only_visible_non_archived_products(products_test_db):
-    
-    create_test_category(products_test_db)
-    
-    create_test_product()
-    
+def test_get_all_products_returns_only_visible_non_archived_products(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(conn)
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-                is_visible=0
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        is_visible=0
+        )
     third_id = create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина"
-            )
-            
-    conn = products_test_db()
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина"
+        )
+
+    conn.commit()
 
     products.set_product_archived(
         conn=conn,
@@ -354,33 +359,34 @@ def test_get_all_products_returns_only_visible_non_archived_products(products_te
     assert product_names == {"Белая ваза"}
     
     
-def test_get_all_products_returns_non_archived_products(products_test_db):
-    
-    create_test_category(products_test_db)
-    
-    create_test_product()
-    
+def test_get_all_products_returns_non_archived_products(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(conn)
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-                is_visible=0
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        is_visible=0
+        )
     third_id = create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина",
-            is_visible=1
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина",
+        is_visible=1
+        )
             
-    conn = products_test_db()
+    conn.commit()
 
     products.set_product_archived(
         conn=conn,
@@ -399,32 +405,35 @@ def test_get_all_products_returns_non_archived_products(products_test_db):
     assert product_names == {"Сны карелии", "Белая ваза"}
     
     
-def test_get_all_products_returns_only_archived_products(products_test_db):
-    create_test_category(products_test_db)
-    
-    first_id = create_test_product()
+def test_get_all_products_returns_only_archived_products(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    first_id = create_test_product(conn)
     
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-                is_visible=1
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        is_visible=1
+        )
     third_id = create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина",
-            is_visible=0
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина",
+        is_visible=0
+        )
             
-    conn = products_test_db()
+    conn.commit()
 
     products.set_product_archived(
         conn=conn,
@@ -449,30 +458,36 @@ def test_get_all_products_returns_only_archived_products(products_test_db):
     assert product_names == {"Детская чашка", "Белая ваза"}
     
     
-def test_get_all_products_returns_only_featured_products(products_test_db):
-    
-    create_test_category(products_test_db)
-    
-    create_test_product(is_featured=1)
+def test_get_all_products_returns_only_featured_products(empty_db,db_connection):
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(
+        conn,
+        is_featured=1
+        )
     
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        )
     create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина",
-            is_featured=1
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина",
+        is_featured=1
+        )
+    conn.commit()
+    conn.close()
             
     all_products = products.get_all_products(only_featured=True)
     
@@ -482,32 +497,36 @@ def test_get_all_products_returns_only_featured_products(products_test_db):
     assert product_names == {"Белая ваза", "Детская чашка"}
     
     
-def test_get_all_products_returns_only_featured_and_visible_products(products_test_db):
-    create_test_category(products_test_db)
-    
-    create_test_product()
-    
+def test_get_all_products_returns_only_featured_and_visible_products(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(conn)
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-                is_visible=0,
-                is_featured=1
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        is_visible=0,
+        is_featured=1
+        )
     create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина",
-            is_visible=1,
-            is_featured=1
-            )
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина",
+        is_visible=1,
+        is_featured=1
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(only_visible=True, only_featured=True)
     
@@ -516,31 +535,38 @@ def test_get_all_products_returns_only_featured_and_visible_products(products_te
     assert product_names == {"Детская чашка"}
     
     
-def test_get_all_products_filters_by_normalized_status(products_test_db):
-    create_test_category(products_test_db)
-    
-    create_test_product(status="sold")
+def test_get_all_products_filters_by_normalized_status(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(
+        conn,
+        status="sold"
+        )
     
     create_test_product(
-                name="Сны карелии",
-                price=15000,
-                description="Про природу",
-                img_path="другой путь",
-                category_id=1,
-                year=2011,
-                status="available"
-            )
+        conn,
+        name="Сны карелии",
+        price=15000,
+        description="Про природу",
+        img_path="другой путь",
+        category_id=1,
+        year=2011,
+        status="available"
+        )
     create_test_product(
-            name="Детская чашка",
-            price=3000,
-            description="Розовая чашка",
-            img_path="третий путь",
-            category_id=1,
-            year=2025,
-            materials="Глина",
-            status="reserved"
-            )
-            
+        conn,
+        name="Детская чашка",
+        price=3000,
+        description="Розовая чашка",
+        img_path="третий путь",
+        category_id=1,
+        year=2025,
+        materials="Глина",
+        status="reserved"
+        )
+    conn.commit()
+    conn.close()   
     
     all_products = products.get_all_products(status="  SOLD ")
     
@@ -549,11 +575,23 @@ def test_get_all_products_filters_by_normalized_status(products_test_db):
     assert product_names == {"Белая ваза"}
     
     
-def test_get_all_products_ignores_invalid_status(products_test_db):
-    create_test_category(products_test_db)
-    create_test_product()
-    create_test_product(name="Чашка", status="reserved")
-    create_test_product(name="Тарелка", status="sold")
+def test_get_all_products_ignores_invalid_status(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    create_test_product(conn)
+    create_test_product(
+        conn,
+        name="Чашка",
+        status="reserved"
+        )
+    create_test_product(
+        conn,
+        name="Тарелка",
+        status="sold"
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(status="aaa")
     
@@ -562,24 +600,29 @@ def test_get_all_products_ignores_invalid_status(products_test_db):
     assert product_names == {"Белая ваза", "Чашка", "Тарелка"}
     
     
-def test_get_all_products_filters_by_category_slug(products_test_db):
-    create_test_category(products_test_db)
+def test_get_all_products_filters_by_category_slug(empty_db,db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
     create_test_category(
-            products_test_db,
-            category_id=2,
-            name="Чашки",
-            slug="cups"
-    )
+        conn,
+        name="Чашки",
+        slug="cups"
+        )
     
-    create_test_product()
+    create_test_product(conn)
     create_test_product(
-            name="Сны Карелии",
-            category_id=1
-    )
+        conn,
+        name="Сны Карелии",
+        category_id=1
+        )
     create_test_product(
-            name="Кружка",
-            category_id=2
-    )
+        conn,
+        name="Кружка",
+        category_id=2
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(category_slug="vases")
     
@@ -588,20 +631,27 @@ def test_get_all_products_filters_by_category_slug(products_test_db):
     assert product_names == {"Белая ваза", "Сны Карелии"}
     
     
-def test_get_all_products_searches_by_name_and_description(products_test_db):
-    create_test_category(products_test_db)
+def test_get_all_products_searches_by_name_and_description(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
     create_test_product(
-            name="Белая ваза",
-            description="Керамический объект"
-            )
+        conn,
+        name="Белая ваза",
+        description="Керамический объект"
+        )
     create_test_product(
-            name="Сны Карелии",
-            description="ваза по природным мотивам"
-            )
+        conn,
+        name="Сны Карелии",
+        description="ваза по природным мотивам"
+        )
     create_test_product(
-            name="Кружка",
-            description="Детская кружка"
-    )
+        conn,
+        name="Кружка",
+        description="Детская кружка"
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(search_query="ваза")
     
@@ -610,19 +660,28 @@ def test_get_all_products_searches_by_name_and_description(products_test_db):
     assert product_names == {"Белая ваза", "Сны Карелии"}
     
     
-def test_get_all_products_sorts_by_price(products_test_db):
-    create_test_category(products_test_db)
-    create_test_product(price=5000)
+def test_get_all_products_sorts_by_price(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
     create_test_product(
-            name="Сны Карелии",
-            description="На природные мотивы",
-            price=10000
-    )
+        conn,
+        price=5000
+        )
     create_test_product(
-            name="Детская кружка",
-            description="Розовая кружка",
-            price=2500
-    )
+        conn,
+        name="Сны Карелии",
+        description="На природные мотивы",
+        price=10000
+        )
+    create_test_product(
+        conn,
+        name="Детская кружка",
+        description="Розовая кружка",
+        price=2500
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(sort_by="price", order="ASC")
     
@@ -637,20 +696,28 @@ def test_get_all_products_sorts_by_price(products_test_db):
     assert product_names == ["Сны Карелии", "Белая ваза", "Детская кружка"]
     
     
-def test_get_all_products_ignores_invalid_sort_data(products_test_db):
-    
-    create_test_category(products_test_db)
-    create_test_product(price=5000)
+def test_get_all_products_ignores_invalid_sort_data(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
     create_test_product(
-            name="Сны Карелии",
-            description="На природные мотивы",
-            price=10000
-    )
+        conn,
+        price=5000
+        )
     create_test_product(
-            name="Детская кружка",
-            description="Розовая кружка",
-            price=2500
-    )
+        conn,
+        name="Сны Карелии",
+        description="На природные мотивы",
+        price=10000
+        )
+    create_test_product(
+        conn,
+        name="Детская кружка",
+        description="Розовая кружка",
+        price=2500
+        )
+    conn.commit()
+    conn.close()
     
     all_products = products.get_all_products(sort_by="banana", order="sideways")
     
@@ -659,13 +726,16 @@ def test_get_all_products_ignores_invalid_sort_data(products_test_db):
     assert product_names == ["Белая ваза", "Детская кружка", "Сны Карелии"]
     
     
-def test_delete_product_completely_removes_product_dependencies(
-    products_test_db,
-):
-    create_test_category(products_test_db)
+def test_delete_product_completely_removes_product_dependencies(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
+    conn.commit()
+    conn.close()
+
     tags.create_tag("Природа", "nature")
 
-    product_id = create_test_product()
     tag_id = tags.get_tag_by_slug("nature")["id"]
 
     tags.add_tag_to_product(product_id, tag_id)
@@ -677,8 +747,8 @@ def test_delete_product_completely_removes_product_dependencies(
         comment="Нормально",
     )
 
-    conn = products_test_db()
-
+    conn = db_connection()
+    
     try:
         is_deleted = products.delete_product_data(
             conn=conn,
@@ -700,7 +770,7 @@ def test_delete_product_completely_removes_product_dependencies(
 
     assert product is None
 
-    check_conn = products_test_db()
+    check_conn = db_connection()
 
     product_tags_count = check_conn.execute(
         """
@@ -726,14 +796,18 @@ def test_delete_product_completely_removes_product_dependencies(
     assert reviews_count == 0
     
     
-def test_update_product_status_updates_when_status_matches(products_test_db):
-    create_test_category(products_test_db)
-    product_id = create_test_product()
-    
+def test_update_product_status_updates_when_status_matches(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(conn)
+    conn.commit()
+    conn.close()
+
     conn = None
     
     try:
-        conn = products_test_db()
+        conn = db_connection()
         result = products.update_product_status(conn=conn, product_id=product_id, new_status="reserved", expected_status="available")
         conn.commit()
     except Exception:
@@ -750,14 +824,21 @@ def test_update_product_status_updates_when_status_matches(products_test_db):
     assert updated_product["status"] == "reserved"
     
     
-def test_update_product_status_does_not_update_when_status_does_not_match(products_test_db):
-    create_test_category(products_test_db)
-    product_id = create_test_product(status="reserved")
-    
+def test_update_product_status_does_not_update_when_status_does_not_match(empty_db, db_connection):
+
+    conn = db_connection()
+    create_test_category(conn)
+    product_id = create_test_product(
+        conn,
+        status="reserved"
+        )
+    conn.commit()
+    conn.close()
+
     conn = None
     
     try:
-        conn = products_test_db()
+        conn = db_connection()
         result = products.update_product_status(conn=conn, product_id=product_id, new_status="sold", expected_status="available")
         conn.commit()
     except Exception:

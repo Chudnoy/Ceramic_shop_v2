@@ -1,12 +1,5 @@
-import pytest
-
 import database.tags as tags
 
-@pytest.fixture
-def tags_test_db(empty_db, db_connection):
-    return db_connection
-    
-    
 def replace_test_product_tags(product_id, tag_ids):
     conn = tags.get_db_connection()
     
@@ -24,7 +17,7 @@ def replace_test_product_tags(product_id, tag_ids):
         conn.close()
     
     
-def test_update_tag_updates_fields(tags_test_db):
+def test_update_tag_updates_fields(empty_db):
     
     tags.create_tag("Природа", "nature")
     
@@ -45,10 +38,10 @@ def test_update_tag_updates_fields(tags_test_db):
     assert new_tag["slug"] == "house"
     
     
-def test_add_tag_to_product_ensures_unique_product_tag_pair(tags_test_db):
+def test_add_tag_to_product_ensures_unique_product_tag_pair(empty_db, db_connection):
     tags.create_tag("Природа", "nature")
     
-    conn = tags_test_db()
+    conn = db_connection()
     conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Белая ваза", 2000))
     conn.commit()
     conn.close()
@@ -56,16 +49,16 @@ def test_add_tag_to_product_ensures_unique_product_tag_pair(tags_test_db):
     tags.add_tag_to_product(1, 1)
     tags.add_tag_to_product(1, 1)
     
-    conn = tags_test_db()
+    conn = db_connection()
     pairs_count = conn.execute("SELECT COUNT(*) FROM product_tags").fetchone()[0]
     conn.close()
     
     assert pairs_count == 1
     
     
-def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
+def test_get_tags_for_product_returns_correct_sorted_tags(empty_db, db_connection):
     
-    conn = tags_test_db()
+    conn = db_connection()
     products = [
             (1, "Ваза", 1000),
             (2, "Чашка", 2000)
@@ -82,7 +75,7 @@ def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
     tags.add_tag_to_product(1, tags.get_tag_by_slug("house")["id"])
     tags.add_tag_to_product(2, tags.get_tag_by_slug("wind")["id"])
     
-    conn = tags_test_db()
+    conn = db_connection()
     product = conn.execute("SELECT * FROM products WHERE id = ?", (1,)).fetchone()
     conn.close()
     
@@ -94,9 +87,9 @@ def test_get_tags_for_product_returns_correct_sorted_tags(tags_test_db):
     assert tag_names == ["Дом", "Природа"]
     
     
-def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
+def test_update_product_tags_replaces_old_tags_with_new_tags(empty_db, db_connection):
     
-    conn = tags_test_db()
+    conn = db_connection()
     conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Ваза", 1000))
     conn.commit()
     
@@ -123,9 +116,9 @@ def test_update_product_tags_replaces_old_tags_with_new_tags(tags_test_db):
     assert new_product_tags == ["Ветер", "Дом"]
     
     
-def test_update_product_tags_deletes_tags_when_tags_list_is_empty(tags_test_db):
+def test_update_product_tags_deletes_tags_when_tags_list_is_empty(empty_db, db_connection):
     
-    conn = tags_test_db()
+    conn = db_connection()
     conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", (1, "Ваза", 1000))
     conn.commit()
     conn.close()
@@ -146,9 +139,9 @@ def test_update_product_tags_deletes_tags_when_tags_list_is_empty(tags_test_db):
     assert new_product_tags == []
     
     
-def test_get_tags_with_product_count_returns_correct_product_counts(tags_test_db):
+def test_get_tags_with_product_count_returns_correct_product_counts(empty_db, db_connection):
     
-    conn = tags_test_db()
+    conn = db_connection()
     products = [
             (1, "Ваза", 2000),
             (2, "Чашка", 3000)
@@ -172,9 +165,9 @@ def test_get_tags_with_product_count_returns_correct_product_counts(tags_test_db
     assert counts_by_slug["house"] == 0
     
     
-def test_get_product_count_by_tag_id_returns_correct_product_counts(tags_test_db):
+def test_get_product_count_by_tag_id_returns_correct_product_counts(empty_db, db_connection):
     
-    conn = tags_test_db()
+    conn = db_connection()
     products = [
             (1, "Ваза", 1000),
             (2, "Чашка", 2000),

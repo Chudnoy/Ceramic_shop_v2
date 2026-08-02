@@ -5,7 +5,7 @@ import services.product_service as product_service
 
 
 @pytest.fixture
-def product_service_test_db(db_connection, monkeypatch):
+def product_service_test_db(empty_db, db_connection, monkeypatch):
     
     def get_test_product_by_id(product_id):
         conn = db_connection()
@@ -16,57 +16,6 @@ def product_service_test_db(db_connection, monkeypatch):
             ).fetchone()
         finally:
             conn.close()
-        
-    conn = db_connection()
-    conn.execute("""
-        CREATE TABLE products (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            price INTEGER NOT NULL,
-            img TEXT,
-            category_id INTEGER,
-            status TEXT,
-            year INTEGER,
-            materials TEXT,
-            is_visible INTEGER,
-            is_for_sale INTEGER,
-            is_featured INTEGER,
-            is_archived INTEGER
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE orders (
-            id TEXT PRIMARY KEY,
-            customer_name TEXT NOT NULL,
-            customer_email TEXT NOT NULL,
-            customer_phone TEXT,
-            customer_address TEXT,
-            total INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'new',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT NOT NULL,
-            product_id TEXT,
-            product_name TEXT NOT NULL,
-            unit_price INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            
-            FOREIGN KEY (order_id)
-                REFERENCES orders(id)
-                ON DELETE CASCADE,
-            
-            FOREIGN KEY (product_id)
-                REFERENCES products(id)
-                ON DELETE SET NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
     
     monkeypatch.setattr(
         product_service,
@@ -74,7 +23,7 @@ def product_service_test_db(db_connection, monkeypatch):
         get_test_product_by_id
     )
     
-    yield db_connection
+    return db_connection
     
     
 def create_test_product(
@@ -389,7 +338,12 @@ def test_process_product_tag_ids_rejects_nonexistent_tags(monkeypatch):
     assert cleaned_tag_ids == []
     
     
-def test_create_products_with_tag_rolls_back_when_tags_fail(monkeypatch, product_service_test_db):
+def test_create_products_with_tag_rolls_back_when_tags_fail(empty_db, db_connection, monkeypatch):
+
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
+    conn.commit()
+    conn.close()
     
     test_image_path = "/static/uploads/test-image.jpg"
     
@@ -436,7 +390,7 @@ def test_create_products_with_tag_rolls_back_when_tags_fail(monkeypatch, product
                 file=object()
         )
         
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     products_count = check_conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
     check_conn.close()
     
@@ -444,12 +398,17 @@ def test_create_products_with_tag_rolls_back_when_tags_fail(monkeypatch, product
     assert deleted_image_paths == [test_image_path]
     
     
-def test_update_product_with_tags_rolls_back_when_tags_fail(monkeypatch, product_service_test_db):
+def test_update_product_with_tags_rolls_back_when_tags_fail(empty_db, db_connection, monkeypatch):
+
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
+    conn.commit()
+    conn.close()
     
     product_id = "product-1"
     old_image_path = "/static/uploads/old-image.jpg"
     
-    conn = product_service_test_db()
+    conn = db_connection()
     conn.execute("""
         INSERT INTO
             products 
@@ -514,7 +473,7 @@ def test_update_product_with_tags_rolls_back_when_tags_fail(monkeypatch, product
             file=object()
         )
         
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     product_after_error = check_conn.execute("SELECT name, img FROM products WHERE id = ?", (product_id,)).fetchone()
     check_conn.close()
     
@@ -523,8 +482,9 @@ def test_update_product_with_tags_rolls_back_when_tags_fail(monkeypatch, product
     assert deleted_image_paths == [new_image_path]
     
     
-def test_update_product_with_tags_rejects_status_change_when_product_has_active_order(product_service_test_db, monkeypatch):
-    conn = product_service_test_db()
+def test_update_product_with_tags_rejects_status_change_when_product_has_active_order(empty_db, db_connection, monkeypatch):
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
     create_test_product(conn=conn, status="reserved")
     conn.commit()
     conn.close()
@@ -565,7 +525,7 @@ def test_update_product_with_tags_rejects_status_change_when_product_has_active_
             
     assert result == (False, "Нельзя изменить статус работы, связанной с активным заказом")
     
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     product_after_error = check_conn.execute("SELECT name, description, price, img, status FROM products WHERE id = ?", ("product-1",)).fetchone()
     check_conn.close()
     
@@ -583,8 +543,9 @@ def test_update_product_with_tags_rejects_status_change_when_product_has_active_
         product_service.restore_archived_product,
     ]
 )
-def test_product_archive_action_returns_error_when_product_not_found(product_service_test_db, service_function):
-    conn = product_service_test_db()
+def test_product_archive_action_returns_error_when_product_not_found(empty_db, db_connection, service_function):
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
     create_test_product(
         conn=conn,
         product_id="12345"
@@ -594,7 +555,7 @@ def test_product_archive_action_returns_error_when_product_not_found(product_ser
 
     is_success, error_message, product_name = service_function("product-1")
 
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     saved_product = get_saved_product(conn=check_conn, product_id="12345")
     check_conn.close()
 
@@ -624,12 +585,14 @@ def test_product_archive_action_returns_error_when_product_not_found(product_ser
     ]
 )
 def test_product_archive_action_updates_archived_state(
-        product_service_test_db,
+        empty_db,
+        db_connection,
         service_function,
         initial_is_archived,
         expected_is_archived
 ):
-    conn = product_service_test_db()
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
     create_test_product(
         conn=conn,
         is_archived=initial_is_archived
@@ -639,7 +602,7 @@ def test_product_archive_action_updates_archived_state(
 
     is_success, error_message, product_name = service_function("product-1")
 
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     saved_product = get_saved_product(conn=check_conn)
     check_conn.close()
 
@@ -669,12 +632,14 @@ def test_product_archive_action_updates_archived_state(
     ]
 )
 def test_product_archive_action_returns_error_for_invalid_state(
-        product_service_test_db,
+        empty_db,
+        db_connection,
         service_function,
         initial_is_archived,
         expected_error_message
 ):
-    conn = product_service_test_db()
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
     create_test_product(
         conn=conn,
         is_archived=initial_is_archived
@@ -684,7 +649,7 @@ def test_product_archive_action_returns_error_for_invalid_state(
 
     is_success, error_message, product_name = service_function("product-1")
 
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     saved_product = get_saved_product(conn=check_conn)
     check_conn.close()
 
@@ -694,15 +659,16 @@ def test_product_archive_action_returns_error_for_invalid_state(
     assert saved_product["is_archived"] == initial_is_archived
 
 
-def test_archive_product_returns_error_when_product_has_active_order(product_service_test_db):
-    conn = product_service_test_db()
+def test_archive_product_returns_error_when_product_has_active_order(empty_db, db_connection):
+    conn = db_connection()
+    conn.execute("INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)", (1, 'Чаши', 'bowls'))
     create_test_order_with_item(conn=conn)
     conn.commit()
     conn.close()
 
     was_archived, error_message, product_name = product_service.archive_product_with_order_check("product-1")
 
-    check_conn = product_service_test_db()
+    check_conn = db_connection()
     saved_product = get_saved_product(conn=check_conn)
     check_conn.close()
 

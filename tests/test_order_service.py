@@ -5,52 +5,8 @@ import services.order_service as order_service
 
 
 @pytest.fixture
-def order_service_test_db(db_connection):
-    conn = db_connection()
-    
-    conn.execute("""
-        CREATE TABLE products (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            price INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT "available"
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE orders (
-            id TEXT PRIMARY KEY,
-            customer_name TEXT NOT NULL,
-            customer_email TEXT NOT NULL,
-            customer_phone TEXT,
-            customer_address TEXT,
-            total INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'new',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT NOT NULL,
-            product_id TEXT,
-            product_name TEXT NOT NULL,
-            unit_price INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            
-            FOREIGN KEY (order_id)
-                REFERENCES orders(id)
-                ON DELETE CASCADE,
-            
-            FOREIGN KEY (product_id)
-                REFERENCES products(id)
-                ON DELETE SET NULL
-        )
-    """)
-    
-    conn.commit()
-    conn.close()
-    
-    yield db_connection
+def order_service_test_db(empty_db, db_connection):
+    return db_connection
     
     
 def create_test_product(
