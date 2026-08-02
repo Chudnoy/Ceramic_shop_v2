@@ -1,5 +1,3 @@
-import pytest
-
 import database.order_items as order_items
 from database import orders
     
