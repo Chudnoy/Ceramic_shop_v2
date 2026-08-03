@@ -1,4 +1,4 @@
-def test_checkout_creates_order_reserves_productt_and_clears_cart(empty_db, db_connection, client):
+def test_checkout_creates_order_reserves_product_and_clears_cart(empty_db, db_connection, client):
 
     conn = db_connection()
     conn.execute("INSERT INTO products (id, name, price) VALUES (?, ?, ?)", ('product-1', 'Башня', 30000))
