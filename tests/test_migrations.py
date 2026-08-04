@@ -1,5 +1,6 @@
 import pytest
 import sqlite3
+from dataclasses import FrozenInstanceError
 import database.migrations as migrations
 
 def test_ensure_schema_migrations_table_creates_table(db_connection):
@@ -90,28 +91,28 @@ def test_get_pending_migrations_excludes_applied_versions():
         pass
 
     available_migrations = [
-        {
-            "version": 3,
-            "name": "add_work_images",
-            "apply": fake_apply,
-        },
-        {
-            "version": 1,
-            "name": "initial_schema",
-            "apply": fake_apply,
-        },
-        {
-            "version": 2,
-            "name": "add_projects",
-            "apply": fake_apply,
-        },
+        migrations.Migration(
+            version = 3,
+            name = "add_work_images",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 1,
+            name = "initial_schema",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 2,
+            name = "add_projects",
+            apply = fake_apply,
+        ),
     ]
 
     applied_versions = {1, 3}
 
     pending_migrations = migrations.get_pending_migrations(available_migrations, applied_versions)
 
-    assert [migration['version'] for migration in pending_migrations] == [2]
+    assert [migration.version for migration in pending_migrations] == [2]
 
 
 def test_get_pending_migrations_sorts_migrations_by_version():
@@ -119,28 +120,28 @@ def test_get_pending_migrations_sorts_migrations_by_version():
         pass
 
     available_migrations = [
-        {
-            "version": 3,
-            "name": "add_work_images",
-            "apply": fake_apply,
-        },
-        {
-            "version": 1,
-            "name": "initial_schema",
-            "apply": fake_apply,
-        },
-        {
-            "version": 2,
-            "name": "add_projects",
-            "apply": fake_apply,
-        },
+        migrations.Migration(
+            version = 3,
+            name = "add_work_images",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 1,
+            name = "initial_schema",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 2,
+            name = "add_projects",
+            apply = fake_apply,
+        ),
     ]
 
     applied_versions = set()
 
     pending_migrations = migrations.get_pending_migrations(available_migrations, applied_versions)
 
-    assert [migration['version'] for migration in pending_migrations] == [1, 2, 3]
+    assert [migration.version for migration in pending_migrations] == [1, 2, 3]
 
 
 def test_get_pending_migrations_returns_empty_list_when_all_applied():
@@ -148,21 +149,21 @@ def test_get_pending_migrations_returns_empty_list_when_all_applied():
         pass
 
     available_migrations = [
-        {
-            "version": 3,
-            "name": "add_work_images",
-            "apply": fake_apply,
-        },
-        {
-            "version": 1,
-            "name": "initial_schema",
-            "apply": fake_apply,
-        },
-        {
-            "version": 2,
-            "name": "add_projects",
-            "apply": fake_apply,
-        },
+        migrations.Migration(
+            version = 3,
+            name = "add_work_images",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 1,
+            name = "initial_schema",
+            apply = fake_apply,
+        ),
+        migrations.Migration(
+            version = 2,
+            name = "add_projects",
+            apply = fake_apply,
+        ),
     ]
 
     applied_versions = {1, 2, 3}
@@ -177,11 +178,11 @@ def test_apply_migration_applies_change_and_records_migration(db_connection):
     def create_test_table(conn):
         conn.execute("CREATE TABLE test_table (id INTEGER PRIMARY KEY)")
 
-    migration = {
-        'version': 1,
-        'name': 'create_test_table',
-        'apply': create_test_table
-    }
+    migration = migrations.Migration(
+        version = 1,
+        name = 'create_test_table',
+        apply = create_test_table
+    )
 
     conn = db_connection()
     migrations.ensure_schema_migrations_table(conn)
@@ -197,3 +198,244 @@ def test_apply_migration_applies_change_and_records_migration(db_connection):
     assert len(saved_migration) == 1
     assert saved_migration[0]['version'] == 1
     assert saved_migration[0]['name'] == 'create_test_table'
+
+
+def test_run_migrations_performs_correct_migrations(db_connection):
+
+    def create_test_table(conn):
+        conn.execute(
+            """
+            CREATE TABLE test_table (
+                id INTEGER PRIMARY KEY
+            )
+            """
+        )
+
+    def add_name_column(conn):
+        conn.execute(
+            """
+            ALTER TABLE test_table
+            ADD COLUMN name TEXT
+            """
+        )
+
+    available_migrations = [
+        migrations.Migration(
+            version = 2,
+            name = "add_name_column",
+            apply = add_name_column,
+        ),
+        migrations.Migration(
+            version = 1,
+            name = "create_test_table",
+            apply = create_test_table,
+        ),
+    ]
+
+    conn = db_connection()
+
+    migrations.run_migrations(
+        conn,
+        available_migrations
+    )
+
+    saved_table = conn.execute(
+        """
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name = ?
+        """,
+        ("test_table",)
+    ).fetchall()
+
+    saved_migrations = conn.execute(
+        """
+        SELECT version, name
+        FROM schema_migrations
+        ORDER BY version
+        """
+    ).fetchall()
+
+    columns = conn.execute(
+        "PRAGMA table_info(test_table)"
+    ).fetchall()
+
+    column_names = [
+        column["name"]
+        for column in columns
+    ]
+
+    conn.close()
+
+    assert len(saved_table) == 1
+    assert "name" in column_names
+
+    assert [row["version"] for row in saved_migrations] == [1, 2]
+
+    assert [row["name"] for row in saved_migrations] == ["create_test_table", "add_name_column"]
+
+
+def test_run_migrations_skips_already_applied_migrations(db_connection):
+
+    def migration_that_should_not_run(conn):
+        raise AssertionError('Миграция была запущена повторно')
+
+    available_migrations = [
+        migrations.Migration(
+            version = 1,
+            name = 'already_done',
+            apply = migration_that_should_not_run
+        )
+    ]
+
+    conn = db_connection()
+    migrations.ensure_schema_migrations_table(conn)
+    migrations.record_applied_migration(conn, 1, 'already_done')
+    conn.commit()
+
+    migrations.run_migrations(conn, available_migrations)
+
+    saved_migrations = conn.execute("SELECT version, name FROM schema_migrations").fetchall()
+
+    conn.close()
+
+    assert len(saved_migrations) == 1
+    assert saved_migrations[0]["version"] == 1
+    assert saved_migrations[0]["name"] == "already_done"
+
+
+def test_run_migrations_rolls_back_failed_migration(db_connection):
+
+    def failing_migration(conn):
+        conn.execute(
+            """
+            CREATE TABLE broken_table(
+                id INTEGER PRIMARY KEY
+            )
+            """
+        )
+        raise RuntimeError('Ошибка миграции')
+
+    available_migrations = [
+        migrations.Migration(
+            version = 1,
+            name = 'broken_migration',
+            apply = failing_migration
+        )
+    ]
+
+    conn = db_connection()
+    with pytest.raises(RuntimeError):
+        migrations.run_migrations(conn, available_migrations)
+
+    table = conn.execute(
+        """
+        SELECT name
+        FROM sqlite_master
+        WHERE type='table'
+        AND name = ?
+        """,
+        ('broken_table',)
+    ).fetchone()
+
+    assert table is None
+
+    saved_migrations = conn.execute(
+        """
+        SELECT *
+        FROM schema_migrations
+        """
+    ).fetchall()
+
+    assert saved_migrations == []
+
+    schema_table = conn.execute(
+        """
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+        AND name = ?
+        """,
+        ('schema_migrations',)
+    ).fetchone()
+
+    conn.close()
+
+    assert schema_table is not None
+
+
+def test_get_migration_by_version_returns_matching_migration():
+
+    def fake_apply(conn):
+        pass
+
+    migration_1 = migrations.Migration(
+        version=1,
+        name="initial",
+        apply=fake_apply,
+    )
+
+    migration_2 = migrations.Migration(
+        version=2,
+        name="orders",
+        apply=fake_apply,
+    )
+
+    available_migrations = [
+        migration_1,
+        migration_2,
+    ]
+
+    found_migration = migrations.get_migration_by_version(available_migrations, 2)
+
+    assert found_migration is migration_2
+
+
+def test_get_migration_by_version_returns_none_when_version_not_found():
+
+    def fake_apply(conn):
+        pass
+
+    available_migrations = [
+        migrations.Migration(
+            version=1,
+            name="initial",
+            apply=fake_apply,
+        )
+    ]
+
+    found_migration = migrations.get_migration_by_version(available_migrations, 5)
+
+    assert found_migration is None
+
+
+def test_migration_stores_its_data():
+
+    def fake_apply(conn):
+        pass
+
+    migration = migrations.Migration(
+        version=1,
+        name='initial_schema',
+        apply=fake_apply
+    )
+
+    assert migration.version == 1
+    assert migration.name == 'initial_schema'
+    assert migration.apply is fake_apply
+
+
+def test_migration_cannot_be_changed_after_creation():
+
+    def fake_apply(conn):
+        pass
+
+    migration = migrations.Migration(
+        version=1,
+        name='initial_schema',
+        apply=fake_apply
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        migration.version = 2
