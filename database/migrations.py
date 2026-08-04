@@ -12,6 +12,9 @@ class Migration:
 
 from database.migration_versions.v001_create_products import apply as apply_v001_create_products
 from database.migration_versions.v002_add_categories import apply as apply_v002_create_categories
+from database.migration_versions.v003_create_orders_with_json_items import apply as apply_v003_create_orders_with_json_items
+from database.migration_versions.v004_add_order_status import apply as apply_v004_add_order_status
+from database.migration_versions.v005_expand_products import apply as apply_v005_expand_products
 
 
 MIGRATIONS = (
@@ -24,11 +27,26 @@ MIGRATIONS = (
         version=2,
         name='add_categories',
         apply=apply_v002_create_categories
+    ),
+    Migration(
+        version=3,
+        name='create_orders_with_json_items',
+        apply=apply_v003_create_orders_with_json_items
+    ),
+    Migration(
+        version=4,
+        name='add_order_status',
+        apply=apply_v004_add_order_status
+    ),
+    Migration(
+        version=5,
+        name='expand_products',
+        apply=apply_v005_expand_products
     )
 )
 
 
-def validate_migration_registy(available_migrations):
+def validate_migration_registry(available_migrations):
 
     versions = [migration.version for migration in available_migrations]
     names = [migration.name for migration in available_migrations]
@@ -90,7 +108,7 @@ def apply_migration(conn, migration):
 
 def run_migrations(conn, available_migrations):
 
-    validate_migration_registy(available_migrations)
+    validate_migration_registry(available_migrations)
 
     ensure_schema_migrations_table(conn)
     conn.commit()

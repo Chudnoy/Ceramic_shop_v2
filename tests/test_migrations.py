@@ -450,7 +450,7 @@ def test_validate_migration_registry_accepts_valid_migrations():
         migrations.Migration(2, 'second', fake_apply)
     )
 
-    migrations.validate_migration_registy(available_migrations)
+    migrations.validate_migration_registry(available_migrations)
 
 
 def test_validate_migration_registry_rejects_duplicate_versions():
@@ -466,7 +466,7 @@ def test_validate_migration_registry_rejects_duplicate_versions():
         ValueError,
         match='Версии миграций не должны повторяться'
     ):
-        migrations.validate_migration_registy(available_migrations)
+        migrations.validate_migration_registry(available_migrations)
 
 
 def test_validate_migration_registry_rejects_nonpositive_version():
@@ -481,4 +481,4 @@ def test_validate_migration_registry_rejects_nonpositive_version():
         ValueError,
         match='Версии миграций должны быть положительными целыми числами'
     ):
-        migrations.validate_migration_registy(available_migrations)
+        migrations.validate_migration_registry(available_migrations)
