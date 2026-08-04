@@ -32,6 +32,7 @@ def test_v001_creates_initial_products_table(db_connection):
     assert saved_table is not None
 
     assert column_names == {'id', 'name', 'description', 'price', 'img'}
+    assert any(column['name'] == 'id' and column['pk'] == 1 for column in columns)
 
     assert len(saved_versions) == 1
     assert saved_versions[0]['version'] == 1

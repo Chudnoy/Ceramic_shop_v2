@@ -28,6 +28,24 @@ MIGRATIONS = (
 )
 
 
+def validate_migration_registy(available_migrations):
+
+    versions = [migration.version for migration in available_migrations]
+    names = [migration.name for migration in available_migrations]
+
+    if any(type(version) is not int or version <= 0 for version in versions):
+        raise ValueError('Версии миграций должны быть положительными целыми числами')
+
+    if len(versions) != len(set(versions)):
+        raise ValueError('Версии миграций не должны повторяться')
+
+    if any(not isinstance(name, str) or not name.strip() for name in names):
+        raise ValueError('Имя миграции должно быть непустой строкой')
+
+    if len(names) != len(set(names)):
+        raise ValueError('Имена миграций не должны повторяться')
+
+
 def ensure_schema_migrations_table(conn):
     conn.execute(
         """
@@ -71,6 +89,9 @@ def apply_migration(conn, migration):
 
 
 def run_migrations(conn, available_migrations):
+
+    validate_migration_registy(available_migrations)
+
     ensure_schema_migrations_table(conn)
     conn.commit()
 

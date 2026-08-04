@@ -439,3 +439,46 @@ def test_migration_cannot_be_changed_after_creation():
 
     with pytest.raises(FrozenInstanceError):
         migration.version = 2
+
+
+def test_validate_migration_registry_accepts_valid_migrations():
+    def fake_apply(conn):
+        pass
+
+    available_migrations = (
+        migrations.Migration(1, 'first', fake_apply),
+        migrations.Migration(2, 'second', fake_apply)
+    )
+
+    migrations.validate_migration_registy(available_migrations)
+
+
+def test_validate_migration_registry_rejects_duplicate_versions():
+    def fake_apply(conn):
+        pass
+
+    available_migrations = (
+        migrations.Migration(1, 'first', fake_apply),
+        migrations.Migration(1, 'second', fake_apply)
+    )
+
+    with pytest.raises(
+        ValueError,
+        match='Версии миграций не должны повторяться'
+    ):
+        migrations.validate_migration_registy(available_migrations)
+
+
+def test_validate_migration_registry_rejects_nonpositive_version():
+    def fake_apply(conn):
+        pass
+
+    available_migrations = (
+        migrations.Migration(0, 'invalid', fake_apply),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match='Версии миграций должны быть положительными целыми числами'
+    ):
+        migrations.validate_migration_registy(available_migrations)
