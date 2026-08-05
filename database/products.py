@@ -58,8 +58,6 @@ def update_product_state(conn, product_id, status, is_visible, is_for_sale, is_f
 def delete_product_data(conn, product_id):
     conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
 
-    conn.execute("DELETE FROM reviews WHERE product_id = ?", (product_id,))
-
     cursor = conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
     
     return cursor.rowcount > 0

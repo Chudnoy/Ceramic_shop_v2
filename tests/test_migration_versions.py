@@ -1,5 +1,6 @@
 import sqlite3
 import pytest
+import json
 
 import database.migrations as migrations
 
@@ -231,3 +232,278 @@ def test_v005_expands_existing_products_with_defaults_and_checks(db_connection):
     assert [row['version'] for row in saved_versions] == [1, 2, 3, 4, 5]
 
     assert saved_versions[-1]['name'] == 'expand_products'
+
+
+def test_v006_create_tags_and_product_tags_relations(db_connection):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:6])
+
+    tag_columns = conn.execute("PRAGMA table_info(tags)").fetchall()
+    product_tags_columns = conn.execute("PRAGMA table_info(product_tags)").fetchall()
+    foreign_keys = conn.execute("PRAGMA foreign_key_list(product_tags)").fetchall()
+
+    conn.execute(
+        """
+        INSERT INTO products
+            (id, name, price)
+        VALUES (?, ?, ?)
+        """,
+        ('product-1', 'Башня', 30000)
+    )
+
+    tag_cursor = conn.execute(
+        """
+        INSERT INTO tags (name, slug)
+        VALUES (?, ?)
+        """,
+        ('Дом', 'home')
+    )
+
+    tag_id = tag_cursor.lastrowid
+
+    conn.execute(
+        """
+        INSERT INTO product_tags
+            (product_id, tag_id)
+        VALUES (?, ?)
+        """,
+        ('product-1', tag_id)
+    )
+
+    conn.commit()
+
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            """
+            INSERT INTO product_tags
+                (product_id, tag_id)
+            VALUES (?, ?)
+            """,
+            ('product-1', tag_id)
+        )
+
+    conn.rollback()
+
+    conn.execute("DELETE FROM tags WHERE id = ?", (tag_id,))
+    conn.commit()
+
+    saved_links = conn.execute("SELECT product_id, tag_id FROM product_tags").fetchall()
+    saved_versions = conn.execute("SELECT version, name FROM schema_migrations ORDER BY version").fetchall()
+
+    conn.close()
+
+    assert {column['name'] for column in tag_columns} == {'id', 'name', 'slug'}
+    assert {column['name'] for column in product_tags_columns} == {'product_id', 'tag_id'}
+
+    primary_key_columns = {column['name']: column['pk'] for column in product_tags_columns}
+
+    assert primary_key_columns == {
+        'product_id': 1,
+        'tag_id': 2
+    }
+
+    assert any(
+        foreign_key['table'] == 'products'
+        and foreign_key['from'] == 'product_id'
+        and foreign_key['to'] == 'id'
+        and foreign_key['on_delete'] == 'CASCADE'
+        for foreign_key in foreign_keys
+    )
+
+    assert any(
+        foreign_key['table'] == 'tags'
+        and foreign_key['from'] == 'tag_id'
+        and foreign_key['to'] == 'id'
+        and foreign_key['on_delete'] == 'CASCADE'
+        for foreign_key in foreign_keys
+    )
+
+    assert saved_links == []
+
+    assert [row['version'] for row in saved_versions] == [1, 2, 3, 4, 5, 6]
+    assert saved_versions[-1]['name'] == 'add_tags'
+
+
+def test_v007_normalizes_json_order_items_without_losing_data(db_connection):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:6])
+
+    conn.execute(
+        """
+        INSERT INTO products (
+            id,
+            name,
+            description,
+            price,
+            img,
+            category_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        ('product-1', 'Башня', None, 30000, None, None)
+    )
+
+    legacy_items = {
+        'product-1': {
+            'name': 'Башня',
+            'price': 30000,
+            'quantity': 1
+        },
+        'deleted-product': {
+            'name': 'Исчезнувшая чаша',
+            'price': 5000,
+            'quantity': 2
+        }
+    }
+
+    conn.execute(
+        """
+        INSERT INTO orders (
+            id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            customer_address,
+            items,
+            total,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            'order-1',
+            'Денис',
+            'denis@example.com',
+            '12345',
+            'spb',
+            json.dumps(
+                legacy_items,
+                ensure_ascii=False
+            ),
+            40000,
+            'confirmed'
+        )
+    )
+
+    conn.commit()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:7])
+
+    order_columns = conn.execute("PRAGMA table_info(orders)").fetchall()
+    order_items_columns = conn.execute("PRAGMA table_info(order_items)").fetchall()
+
+    saved_order = conn.execute(
+        """
+        SELECT
+            id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            customer_address,
+            total,
+            status
+        FROM orders WHERE id = ?
+        """, ('order-1',)
+    ).fetchone()
+
+    saved_items = conn.execute(
+        """
+        SELECT
+            order_id,
+            product_id,
+            product_name,
+            unit_price,
+            quantity
+        FROM order_items WHERE order_id = ?
+        """, ('order-1',)
+    ).fetchall()
+
+    saved_versions = conn.execute("SELECT version, name FROM schema_migrations ORDER BY version").fetchall()
+
+    saved_items_by_name = {
+        item['product_name']: item
+        for item in saved_items
+    }
+
+    existing_product_item = saved_items_by_name['Башня']
+    deleted_product_item = saved_items_by_name['Исчезнувшая чаша']
+
+    conn.execute("DELETE FROM products WHERE id = ?", ('product-1',))
+
+    conn.commit()
+
+    item_after_product_deletion = conn.execute(
+        """
+        SELECT
+            product_id,
+            product_name,
+            unit_price,
+            quantity
+        FROM order_items
+        WHERE order_id = ? AND product_name = ?
+        """,
+        ('order-1', 'Башня')
+    ).fetchone()
+
+    conn.execute("DELETE FROM orders WHERE id = ?", ('order-1',))
+
+    conn.commit()
+
+    remaining_order_items = conn.execute("SELECT id FROM order_items").fetchall()
+
+    conn.close()
+
+    assert {column['name'] for column in order_columns} == {
+        'id',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
+        'customer_address',
+        'total',
+        'status',
+        'created_at'
+    }
+
+    assert 'items' not in {column['name'] for column in order_columns}
+
+    assert {column['name'] for column in order_items_columns} == {
+        'id',
+        'order_id',
+        'product_id',
+        'product_name',
+        'unit_price',
+        'quantity'
+    }
+
+    assert saved_order['id'] == 'order-1'
+    assert saved_order['customer_name'] == 'Денис'
+    assert saved_order['customer_email'] == 'denis@example.com'
+    assert saved_order['customer_phone'] == '12345'
+    assert saved_order['customer_address'] == 'spb'
+    assert saved_order['total'] == 40000
+    assert saved_order['status'] == 'confirmed'
+
+    assert len(saved_items) == 2
+
+    assert existing_product_item['order_id'] == 'order-1'
+    assert existing_product_item['product_id'] == 'product-1'
+    assert existing_product_item['unit_price'] == 30000
+    assert existing_product_item['quantity'] == 1
+
+    assert deleted_product_item['order_id'] == 'order-1'
+    assert deleted_product_item['product_id'] is None
+    assert deleted_product_item['unit_price'] == 5000
+    assert deleted_product_item['quantity'] == 2
+
+    assert item_after_product_deletion['product_id'] is None
+    assert item_after_product_deletion['product_name'] == 'Башня'
+    assert item_after_product_deletion['unit_price'] == 30000
+    assert item_after_product_deletion['quantity'] == 1
+
+    assert remaining_order_items == []
+
+    assert [row['version'] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7]
+
+    assert saved_versions[-1]['name'] == 'normalize_order_items'

@@ -15,6 +15,8 @@ from database.migration_versions.v002_add_categories import apply as apply_v002_
 from database.migration_versions.v003_create_orders_with_json_items import apply as apply_v003_create_orders_with_json_items
 from database.migration_versions.v004_add_order_status import apply as apply_v004_add_order_status
 from database.migration_versions.v005_expand_products import apply as apply_v005_expand_products
+from database.migration_versions.v006_add_tags import apply as apply_v006_add_tags
+from database.migration_versions.v007_normalize_order_items import apply as apply_v007_normalize_order_items
 
 
 MIGRATIONS = (
@@ -42,6 +44,16 @@ MIGRATIONS = (
         version=5,
         name='expand_products',
         apply=apply_v005_expand_products
+    ),
+    Migration(
+        version=6,
+        name='add_tags',
+        apply=apply_v006_add_tags
+    ),
+    Migration(
+        version=7,
+        name='normalize_order_items',
+        apply=apply_v007_normalize_order_items
     )
 )
 

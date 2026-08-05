@@ -1,6 +1,5 @@
 import database.products as products
 import database.tags as tags
-import database.reviews as reviews
     
     
 def create_test_product(
@@ -740,13 +739,6 @@ def test_delete_product_completely_removes_product_dependencies(empty_db, db_con
 
     tags.add_tag_to_product(product_id, tag_id)
 
-    reviews.add_review_db(
-        product_id=product_id,
-        name="Денис",
-        rating=4,
-        comment="Нормально",
-    )
-
     conn = db_connection()
     
     try:
@@ -781,19 +773,9 @@ def test_delete_product_completely_removes_product_dependencies(empty_db, db_con
         (product_id,),
     ).fetchone()[0]
 
-    reviews_count = check_conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM reviews
-        WHERE product_id = ?
-        """,
-        (product_id,),
-    ).fetchone()[0]
-
     check_conn.close()
 
     assert product_tags_count == 0
-    assert reviews_count == 0
     
     
 def test_update_product_status_updates_when_status_matches(empty_db, db_connection):

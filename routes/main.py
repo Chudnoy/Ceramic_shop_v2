@@ -16,11 +16,6 @@ from database.products import (
     product_exists
 )
 
-from database.reviews import (
-    add_review_db,
-    get_reviews_by_product
-)
-
 from database.tags import (
     get_tag_by_slug,
     get_tags_for_product
@@ -28,7 +23,6 @@ from database.tags import (
 from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items, remove_ordered_items_from_cart
 from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
 from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
-from validation import validate_review
 
 main_bp = Blueprint('main', __name__)
 
@@ -120,10 +114,9 @@ def product_page(product_id):
         flash("Работа не найдена", "error")
         return redirect(url_for("main.catalog"))
         
-    reviews = get_reviews_by_product(product_id)
     tags = get_tags_for_product(product_id)
     
-    return render_template("product_page.html", tags=tags, product=product, reviews=reviews, product_statuses=PRODUCT_STATUSES)
+    return render_template("product_page.html", tags=tags, product=product, product_statuses=PRODUCT_STATUSES)
     
     
 @main_bp.route("/add_to_cart/<product_id>", methods=["POST"])
@@ -276,35 +269,6 @@ def clear_cart_route():
         flash('В корзине нет работ', 'error')
         
     return redirect(url_for('main.show_cart'))
-    
-    
-@main_bp.route("/product/<product_id>/review", methods=["POST"])
-def add_review(product_id):
-    """
-Обрабатывает добавление отзыва к товару.
-
-Проверяет существование товара, получает имя, оценку и комментарий из формы,
-валидирует данные через validate_review и сохраняет отзыв в базу. После успешного
-добавления возвращает пользователя на страницу товара.
-"""
-    if not product_exists(product_id):
-        flash("Работа не найдена", "error")
-        return redirect(url_for("main.catalog"))
-        
-    name = request.form.get("name", "").strip()
-    rating_str = request.form.get("rating")
-    comment = request.form.get("comment", "")
-    
-    is_valid, error_message, cleaned_data = validate_review(name, rating_str, comment)
-    
-    if not is_valid:
-        flash(error_message, "error")
-        return redirect(url_for("main.product_page", product_id=product_id))
-        
-    add_review_db(product_id, cleaned_data["name"], cleaned_data["rating"], cleaned_data["comment"])
-    flash("Спасибо за отзыв", "success")
-    
-    return redirect(url_for("main.product_page", product_id=product_id))
     
     
 @main_bp.route('/checkout')

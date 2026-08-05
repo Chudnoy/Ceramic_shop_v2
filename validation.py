@@ -1,32 +1,5 @@
 import re
 
-
-def validate_review(name, rating_str, comment):
-    """
-Валидирует данные формы отзыва.
-
-Проверяет, что имя заполнено, оценка является числом от 1 до 5, а комментарий
-не превышает допустимую длину. Возвращает флаг успеха, сообщение об ошибке и
-очищенные данные отзыва.
-"""
-    name = name.strip()
-    comment = comment.strip() if comment else ""
-    
-    if not name:
-        return False, "Имя обязательно для заполнения", {}
-        
-    try:
-        rating = int(rating_str)
-        if rating < 1 or rating > 5:
-            raise ValueError
-    except (ValueError, TypeError):
-        return False, "Оценка должна быть числом от 1 до 5", {}
-    
-    if len(comment) > 1000:
-        return False, "Длина комментария не должна превышать 1000 символов", {}
-        
-    return True, "", {"name": name, "rating": rating, "comment": comment}
-    
     
 def validate_product(name, price, description, category_id, year, materials, is_visible, is_for_sale, is_featured):
     """

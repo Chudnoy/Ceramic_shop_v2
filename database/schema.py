@@ -59,16 +59,6 @@ def create_schema():
         is_featured INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (category_id) REFERENCES categories(id)
         )""")
-        
-    conn.execute("""CREATE TABLE IF NOT EXISTS reviews (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        rating INTEGER NOT NULL,
-        comment TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(id)
-        )""")
     
     conn.execute("""CREATE TABLE IF NOT EXISTS orders (
                      id TEXT PRIMARY KEY,
