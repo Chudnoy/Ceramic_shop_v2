@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash
 
 from app import create_app
 import database.connection as connection
-import database.schema as schema
+import database.migrations as migrations
 
 
 TEST_ADMIN_PASSWORD_HASH = generate_password_hash("test-password")
@@ -39,4 +39,9 @@ def db_connection(app_context):
 
 @pytest.fixture
 def empty_db(db_connection):
-    schema.create_schema()
+    conn = db_connection()
+
+    try:
+        migrations.run_migrations(conn=conn, available_migrations=migrations.MIGRATIONS)
+    finally:
+        conn.close()

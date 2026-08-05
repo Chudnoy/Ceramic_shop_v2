@@ -13,7 +13,6 @@ from database.products import (
     get_product_by_id,
     get_product_with_category,
     get_products_by_tag_slug,
-    product_exists
 )
 
 from database.tags import (

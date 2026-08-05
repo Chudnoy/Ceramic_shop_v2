@@ -1,111 +1,6 @@
 import uuid
 from database.connection import get_db_connection
-
-def ensure_product_columns():
-    conn = get_db_connection()
-    
-    columns = conn.execute("PRAGMA table_info(products)").fetchall()
-    column_names = [column['name'] for column in columns]
-    
-    if "status" not in column_names:
-        conn.execute("ALTER TABLE products ADD COLUMN status TEXT NOT NULL DEFAULT 'available'")
-        
-    if "year" not in column_names:
-        conn.execute("ALTER TABLE products ADD COLUMN year INTEGER")
-        
-    if "materials" not in column_names:
-        conn.execute("ALTER TABLE products ADD COLUMN materials TEXT NOT NULL DEFAULT 'Каменная масса'")
-        
-    if 'is_visible' not in column_names:
-        conn.execute('ALTER TABLE products ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 1')
-        
-    if 'is_for_sale' not in column_names:
-        conn.execute('ALTER TABLE products ADD COLUMN is_for_sale INTEGER NOT NULL DEFAULT 1')
-        
-    if "is_archived" not in column_names:
-        conn.execute("ALTER TABLE products ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0")
-        
-    if "is_featured" not in column_names:
-        conn.execute("ALTER TABLE products ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0")
-        
-    conn.commit()
-    
-    conn.close()
-
-
-def create_schema():
-    conn = get_db_connection()
-
-    conn.execute("""CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        slug TEXT NOT NULL UNIQUE,
-        description TEXT
-        )""")
-        
-    conn.execute("""CREATE TABLE IF NOT EXISTS products (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        price INTEGER NOT NULL,
-        status TEXT NOT NULL DEFAULT 'available',
-        img TEXT,
-        category_id INTEGER,
-        year INTEGER,
-        materials TEXT NOT NULL DEFAULT 'Каменная масса',
-        is_visible INTEGER NOT NULL DEFAULT 1,
-        is_for_sale INTEGER NOT NULL DEFAULT 1,
-        is_archived INTEGER NOT NULL DEFAULT 0,
-        is_featured INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
-        )""")
-    
-    conn.execute("""CREATE TABLE IF NOT EXISTS orders (
-                     id TEXT PRIMARY KEY,
-                     customer_name TEXT NOT NULL,
-                     customer_email TEXT NOT NULL,
-                     customer_phone TEXT,
-                     customer_address TEXT,
-                     total INTEGER NOT NULL,
-                     status TEXT NOT NULL DEFAULT 'new',
-                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                     )""")
-                     
-    conn.execute("""CREATE TABLE IF NOT EXISTS order_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                order_id TEXT NOT NULL,
-                product_id TEXT,
-                product_name TEXT NOT NULL,
-                unit_price INTEGER NOT NULL,
-                quantity INTEGER NOT NULL,
-                
-                FOREIGN KEY (order_id)
-                    REFERENCES orders(id)
-                    ON DELETE CASCADE,
-                
-                FOREIGN KEY (product_id)
-                    REFERENCES products(id)
-                    ON DELETE SET NULL
-        )""")
-                     
-    conn.execute("""CREATE TABLE IF NOT EXISTS tags (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        slug TEXT NOT NULL UNIQUE
-        )""")
-        
-    conn.execute("""CREATE TABLE IF NOT EXISTS product_tags (
-        product_id TEXT NOT NULL,
-        tag_id INTEGER NOT NULL,
-        PRIMARY KEY (product_id, tag_id),
-        FOREIGN KEY (product_id) REFERENCES products(id),
-        FOREIGN KEY (tag_id) REFERENCES tags(id)
-        )""")
-
-    conn.commit()
-    conn.close()
-
-    ensure_product_columns()
+from database.migrations import MIGRATIONS, run_migrations
 
 
 def seed_initial_data():
@@ -154,5 +49,11 @@ def seed_initial_data():
     
     
 def init_db():
-    create_schema()
+    conn = get_db_connection()
+
+    try:
+        run_migrations(conn=conn, available_migrations=MIGRATIONS)
+    finally:
+        conn.close()
+    
     seed_initial_data()
