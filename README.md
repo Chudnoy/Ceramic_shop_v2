@@ -2,155 +2,112 @@
 
 Сайт-портфолио и небольшая коммерческая витрина керамических работ художницы Полины Яланской.
 
-Проект построен на Flask и SQLite. Публичная часть ориентирована на презентацию художественной практики: каталог, отдельные страницы работ, материалы, годы, категории и смысловые теги. Коммерческая часть включает session-корзину, оформление заказа и административное управление жизненным циклом заказов и работ.
+Проект сочетает две уже работающие части:
 
-## Реализовано
+- публичную презентацию работ: главная, каталог, фильтры, смысловые теги и отдельные страницы;
+- небольшой магазин уникальных объектов: session-корзина, checkout, резервирование и административный жизненный цикл заказа.
 
-- публичный каталог и страницы работ;
-- фильтры, поиск и сортировка;
-- категории и теги many-to-many;
-- отзывы;
-- флаги публикации, продажи, архива и избранного;
-- статусы работ `available`, `reserved`, `sold`;
-- session-корзина с повторной проверкой базы;
-- полный и подтверждаемый частичный checkout;
-- таблицы `orders` и `order_items`;
-- резервирование работ при создании заказа;
-- подтверждение, выполнение и отмена;
-- снятие резерва при отмене;
-- перевод работ в `sold` при выполнении;
-- удаление только отменённых заказов;
-- административная панель;
+Сейчас это учебный, но уже содержательно цельный **модульный монолит на Flask и SQLite**. Проект ещё не готов к production: перед размещением предстоят предметное переосмысление `Project / Work / Shop item`, доработка безопасности, конфигурации, изображений и эксплуатационной инфраструктуры.
+
+## Что уже реализовано
+
+### Публичная часть
+
+- главная страница с избранными опубликованными работами;
+- каталог с категориями, поиском и сортировкой;
+- фильтрация по смысловым тегам;
+- отдельная страница опубликованной работы;
+- session-корзина;
+- повторная проверка доступности по базе;
+- удаление недоступных позиций;
+- полный и явно подтверждаемый частичный checkout;
+- страница успешного заказа.
+
+### Административная часть
+
+- вход по логину и хешу пароля из переменных окружения;
+- dashboard со статистикой;
+- создание, редактирование, публикация, избранное и архивирование работ;
+- управление категориями и тегами;
 - загрузка и замена изображений;
-- CSRF-защита;
-- хешированный пароль администратора;
-- database-, service- и route-тесты;
-- транзакционные rollback-сценарии.
+- список и карточка заказов;
+- редактирование нового заказа;
+- подтверждение, выполнение, отмена и удаление отменённого заказа.
+
+### Данные и надёжность
+
+- SQLite с включёнными внешними ключами;
+- `products`, `categories`, `tags`, `product_tags`, `orders`, `order_items`;
+- история схемы через собственный migration runner;
+- миграции `v001–v007`;
+- снимки названия и цены в `order_items`;
+- транзакционные сценарии с `commit / rollback`;
+- временные тестовые базы;
+- автоматический запуск `pytest` в GitHub Actions.
+
+## Основные правила предметной модели
+
+Работа доступна для оформления, только когда она:
+
+```text
+существует
+не находится в архиве
+опубликована
+предназначена для продажи
+имеет status = available
+```
+
+Создание заказа выполняет переход:
+
+```text
+product: available → reserved
+order: создаётся со status = new
+```
+
+Жизненный цикл заказа:
+
+```mermaid
+stateDiagram-v2
+    [*] --> new
+    new --> confirmed: подтверждение
+    new --> canceled: отмена
+    confirmed --> completed: выполнение
+    confirmed --> canceled: отмена
+    canceled --> [*]: окончательное удаление
+```
+
+Связанные состояния работы:
+
+```text
+создание заказа     available → reserved
+отмена заказа       reserved  → available
+выполнение заказа   reserved  → sold
+```
 
 ## Технологии
 
-- Python
-- Flask
-- SQLite
-- Jinja2
-- HTML и CSS
-- pytest
-- python-dotenv
-- Werkzeug
+- Python;
+- Flask 3;
+- SQLite;
+- Jinja2;
+- Werkzeug;
+- python-dotenv;
+- HTML, CSS и немного JavaScript;
+- pytest;
+- GitHub Actions.
 
-## Структура
-
-```text
-Ceramic_shop_v2/
-├── app.py
-├── validation.py
-├── database/
-│   ├── connection.py
-│   ├── schema.py
-│   ├── products.py
-│   ├── categories.py
-│   ├── tags.py
-│   ├── reviews.py
-│   ├── orders.py
-│   ├── order_items.py
-│   └── stats.py
-├── routes/
-│   ├── main.py
-│   └── admin/
-│       ├── __init__.py
-│       ├── auth.py
-│       ├── dashboard.py
-│       ├── products.py
-│       ├── orders.py
-│       ├── categories.py
-│       └── tags.py
-├── services/
-│   ├── cart_service.py
-│   ├── category_service.py
-│   ├── csrf_service.py
-│   ├── image_service.py
-│   ├── order_service.py
-│   ├── product_service.py
-│   └── tag_service.py
-├── templates/
-├── static/
-├── tests/
-├── scenarios/
-├── requirements.txt
-└── PROJECT_MAP.md
-```
-
-## Модель данных
-
-Основные таблицы:
-
-- `categories`;
-- `products`;
-- `tags`;
-- `product_tags`;
-- `reviews`;
-- `orders`;
-- `order_items`.
-
-`order_items` хранит исторические название, цену и количество. При удалении заказа позиции удаляются каскадно. При удалении работы историческая позиция сохраняется, а `product_id` становится `NULL`.
-
-## Доступность работы
-
-Для оформления работа должна:
-
-```text
-существовать
-не быть архивной
-быть видимой
-быть предназначенной для продажи
-иметь status = available
-```
-
-Создание заказа:
-
-```text
-available → reserved
-```
-
-Отмена:
-
-```text
-reserved → available
-```
-
-Выполнение:
-
-```text
-reserved → sold
-```
-
-## Статусы заказов
-
-```text
-new
-confirmed
-completed
-canceled
-```
-
-Переходы:
-
-```text
-new → confirmed
-new → canceled
-confirmed → completed
-confirmed → canceled
-canceled → delete
-```
-
-## Установка
+## Быстрый запуск
 
 ```bash
 git clone <URL-РЕПОЗИТОРИЯ>
 cd Ceramic_shop_v2
 python -m venv .venv
+```
+
+Активация Linux/macOS:
+
+```bash
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 Windows PowerShell:
@@ -159,7 +116,13 @@ Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
 ```
 
-## `.env`
+Установка зависимостей для разработки:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+Создайте `.env` по образцу `.env.example`.
 
 ```env
 SECRET_KEY=...
@@ -167,21 +130,34 @@ ADMIN_LOGIN=admin
 ADMIN_PASSWORD_HASH=...
 ```
 
+Генерация значений:
+
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
-python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('ПАРОЛЬ'))"
+python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('ВАШ_ПАРОЛЬ'))"
 ```
 
-## Запуск
+Локальный запуск:
 
 ```bash
 python app.py
 ```
 
+При первом запуске приложение:
+
+1. создаёт локальный `shop.db`;
+2. создаёт `schema_migrations`;
+3. последовательно применяет `v001–v007`;
+4. добавляет стартовые категории, теги и работы;
+5. запускает Flask на `http://127.0.0.1:8000`.
+
+Админка:
+
 ```text
-http://127.0.0.1:8000
 http://127.0.0.1:8000/admin/login
 ```
+
+> Текущий `app.py` запускает development server с `debug=True`. Это допустимо только локально и должно быть изменено до production.
 
 ## Тесты
 
@@ -189,21 +165,39 @@ http://127.0.0.1:8000/admin/login
 python -m pytest
 ```
 
-`pytest` рекомендуется вынести в `requirements-dev.txt`.
+Тесты используют отдельные временные SQLite-файлы и создают схему через настоящий migration runner. Локальная `shop.db` при этом не затрагивается.
+
+GitHub Actions повторяет запуск тестов при `push` и `pull_request`.
+
+## Локальная база данных
+
+`shop.db` — локальное состояние приложения, а не часть исходного кода. Файл и его журналы перечислены в `.gitignore` и не должны отслеживаться Git:
+
+```text
+shop.db
+shop.db-journal
+shop.db-shm
+shop.db-wal
+```
+
+Проверка:
+
+```bash
+git ls-files shop.db
+git check-ignore -v shop.db
+```
+
+Первая команда должна ничего не вывести, вторая — показать правило из `.gitignore`.
 
 ## Документация
 
-Подробные главы находятся в `scenarios/`. Начинать с `scenarios/00_INDEX.md`.
+Начинать с [docs/00_INDEX.md](docs/00_INDEX.md).
 
-## Известные задачи
+Ключевые документы:
 
-- исправить условие подтверждения partial checkout;
-- удалить неиспользуемый SQL с лишней запятой;
-- подключить GitHub Actions;
-- ввести миграции;
-- перейти к `create_app()`;
-- определить модель уникальных и складских товаров;
-- закрыть session-доступом страницу успешного заказа;
-- отключить debug при размещении.
-
-Подробности: `scenarios/14_KNOWN_ISSUES.md`.
+- [PROJECT_MAP.md](PROJECT_MAP.md) — компактная карта модулей и сценариев;
+- [docs/02_ARCHITECTURE.md](docs/02_ARCHITECTURE.md) — архитектурные границы;
+- [docs/03_DOMAIN_MODEL.md](docs/03_DOMAIN_MODEL.md) — текущая модель данных и инварианты;
+- [docs/04_DATABASE_AND_MIGRATIONS.md](docs/04_DATABASE_AND_MIGRATIONS.md) — устройство миграций;
+- [docs/10_KNOWN_LIMITATIONS.md](docs/10_KNOWN_LIMITATIONS.md) — честный список ограничений;
+- [docs/11_ROADMAP_TO_PRODUCTION.md](docs/11_ROADMAP_TO_PRODUCTION.md) — дальнейший путь.
