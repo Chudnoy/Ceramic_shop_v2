@@ -1,5 +1,6 @@
 import pytest
 from flask import Flask
+
 import database.connection as connection
 
 

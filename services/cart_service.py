@@ -1,6 +1,7 @@
 from database.products import get_products_by_ids
 from services.product_service import get_product_cart_unavailable_reason
 
+
 def get_cart(session):
     """
 Возвращает текущую корзину из session.

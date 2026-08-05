@@ -1,10 +1,9 @@
 import pytest
 from werkzeug.security import generate_password_hash
 
-from app import create_app
 import database.connection as connection
 import database.migrations as migrations
-
+from app import create_app
 
 TEST_ADMIN_PASSWORD_HASH = generate_password_hash("test-password")
 

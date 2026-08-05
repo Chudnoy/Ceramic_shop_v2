@@ -1,4 +1,5 @@
 import uuid
+
 from database.connection import get_db_connection
 from database.migrations import MIGRATIONS, run_migrations
 

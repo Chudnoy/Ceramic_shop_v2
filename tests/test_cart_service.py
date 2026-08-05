@@ -2,6 +2,7 @@ from flask.sessions import SecureCookieSession
 
 import services.cart_service as cart_service
 
+
 def test_remove_ordered_items_from_cart_removes_only_requested_products():
     
     session = SecureCookieSession({

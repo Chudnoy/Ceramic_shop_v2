@@ -1,5 +1,5 @@
-import sqlite3
 from database.connection import get_db_connection
+
 
 def create_category(name, slug, description):
     """

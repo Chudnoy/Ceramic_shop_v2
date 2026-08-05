@@ -1,8 +1,18 @@
-from flask import request, render_template, flash, redirect, url_for
+from flask import flash, redirect, render_template, request, url_for
+
 from database.orders import get_all_orders, get_order_by_id
-from services.order_service import ORDER_STATUSES, process_order_form, update_order_with_items, cancel_order, delete_canceled_order, confirm_order, complete_order
+from services.order_service import (
+    ORDER_STATUSES,
+    cancel_order,
+    complete_order,
+    confirm_order,
+    delete_canceled_order,
+    process_order_form,
+    update_order_with_items,
+)
 
 from . import admin_bp
+
 
 @admin_bp.route("/admin/orders")
 def admin_orders():

@@ -1,5 +1,6 @@
 import os
 import uuid
+
 from werkzeug.utils import secure_filename
 
 IMAGE_SERVICE_DIR = os.path.dirname(os.path.abspath(__file__))

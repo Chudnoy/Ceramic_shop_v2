@@ -1,7 +1,9 @@
 from flask import render_template
+
 from database.stats import get_admin_stats
 
 from . import admin_bp
+
 
 @admin_bp.route("/admin")
 def admin():

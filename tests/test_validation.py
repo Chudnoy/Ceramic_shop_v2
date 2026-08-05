@@ -1,5 +1,7 @@
 import pytest
+
 from validation import validate_product
+
 
 def make_valid_product_data():
     return {

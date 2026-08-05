@@ -1,5 +1,6 @@
 import database.tags as tags
 
+
 def replace_test_product_tags(conn, product_id, tag_ids):
     
     tags.replace_product_tags(

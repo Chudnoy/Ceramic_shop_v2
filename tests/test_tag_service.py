@@ -1,5 +1,6 @@
 from services.tag_service import process_tag_form
 
+
 def test_process_tag_form_accepts_and_normalized_valid_data():
     form = {
     "tag_name": "  СКУЛЬПТУРА  ",

@@ -1,6 +1,7 @@
-import sqlite3
-import pytest
 import json
+import sqlite3
+
+import pytest
 
 import database.migrations as migrations
 

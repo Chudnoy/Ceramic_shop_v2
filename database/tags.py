@@ -1,5 +1,6 @@
 from database.connection import get_db_connection
 
+
 def create_tag(tag_name, tag_slug):
     conn = get_db_connection()
     conn.execute("INSERT INTO tags (name, slug) VALUES (?, ?)", (tag_name, tag_slug))

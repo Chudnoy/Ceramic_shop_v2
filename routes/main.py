@@ -1,27 +1,41 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from database.categories import (
-    get_all_categories,
-    get_category_by_slug
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
 
-from database.orders import (
-    get_order_by_id
-)
-
+from database.categories import get_all_categories, get_category_by_slug
+from database.orders import get_order_by_id
 from database.products import (
     get_all_products,
     get_product_by_id,
     get_product_with_category,
     get_products_by_tag_slug,
 )
-
-from database.tags import (
-    get_tag_by_slug,
-    get_tags_for_product
+from database.tags import get_tag_by_slug, get_tags_for_product
+from services.cart_service import (
+    add_to_cart_serv,
+    build_cart_summary,
+    clear_cart,
+    get_cart_count,
+    remove_from_cart_serv,
+    remove_ordered_items_from_cart,
+    remove_unavailable_items,
 )
-from services.cart_service import add_to_cart_serv, remove_from_cart_serv, clear_cart, build_cart_summary, get_cart_count, remove_unavailable_items, remove_ordered_items_from_cart
-from services.order_service import process_checkout_form, build_order_item_list, create_order_with_items
-from services.product_service import PRODUCT_STATUSES, get_product_cart_unavailable_reason
+from services.order_service import (
+    build_order_item_list,
+    create_order_with_items,
+    process_checkout_form,
+)
+from services.product_service import (
+    PRODUCT_STATUSES,
+    get_product_cart_unavailable_reason,
+)
 
 main_bp = Blueprint('main', __name__)
 

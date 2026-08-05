@@ -1,31 +1,23 @@
 from flask import flash, redirect, render_template, request, url_for
 
-from database.categories import (
-    get_all_categories,
-    get_category_by_slug
-)
-from database.products import (
-    get_all_products,
-    get_product_by_id
-)
-from database.tags import (
-    get_all_tags,
-    get_tags_for_product
-)
+from database.categories import get_all_categories, get_category_by_slug
+from database.products import get_all_products, get_product_by_id
+from database.tags import get_all_tags, get_tags_for_product
 from services.product_service import (
     PRODUCT_STATUSES,
+    archive_product_with_order_check,
+    create_product_with_tags,
+    delete_product_with_image,
     process_product_form,
     process_product_state_form,
     process_product_tag_ids,
-    create_product_with_tags,
-    update_product_with_tags,
-    delete_product_with_image,
+    restore_archived_product,
     update_product_state_with_order_check,
-    archive_product_with_order_check,
-    restore_archived_product
+    update_product_with_tags,
 )
 
 from . import admin_bp
+
 
 @admin_bp.route("/admin/products")
 def admin_products():
@@ -136,7 +128,7 @@ def new_product():
             return redirect(url_for("admin.new_product"))
         
         file = request.files.get('img')
-        is_created, create_error, product_id = create_product_with_tags(
+        is_created, create_error, _product_id = create_product_with_tags(
                     data=data,
                     tag_ids=cleaned_tag_ids,
                     file=file

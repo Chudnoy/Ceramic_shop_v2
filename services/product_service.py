@@ -1,11 +1,17 @@
-from validation import validate_product
-from database.connection import get_db_connection
-from database.products import insert_product, update_product_data, delete_product_data, update_product_state, get_product_by_id, set_product_archived
-from database.tags import get_all_tags, replace_product_tags
-from services.image_service import save_image, delete_image
 from database.categories import get_category_by_id
+from database.connection import get_db_connection
 from database.orders import has_active_order_for_product
-
+from database.products import (
+    delete_product_data,
+    get_product_by_id,
+    insert_product,
+    set_product_archived,
+    update_product_data,
+    update_product_state,
+)
+from database.tags import get_all_tags, replace_product_tags
+from services.image_service import delete_image, save_image
+from validation import validate_product
 
 PRODUCT_STATUSES = {
 "available": "В наличии",

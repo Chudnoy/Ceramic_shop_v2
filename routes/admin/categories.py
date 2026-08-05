@@ -1,8 +1,16 @@
-from flask import render_template, flash, request, redirect, url_for
-from database.categories import get_all_categories_with_product_count, get_category_by_slug, create_category, update_category, delete_category
+from flask import flash, redirect, render_template, request, url_for
+
+from database.categories import (
+    create_category,
+    delete_category,
+    get_all_categories_with_product_count,
+    get_category_by_slug,
+    update_category,
+)
 from services.category_service import process_category_form
 
 from . import admin_bp
+
 
 @admin_bp.route('/admin/categories')
 def admin_categories():

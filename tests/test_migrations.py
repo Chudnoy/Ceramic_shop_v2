@@ -1,7 +1,10 @@
-import pytest
 import sqlite3
 from dataclasses import FrozenInstanceError
+
+import pytest
+
 import database.migrations as migrations
+
 
 def test_ensure_schema_migrations_table_creates_table(db_connection):
 

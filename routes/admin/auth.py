@@ -1,7 +1,16 @@
-from flask import session, request, redirect, url_for, flash, render_template, current_app
+from flask import (
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash
 
 from . import admin_bp
+
 
 @admin_bp.before_request
 def require_admin_login():

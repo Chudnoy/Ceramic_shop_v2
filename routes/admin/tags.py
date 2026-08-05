@@ -15,6 +15,7 @@ from services.tag_service import process_tag_form
 
 from . import admin_bp
 
+
 @admin_bp.route('/admin/tags')
 def admin_tags_route():
     tags = get_tags_with_product_count()
@@ -75,15 +76,23 @@ def edit_tag_route(tag_slug):
         existing_names = {tag['name'] for tag in tags}
         existing_slugs = {tag['slug'] for tag in tags}
         
-        if tag_data['tag_name'] != tag['name']:
-            if tag_data['tag_name'] in existing_names:
-                flash('Тег с таким названием уже существует', 'error')
-                return redirect(url_for('admin.edit_tag_route', tag_slug=tag_slug))
+        if (
+            tag_data['tag_name'] != tag['name']
+            and tag_data['tag_name'] in existing_names
+        ):
+            flash('Тег с таким названием уже существует', 'error')
+            return redirect(
+                url_for('admin.edit_tag_route', tag_slug=tag_slug)
+            )
         
-        if tag_data['tag_slug'] != tag['slug']:
-            if tag_data['tag_slug'] in existing_slugs:
-                flash('Тег с таким slug уже существует', 'error')
-                return redirect(url_for('admin.edit_tag_route', tag_slug=tag_slug))
+        if (
+            tag_data['tag_slug'] != tag['slug']
+            and tag_data['tag_slug'] in existing_slugs
+        ):
+            flash('Тег с таким slug уже существует', 'error')
+            return redirect(
+                url_for('admin.edit_tag_route', tag_slug=tag_slug)
+            )
 
         update_tag(tag_data['tag_name'], tag_data['tag_slug'], tag['id'])
 

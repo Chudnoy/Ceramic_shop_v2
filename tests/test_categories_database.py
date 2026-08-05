@@ -1,5 +1,6 @@
 import database.categories as categories
-    
+
+
 def test_delete_category_rejects_deleting_when_it_has_products(empty_db, db_connection):
     
     categories.create_category("Вазы", "vases", "")

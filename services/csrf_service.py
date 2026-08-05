@@ -1,5 +1,7 @@
 import secrets
-from flask import session, request
+
+from flask import request, session
+
 
 def get_csrf_token():
     """

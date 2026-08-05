@@ -3,7 +3,6 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 
-
 APP_FILE_PATH = os.path.abspath(__file__)
 PROJECT_DIR = os.path.dirname(APP_FILE_PATH)
 ENV_PATH = os.path.join(PROJECT_DIR, ".env")
@@ -13,14 +12,13 @@ ENV_PATH = os.path.join(PROJECT_DIR, ".env")
 load_dotenv(ENV_PATH)
 
 
-from flask import Flask, session, request, redirect, url_for, flash, jsonify
-
-from routes.admin import admin_bp
-from routes.main import main_bp
+from flask import Flask, flash, jsonify, redirect, request, session, url_for
 
 from database.schema import init_db
+from routes.admin import admin_bp
+from routes.main import main_bp
 from services.cart_service import get_cart_count
-from services.csrf_service import validate_csrf_from_form, get_csrf_token
+from services.csrf_service import get_csrf_token, validate_csrf_from_form
 
 
 def create_app(test_config=None):

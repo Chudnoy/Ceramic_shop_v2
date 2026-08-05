@@ -1,5 +1,6 @@
 from database.connection import get_db_connection
 
+
 def get_admin_stats():
     """
 Собирает основные статистические показатели для главной страницы админки.
