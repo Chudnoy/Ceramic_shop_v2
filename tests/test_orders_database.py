@@ -245,7 +245,7 @@ def test_has_active_order_for_product_returns_true_for_active_statuses(orders_te
     
     check_conn = orders_test_db()
     result = orders.has_active_order_for_product(conn=check_conn, product_id="product-1")
-    conn.close()
+    check_conn.close()
     
     assert result is True
     
