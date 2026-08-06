@@ -213,3 +213,45 @@ def test_has_active_order_for_product_ignores_active_order_for_another_product(
     check_conn.close()
 
     assert result is False
+
+
+def test_get_all_orders_combines_search_and_status_filters(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_order(
+        conn=conn,
+        order_id="order-1",
+        customer_name="Полина",
+        customer_email="polina@example.com",
+        status="confirmed",
+    )
+    create_test_order(
+        conn=conn,
+        order_id="order-2",
+        customer_name="Полина",
+        customer_email="another@example.com",
+        status="new",
+    )
+    create_test_order(
+        conn=conn,
+        order_id="order-3",
+        customer_name="Денис",
+        customer_email="denis@example.com",
+        status="confirmed",
+    )
+
+    conn.commit()
+    conn.close()
+
+    result = orders.get_all_orders(
+        search_query="Полина",
+        status="confirmed",
+    )
+
+    assert len(result) == 1
+    assert result[0]["id"] == "order-1"
+    assert result[0]["customer_name"] == "Полина"
+    assert result[0]["status"] == "confirmed"
