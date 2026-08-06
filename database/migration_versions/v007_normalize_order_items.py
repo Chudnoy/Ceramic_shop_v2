@@ -30,16 +30,18 @@ def create_order_items_table(conn):
 
 def migrate_json_items(conn):
     existing_product_ids = {
-        row['id'] for row in conn.execute("SELECT id FROM products").fetchall()
+        row["id"] for row in conn.execute("SELECT id FROM products").fetchall()
     }
 
     orders = conn.execute("SELECT id, items FROM orders ORDER BY id").fetchall()
 
     for order in orders:
-        items = json.loads(order['items'])
+        items = json.loads(order["items"])
 
         for product_id, item in items.items():
-            linked_product_id = product_id if product_id in existing_product_ids else None
+            linked_product_id = (
+                product_id if product_id in existing_product_ids else None
+            )
 
             conn.execute(
                 """
@@ -47,7 +49,13 @@ def migrate_json_items(conn):
                     (order_id, product_id, product_name, unit_price, quantity)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                (order['id'], linked_product_id, item['name'], item['price'], item['quantity'])
+                (
+                    order["id"],
+                    linked_product_id,
+                    item["name"],
+                    item["price"],
+                    item["quantity"],
+                ),
             )
 
 

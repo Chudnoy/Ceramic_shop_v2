@@ -24,10 +24,7 @@
 ```python
 confirmation = request.form.get("confirm_partial_order")
 
-if (
-    cart_summary["has_unavailable_items"]
-    and confirmation != "1"
-):
+if cart_summary["has_unavailable_items"] and confirmation != "1":
     ...
 ```
 

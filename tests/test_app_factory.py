@@ -6,13 +6,15 @@ from app import create_app
 def test_create_app_applies_test_config(tmp_path):
     database_path = tmp_path / "factory-test.db"
 
-    app = create_app({
-        "TESTING": True,
-        "SECRET_KEY": "factory-secret",
-        "ADMIN_LOGIN": "factory-admin",
-        "ADMIN_PASSWORD_HASH": "factory-password-hash",
-        "DATABASE": str(database_path),
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "factory-secret",
+            "ADMIN_LOGIN": "factory-admin",
+            "ADMIN_PASSWORD_HASH": "factory-password-hash",
+            "DATABASE": str(database_path),
+        }
+    )
 
     assert app.testing is True
     assert app.config["SECRET_KEY"] == "factory-secret"
@@ -33,9 +35,9 @@ def test_create_app_applies_test_config(tmp_path):
     ],
 )
 def test_create_app_rejects_missing_required_config(
-        tmp_path,
-        missing_key,
-        expected_message,
+    tmp_path,
+    missing_key,
+    expected_message,
 ):
     config = {
         "TESTING": True,
@@ -54,12 +56,14 @@ def test_create_app_rejects_missing_required_config(
 def test_create_app_does_not_initialize_database(tmp_path):
     database_path = tmp_path / "factory-test.db"
 
-    create_app({
-        "TESTING": True,
-        "SECRET_KEY": "test-secret",
-        "ADMIN_LOGIN": "test-admin",
-        "ADMIN_PASSWORD_HASH": "test-password-hash",
-        "DATABASE": str(database_path),
-    })
+    create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test-secret",
+            "ADMIN_LOGIN": "test-admin",
+            "ADMIN_PASSWORD_HASH": "test-password-hash",
+            "DATABASE": str(database_path),
+        }
+    )
 
     assert database_path.exists() is False

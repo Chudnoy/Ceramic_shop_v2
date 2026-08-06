@@ -5,10 +5,7 @@
 Корзина хранится в Flask session как словарь:
 
 ```python
-{
-    "product-uuid-1": 1,
-    "product-uuid-2": 2
-}
+{"product-uuid-1": 1, "product-uuid-2": 2}
 ```
 
 Ключ — ID работы, значение — количество.

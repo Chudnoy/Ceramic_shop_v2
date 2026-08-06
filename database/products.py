@@ -4,79 +4,115 @@ from database.connection import get_db_connection
 
 
 def insert_product(
-        conn,
-        name,
-        price,
-        description,
-        img_path,
-        category_id,
-        status,
-        year,
-        materials,
-        is_visible,
-        is_for_sale,
-        is_featured
-    ):
+    conn,
+    name,
+    price,
+    description,
+    img_path,
+    category_id,
+    status,
+    year,
+    materials,
+    is_visible,
+    is_for_sale,
+    is_featured,
+):
     product_id = str(uuid.uuid4())
-    conn.execute("""
+    conn.execute(
+        """
     INSERT INTO products (id, name, description, price, img, category_id, status, year, materials, is_visible, is_for_sale, is_featured)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-    (product_id, name, description, price, img_path, category_id, status, year, materials, is_visible, is_for_sale, is_featured))
-    
+        (
+            product_id,
+            name,
+            description,
+            price,
+            img_path,
+            category_id,
+            status,
+            year,
+            materials,
+            is_visible,
+            is_for_sale,
+            is_featured,
+        ),
+    )
+
     return product_id
-        
-        
+
+
 def update_product_data(
-        conn,
-        product_id,
-        name,
-        price,
-        description,
-        img_path,
-        category_id,
-        status,
-        year,
-        materials,
-        is_visible,
-        is_for_sale,
-        is_featured,
+    conn,
+    product_id,
+    name,
+    price,
+    description,
+    img_path,
+    category_id,
+    status,
+    year,
+    materials,
+    is_visible,
+    is_for_sale,
+    is_featured,
 ):
-    conn.execute("""
+    conn.execute(
+        """
     UPDATE products
     SET name = ?, description = ?, price = ?, category_id = ?, img = ?, status = ?, year = ?, materials = ?, is_visible = ?, is_for_sale = ?, is_featured = ?
     WHERE id = ?
-    """, (name, description, price, category_id, img_path, status, year, materials, is_visible, is_for_sale, is_featured, product_id))
-    
-    
-def update_product_state(conn, product_id, status, is_visible, is_for_sale, is_featured):
+    """,
+        (
+            name,
+            description,
+            price,
+            category_id,
+            img_path,
+            status,
+            year,
+            materials,
+            is_visible,
+            is_for_sale,
+            is_featured,
+            product_id,
+        ),
+    )
+
+
+def update_product_state(
+    conn, product_id, status, is_visible, is_for_sale, is_featured
+):
     cursor = conn.execute(
-        """UPDATE products SET status = ?, is_visible = ?, is_for_sale = ?, is_featured = ? WHERE id = ?""", 
-        (status, is_visible, is_for_sale, is_featured, product_id))
+        """UPDATE products SET status = ?, is_visible = ?, is_for_sale = ?, is_featured = ? WHERE id = ?""",
+        (status, is_visible, is_for_sale, is_featured, product_id),
+    )
 
     return cursor.rowcount > 0
-    
-    
+
+
 def delete_product_data(conn, product_id):
     conn.execute("DELETE FROM product_tags WHERE product_id = ?", (product_id,))
 
     cursor = conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
-    
+
     return cursor.rowcount > 0
 
 
 def product_exists(product_id):
     """
-Проверяет, существует ли товар с указанным id.
+    Проверяет, существует ли товар с указанным id.
 
-Возвращает True, если в таблице products есть запись с таким id, иначе False.
-Используется там, где нужно быстро проверить существование товара без загрузки
-всех его данных.
-"""
+    Возвращает True, если в таблице products есть запись с таким id, иначе False.
+    Используется там, где нужно быстро проверить существование товара без загрузки
+    всех его данных.
+    """
     conn = get_db_connection()
-    product = conn.execute("SELECT 1 FROM products WHERE id = ?", (product_id,)).fetchone()
+    product = conn.execute(
+        "SELECT 1 FROM products WHERE id = ?", (product_id,)
+    ).fetchone()
     conn.close()
     return product is not None
-    
+
 
 def get_all_products(
     category_slug=None,
@@ -86,7 +122,7 @@ def get_all_products(
     status="",
     only_visible=True,
     is_archived=False,
-    only_featured= False
+    only_featured=False,
 ):
     """
     Возвращает список работ с учётом категории, поиска, сортировки,
@@ -109,10 +145,10 @@ def get_all_products(
 
     params = []
     conditions = []
-    
+
     if only_featured:
         conditions.append("products.is_featured = 1")
-    
+
     if is_archived:
         conditions.append("products.is_archived = 1")
     else:
@@ -139,10 +175,7 @@ def get_all_products(
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
 
-    allowed_sort_fields = {
-        "name": "products.name",
-        "price": "products.price"
-    }
+    allowed_sort_fields = {"name": "products.name", "price": "products.price"}
 
     sort_field = allowed_sort_fields.get(sort_by, "products.name")
 
@@ -155,29 +188,31 @@ def get_all_products(
     conn.close()
 
     return products
-    
-    
+
+
 def get_product_by_id(product_id):
     """
-Возвращает товар по его id.
+    Возвращает товар по его id.
 
-Ищет одну запись в таблице products. Если товар найден, возвращает sqlite3.Row
-с данными товара. Если товара нет, возвращает None.
-"""
+    Ищет одну запись в таблице products. Если товар найден, возвращает sqlite3.Row
+    с данными товара. Если товара нет, возвращает None.
+    """
     conn = get_db_connection()
-    product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    product = conn.execute(
+        "SELECT * FROM products WHERE id = ?", (product_id,)
+    ).fetchone()
     conn.close()
     return product
-    
-    
+
+
 def get_products_by_ids(product_ids):
     """
-Возвращает список товаров по набору id.
+    Возвращает список товаров по набору id.
 
-Используется для восстановления товаров из корзины, где в session хранятся только
-id товаров и количество. Если список id пустой, сразу возвращает пустой список
-без обращения к базе данных.
-"""
+    Используется для восстановления товаров из корзины, где в session хранятся только
+    id товаров и количество. Если список id пустой, сразу возвращает пустой список
+    без обращения к базе данных.
+    """
     if not product_ids:
         return []
     conn = get_db_connection()
@@ -186,47 +221,53 @@ id товаров и количество. Если список id пустой
     products = conn.execute(query, product_ids).fetchall()
     conn.close()
     return products
-    
-    
+
+
 def get_product_with_category(product_id):
     """
-Возвращает товар вместе с данными его категории.
+    Возвращает товар вместе с данными его категории.
 
-Используется на странице отдельного товара, где помимо данных самого товара нужно
-показать название и slug категории. Если товар не найден, возвращает None.
-"""
+    Используется на странице отдельного товара, где помимо данных самого товара нужно
+    показать название и slug категории. Если товар не найден, возвращает None.
+    """
     conn = get_db_connection()
-    product = conn.execute("""SELECT 
-        products.*, 
+    product = conn.execute(
+        """SELECT
+        products.*,
         categories.name AS category_name,
         categories.slug AS category_slug
         FROM products
         LEFT JOIN categories
         ON products.category_id = categories.id
         WHERE products.id = ?
-        """, (product_id,)).fetchone()
+        """,
+        (product_id,),
+    ).fetchone()
     conn.close()
     return product
-    
-    
+
+
 def get_products_by_category(category_id):
     """
-Возвращает товары указанной категории.
+    Возвращает товары указанной категории.
 
-Принимает category_id и возвращает товары, связанные с этой категорией, вместе
-с названием категории. Это более прямой вариант выборки по category_id, в отличие
-от get_all_products, где фильтрация идёт через slug.
-"""
+    Принимает category_id и возвращает товары, связанные с этой категорией, вместе
+    с названием категории. Это более прямой вариант выборки по category_id, в отличие
+    от get_all_products, где фильтрация идёт через slug.
+    """
     conn = get_db_connection()
-    products = conn.execute("""SELECT products.*, categories.name AS category_name
+    products = conn.execute(
+        """SELECT products.*, categories.name AS category_name
     FROM products
     JOIN categories
     ON products.category_id = categories.id
-    WHERE products.category_id = ?""", (category_id,)).fetchall()
+    WHERE products.category_id = ?""",
+        (category_id,),
+    ).fetchall()
     conn.close()
     return products
-    
-    
+
+
 def get_products_by_tag_slug(tag_slug, only_visible=True):
     """
     Возвращает работы, связанные с тегом по его slug.
@@ -268,23 +309,26 @@ def get_products_by_tag_slug(tag_slug, only_visible=True):
 
     conn.close()
     return products
-    
-    
+
+
 def set_product_archived(conn, product_id, is_archived):
-    
+
     cursor = conn.execute(
         """
         UPDATE products
         SET is_archived = ?
         WHERE id = ?
         """,
-        (is_archived, product_id)
+        (is_archived, product_id),
     )
-    
+
     return cursor.rowcount > 0
-    
-    
+
+
 def update_product_status(conn, product_id, new_status, expected_status):
-    cursor = conn.execute("UPDATE products SET status = ? WHERE id = ? AND status = ?", (new_status, product_id, expected_status))
-    
+    cursor = conn.execute(
+        "UPDATE products SET status = ? WHERE id = ? AND status = ?",
+        (new_status, product_id, expected_status),
+    )
+
     return cursor.rowcount > 0

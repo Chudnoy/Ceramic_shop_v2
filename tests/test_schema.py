@@ -19,20 +19,15 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
         "SELECT COUNT(*) AS count FROM categories"
     ).fetchone()["count"]
 
-    tag_count = conn.execute(
-        "SELECT COUNT(*) AS count FROM tags"
-    ).fetchone()["count"]
+    tag_count = conn.execute("SELECT COUNT(*) AS count FROM tags").fetchone()["count"]
 
-    product_count = conn.execute(
-        "SELECT COUNT(*) AS count FROM products"
-    ).fetchone()["count"]
+    product_count = conn.execute("SELECT COUNT(*) AS count FROM products").fetchone()[
+        "count"
+    ]
 
     conn.close()
 
-    assert [
-        row["version"]
-        for row in saved_versions
-    ] == [1, 2, 3, 4, 5, 6, 7]
+    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7]
 
     assert category_count == 5
     assert tag_count == 6

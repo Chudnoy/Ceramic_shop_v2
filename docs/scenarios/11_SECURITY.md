@@ -29,10 +29,7 @@ POST-формы отправляют скрытое поле, а общий `bef
 Пользовательские значения передаются через `?`:
 
 ```python
-conn.execute(
-    "SELECT * FROM products WHERE id = ?",
-    (product_id,)
-)
+conn.execute("SELECT * FROM products WHERE id = ?", (product_id,))
 ```
 
 Динамические имена сортировки должны проходить белый список.

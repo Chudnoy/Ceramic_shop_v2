@@ -11,13 +11,15 @@ TEST_ADMIN_PASSWORD_HASH = generate_password_hash("test-password")
 @pytest.fixture
 def test_app(tmp_path):
     test_database_path = tmp_path / "test_shop.db"
-    return create_app({
-        "TESTING": True,
-        "SECRET_KEY": "test-secret-key",
-        "ADMIN_LOGIN": "test-admin",
-        "ADMIN_PASSWORD_HASH": TEST_ADMIN_PASSWORD_HASH,
-        "DATABASE": str(test_database_path)
-    })
+    return create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test-secret-key",
+            "ADMIN_LOGIN": "test-admin",
+            "ADMIN_PASSWORD_HASH": TEST_ADMIN_PASSWORD_HASH,
+            "DATABASE": str(test_database_path),
+        }
+    )
 
 
 @pytest.fixture
@@ -28,7 +30,7 @@ def client(test_app):
 @pytest.fixture
 def app_context(test_app):
     with test_app.app_context():
-        yield 
+        yield
 
 
 @pytest.fixture

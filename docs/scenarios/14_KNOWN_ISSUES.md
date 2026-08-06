@@ -24,14 +24,8 @@ if (
 ```python
 confirmation = request.form.get("confirm_partial_order")
 
-if (
-    cart_summary["has_unavailable_items"]
-    and confirmation != "1"
-):
-    flash(
-        "Подтвердите оформление заказа только из доступных работ",
-        "info"
-    )
+if cart_summary["has_unavailable_items"] and confirmation != "1":
+    flash("Подтвердите оформление заказа только из доступных работ", "info")
     return redirect(url_for("main.checkout_form"))
 ```
 
