@@ -1,63 +1,6 @@
-import sqlite3
-
 import pytest
 
 import database.orders as orders
-
-
-@pytest.fixture
-def orders_test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test_shop.db"
-
-    conn = sqlite3.connect(db_path)
-    conn.execute("""
-        CREATE TABLE products (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            price INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT "available"
-        )
-    """)
-    conn.execute("""CREATE TABLE orders (
-                 id TEXT PRIMARY KEY,
-                 customer_name TEXT NOT NULL,
-                 customer_email TEXT NOT NULL,
-                 customer_phone TEXT,
-                 customer_address TEXT,
-                 total INTEGER NOT NULL,
-                 status TEXT NOT NULL DEFAULT 'new',
-                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                 )""")
-    conn.execute("""
-        CREATE TABLE order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT NOT NULL,
-            product_id TEXT,
-            product_name TEXT NOT NULL,
-            unit_price INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            
-            FOREIGN KEY (order_id)
-                REFERENCES orders(id)
-                ON DELETE CASCADE,
-            
-            FOREIGN KEY (product_id)
-                REFERENCES products(id)
-                ON DELETE SET NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-    def get_test_db_connection():
-        conn = sqlite3.connect(db_path)
-        conn.execute("PRAGMA foreign_keys = ON")
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    monkeypatch.setattr(orders, "get_db_connection", get_test_db_connection)
-
-    return get_test_db_connection
 
 
 def create_test_product(
@@ -116,21 +59,27 @@ def create_test_order_item(
     )
 
 
-def test_update_order_status_updates_when_status_matches(orders_test_db):
-
-    conn = orders_test_db()
+def test_update_order_status_updates_when_status_matches(empty_db, db_connection):
+    conn = db_connection()
     create_test_order(conn)
 
     result = orders.update_order_status(
-        conn=conn, order_id="order-1", new_status="confirmed", expected_status="new"
+        conn=conn,
+        order_id="order-1",
+        new_status="confirmed",
+        expected_status="new",
     )
+
     conn.commit()
     conn.close()
 
-    check_conn = orders_test_db()
+    check_conn = db_connection()
+
     order = check_conn.execute(
-        "SELECT * FROM orders WHERE id = ?", ("order-1",)
+        "SELECT * FROM orders WHERE id = ?",
+        ("order-1",),
     ).fetchone()
+
     check_conn.close()
 
     assert result is True
@@ -138,8 +87,10 @@ def test_update_order_status_updates_when_status_matches(orders_test_db):
     assert order["status"] == "confirmed"
 
 
-def test_update_order_status_does_not_update_when_status_does_not_match(orders_test_db):
-    conn = orders_test_db()
+def test_update_order_status_does_not_update_when_status_does_not_match(
+    empty_db, db_connection
+):
+    conn = db_connection()
     create_test_order(conn, status="completed")
 
     result = orders.update_order_status(
@@ -148,7 +99,7 @@ def test_update_order_status_does_not_update_when_status_does_not_match(orders_t
     conn.commit()
     conn.close()
 
-    check_conn = orders_test_db()
+    check_conn = db_connection()
     order = check_conn.execute(
         "SELECT * FROM orders WHERE id = ?", ("order-1",)
     ).fetchone()
@@ -159,8 +110,10 @@ def test_update_order_status_does_not_update_when_status_does_not_match(orders_t
     assert order["status"] == "completed"
 
 
-def test_has_active_order_for_product_returns_true_for_confirmed_order(orders_test_db):
-    conn = orders_test_db()
+def test_has_active_order_for_product_returns_true_for_confirmed_order(
+    empty_db, db_connection
+):
+    conn = db_connection()
 
     create_test_product(conn=conn, product_id="product-1", status="reserved")
 
@@ -177,8 +130,10 @@ def test_has_active_order_for_product_returns_true_for_confirmed_order(orders_te
     assert result is True
 
 
-def test_has_active_order_for_product_returns_false_for_canceled_order(orders_test_db):
-    conn = orders_test_db()
+def test_has_active_order_for_product_returns_false_for_canceled_order(
+    empty_db, db_connection
+):
+    conn = db_connection()
 
     create_test_product(conn=conn, product_id="product-1", status="available")
 
@@ -197,16 +152,16 @@ def test_has_active_order_for_product_returns_false_for_canceled_order(orders_te
 
 @pytest.mark.parametrize("order_status", ["new", "confirmed"])
 def test_has_active_order_for_product_returns_true_for_active_statuses(
-    orders_test_db, order_status
+    empty_db, db_connection, order_status
 ):
-    conn = orders_test_db()
+    conn = db_connection()
     create_test_product(conn=conn)
     create_test_order(conn=conn, status=order_status)
     create_test_order_item(conn=conn)
     conn.commit()
     conn.close()
 
-    check_conn = orders_test_db()
+    check_conn = db_connection()
     result = orders.has_active_order_for_product(
         conn=check_conn, product_id="product-1"
     )
@@ -217,16 +172,16 @@ def test_has_active_order_for_product_returns_true_for_active_statuses(
 
 @pytest.mark.parametrize("order_status", ["completed", "canceled"])
 def test_has_active_order_for_product_returns_false_for_inactive_statuses(
-    orders_test_db, order_status
+    empty_db, db_connection, order_status
 ):
-    conn = orders_test_db()
+    conn = db_connection()
     create_test_product(conn=conn)
     create_test_order(conn=conn, status=order_status)
     create_test_order_item(conn=conn)
     conn.commit()
     conn.close()
 
-    check_conn = orders_test_db()
+    check_conn = db_connection()
     result = orders.has_active_order_for_product(
         conn=check_conn, product_id="product-1"
     )
@@ -236,9 +191,10 @@ def test_has_active_order_for_product_returns_false_for_inactive_statuses(
 
 
 def test_has_active_order_for_product_ignores_active_order_for_another_product(
-    orders_test_db,
+    empty_db,
+    db_connection,
 ):
-    conn = orders_test_db()
+    conn = db_connection()
 
     create_test_product(conn=conn, product_id="product-1")
     create_test_product(conn=conn, product_id="product-2")
@@ -250,7 +206,7 @@ def test_has_active_order_for_product_ignores_active_order_for_another_product(
     conn.commit()
     conn.close()
 
-    check_conn = orders_test_db()
+    check_conn = db_connection()
     result = orders.has_active_order_for_product(
         conn=check_conn, product_id="product-1"
     )
