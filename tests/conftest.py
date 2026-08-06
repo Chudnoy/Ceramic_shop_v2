@@ -18,6 +18,7 @@ def test_app(tmp_path):
             "ADMIN_LOGIN": "test-admin",
             "ADMIN_PASSWORD_HASH": TEST_ADMIN_PASSWORD_HASH,
             "DATABASE": str(test_database_path),
+            "AUTO_INIT_DB": False,
         }
     )
 
