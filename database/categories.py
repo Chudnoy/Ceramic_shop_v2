@@ -23,7 +23,7 @@ def update_category(conn, name, slug, description, category_id):
 
 def get_product_count_by_category_id(conn, category_id):
     return conn.execute(
-        "SELECT COUNT(*) FROM products WHERE id = ?", (category_id,)
+        "SELECT COUNT(*) FROM products WHERE category_id = ?", (category_id,)
     ).fetchone()[0]
 
 
