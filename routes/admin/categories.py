@@ -1,12 +1,12 @@
 from flask import flash, redirect, render_template, request, url_for
 
 from database.categories import (
-    delete_category,
     get_all_categories_with_product_count,
     get_category_by_slug,
 )
 from services.category_service import (
     create_category_from_form,
+    delete_category_by_id,
     update_category_from_form,
 )
 
@@ -80,7 +80,7 @@ def delete_category_route(slug):
         flash("Категория не найдена", "error")
         return redirect(url_for("admin.admin_categories"))
 
-    is_deleted, error_message = delete_category(category["id"])
+    is_deleted, error_message = delete_category_by_id(category["id"])
 
     if not is_deleted:
         flash(error_message, "error")

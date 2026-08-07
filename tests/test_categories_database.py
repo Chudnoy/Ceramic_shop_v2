@@ -264,7 +264,7 @@ def test_update_category_updates_fields_and_slug(empty_db, db_connection):
     is_updated = categories.update_category(
         conn=conn,
         name="Чашки",
-        new_slug="cups",
+        slug="cups",
         description="Красивые чашки",
         category_id=category_id,
     )

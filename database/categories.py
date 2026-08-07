@@ -10,12 +10,12 @@ def create_category(conn, name, slug, description):
     return cursor.lastrowid
 
 
-def update_category(conn, name, new_slug, description, category_id):
+def update_category(conn, name, slug, description, category_id):
     cursor = conn.execute(
         """ UPDATE categories
                  SET name = ?, slug = ?, description = ?
                  WHERE id = ?""",
-        (name, new_slug, description, category_id),
+        (name, slug, description, category_id),
     )
 
     return cursor.rowcount > 0
@@ -69,7 +69,7 @@ def get_category_by_name(name):
 
     try:
         conn = get_db_connection()
-        return find_category_by_slug(conn, name)
+        return find_category_by_name(conn, name)
     finally:
         if conn is not None:
             conn.close()
