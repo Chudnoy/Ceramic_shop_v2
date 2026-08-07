@@ -4,7 +4,6 @@ from database.categories import get_all_categories, get_category_by_slug
 from database.products import (
     get_all_products,
     get_product_with_category,
-    get_products_by_tag_slug,
 )
 from database.tags import get_tag_by_slug, get_tags_for_product
 from services.product_service import PRODUCT_STATUSES
@@ -44,9 +43,13 @@ def catalog():
             flash("Тег не найден", "error")
             return redirect(url_for("main.catalog"))
 
-        products = get_products_by_tag_slug(tag_slug)
-    else:
-        products = get_all_products(category_slug, sort_by, order, search_query)
+    products = get_all_products(
+        category_slug=category_slug,
+        sort_by=sort_by,
+        order=order,
+        search_query=search_query,
+        tag_slug=tag_slug,
+    )
 
     return render_template(
         "catalog.html",

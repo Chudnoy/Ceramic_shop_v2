@@ -34,7 +34,11 @@ def create_test_product(
 
 
 def create_test_category(conn, name="Вазы", slug="vases"):
-    conn.execute("INSERT INTO categories (name, slug) VALUES (?, ?)", (name, slug))
+    cursor = conn.execute(
+        "INSERT INTO categories (name, slug) VALUES (?, ?)", (name, slug)
+    )
+
+    return cursor.lastrowid
 
 
 def test_created_product_can_be_retrieved(empty_db, db_connection):
@@ -638,6 +642,44 @@ def test_get_all_products_ignores_invalid_sort_data(empty_db, db_connection):
     product_names = [product["name"] for product in all_products]
 
     assert product_names == ["Белая ваза", "Детская кружка", "Сны Карелии"]
+
+
+def test_get_all_products_combines_category_and_tag_filters(empty_db, db_connection):
+    conn = db_connection()
+
+    sculpture_id = create_test_category(conn=conn, name="Скульптура", slug="sculpture")
+    dishes_id = create_test_category(conn=conn, name="Блюда", slug="dishes")
+
+    tag_list = [("Память", "memory"), ("Дом", "home")]
+    conn.executemany(
+        """
+        INSERT INTO tags (name, slug)
+        VALUES (?, ?)
+        """,
+        tag_list,
+    )
+
+    first_product = create_test_product(
+        conn=conn, name="Башня", category_id=sculpture_id
+    )
+    second_product = create_test_product(
+        conn=conn, name="Разрушение", category_id=sculpture_id
+    )
+    third_product = create_test_product(conn=conn, name="Блюдо", category_id=dishes_id)
+
+    product_tag_list = [(first_product, 1), (second_product, 2), (third_product, 1)]
+    conn.executemany(
+        "INSERT INTO product_tags (product_id, tag_id) VALUES (?, ?)", product_tag_list
+    )
+    conn.commit()
+    conn.close()
+
+    all_products = products.get_all_products(
+        category_slug="sculpture", tag_slug="memory"
+    )
+
+    assert len(all_products) == 1
+    assert all_products[0]["id"] == first_product
 
 
 def test_delete_product_completely_removes_product_dependencies(

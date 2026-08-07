@@ -123,17 +123,8 @@ def get_all_products(
     only_visible=True,
     is_archived=False,
     only_featured=False,
+    tag_slug=None,
 ):
-    """
-    Возвращает список работ с учётом категории, поиска, сортировки,
-    статуса и публичной видимости.
-
-    only_visible=True используется для публичной части сайта:
-    показываются только опубликованные работы.
-
-    only_visible=False используется в админке:
-    показываются все работы, включая скрытые с сайта.
-    """
     conn = get_db_connection()
 
     query = """
@@ -160,6 +151,21 @@ def get_all_products(
     if category_slug:
         conditions.append("categories.slug = ?")
         params.append(category_slug)
+
+    if tag_slug:
+        conditions.append(
+            """
+            EXISTS (
+                SELECT 1
+                FROM product_tags
+                JOIN tags
+                    ON tags.id = product_tags.tag_id
+                WHERE product_tags.product_id = products.id
+                    AND tags.slug = ?
+            )
+            """
+        )
+        params.append(tag_slug)
 
     if search_query:
         conditions.append("(products.name LIKE ? OR products.description LIKE ?)")
