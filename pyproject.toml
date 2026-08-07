@@ -1,3 +1,4 @@
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["PLR0402"]
 "routes/admin/__init__.py" = ["F401", "I001"]
+"routes/main/__init__.py" = ["F401", "I001"]

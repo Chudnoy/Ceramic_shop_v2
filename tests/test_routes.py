@@ -2,7 +2,7 @@ import pytest
 
 import routes.admin.dashboard as dashboard
 import routes.admin.products as admin_products
-import routes.main as main_routes
+import routes.main.checkout as checkout_routes
 
 
 def test_admin_login_page_opens(client):
@@ -105,7 +105,7 @@ def test_checkout_requires_confirmation_when_cart_contains_unavailable_items(
         test_session["csrf_token"] = "test_token"
 
     monkeypatch.setattr(
-        main_routes,
+        checkout_routes,
         "build_cart_summary",
         lambda _session: {
             "cart": {"product-1": 1, "product-2": 1},
@@ -122,7 +122,9 @@ def test_checkout_requires_confirmation_when_cart_contains_unavailable_items(
         )
 
     monkeypatch.setattr(
-        main_routes, "create_order_with_items", fail_if_create_order_with_items_called
+        checkout_routes,
+        "create_order_with_items",
+        fail_if_create_order_with_items_called,
     )
 
     response = client.post(
@@ -150,7 +152,7 @@ def test_checkout_creates_partial_order_after_confirmation(client, monkeypatch):
         test_session["csrf_token"] = "test_token"
 
     monkeypatch.setattr(
-        main_routes,
+        checkout_routes,
         "build_cart_summary",
         lambda _session: {
             "cart": {"product-1": 1, "product-2": 1},
@@ -168,7 +170,9 @@ def test_checkout_creates_partial_order_after_confirmation(client, monkeypatch):
         received_order["items"] = items
         return True, "", "order-12345678"
 
-    monkeypatch.setattr(main_routes, "create_order_with_items", successful_create_order)
+    monkeypatch.setattr(
+        checkout_routes, "create_order_with_items", successful_create_order
+    )
 
     response = client.post(
         "/checkout",
@@ -205,7 +209,7 @@ def test_checkout_preserves_cart_when_order_creation_fails(client, monkeypatch):
         test_session["csrf_token"] = "test_token"
 
     monkeypatch.setattr(
-        main_routes,
+        checkout_routes,
         "build_cart_summary",
         lambda _session: {
             "cart": {"product-1": 1, "product-2": 1},
@@ -219,7 +223,7 @@ def test_checkout_preserves_cart_when_order_creation_fails(client, monkeypatch):
     def failed_create_order(data, items):
         return False, "Не удалось создать заказ", None
 
-    monkeypatch.setattr(main_routes, "create_order_with_items", failed_create_order)
+    monkeypatch.setattr(checkout_routes, "create_order_with_items", failed_create_order)
 
     response = client.post(
         "/checkout",
@@ -248,7 +252,7 @@ def test_checkout_creates_full_order_without_partial_confirmation_when_all_produ
         test_session["csrf_token"] = "test_token"
 
     monkeypatch.setattr(
-        main_routes,
+        checkout_routes,
         "build_cart_summary",
         lambda _session: {
             "cart": {"product-1": 1, "product-2": 1},
@@ -267,7 +271,9 @@ def test_checkout_creates_full_order_without_partial_confirmation_when_all_produ
         received_order["items"] = items
         return True, "", "order-12345678"
 
-    monkeypatch.setattr(main_routes, "create_order_with_items", successful_create_order)
+    monkeypatch.setattr(
+        checkout_routes, "create_order_with_items", successful_create_order
+    )
 
     response = client.post(
         "/checkout",

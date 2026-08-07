@@ -12,7 +12,7 @@ ENV_PATH = os.path.join(PROJECT_DIR, ".env")
 load_dotenv(ENV_PATH)
 
 
-from flask import Flask, flash, jsonify, redirect, request, session, url_for
+from flask import Flask, flash, redirect, request, session, url_for
 
 from database.schema import init_db
 from routes.admin import admin_bp
@@ -60,11 +60,6 @@ def create_app(test_config=None):
 
         if validate_csrf_from_form():
             return
-
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify(
-                {"success": False, "message": "Некорректный защитный токен формы"}
-            ), 400
 
         flash("Некорректный защитный токен формы", "error")
         return redirect(request.referrer or url_for("main.index"))
