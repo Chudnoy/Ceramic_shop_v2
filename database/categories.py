@@ -1,94 +1,78 @@
 from database.connection import get_db_connection
 
 
-def create_category(name, slug, description):
-    """
-    Создаёт новую категорию в базе данных.
-
-    Принимает название, slug и описание категории, добавляет новую запись
-    в таблицу categories и сохраняет изменения.
-    """
-    conn = get_db_connection()
-    conn.execute(
+def create_category(conn, name, slug, description):
+    cursor = conn.execute(
         "INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)",
         (name, slug, description),
     )
-    conn.commit()
-    conn.close()
+
+    return cursor.lastrowid
 
 
-def update_category(name, new_slug, description, slug):
-    """
-    Обновляет данные существующей категории.
-
-    Находит категорию по её текущему slug и обновляет название, slug
-    и описание. Используется при редактировании категории в админке.
-    """
-    conn = get_db_connection()
-    conn.execute(
+def update_category(conn, name, new_slug, description, category_id):
+    cursor = conn.execute(
         """ UPDATE categories
                  SET name = ?, slug = ?, description = ?
-                 WHERE slug = ?""",
-        (name, new_slug, description, slug),
+                 WHERE id = ?""",
+        (name, new_slug, description, category_id),
     )
-    conn.commit()
-    conn.close()
+
+    return cursor.rowcount > 0
 
 
-def delete_category(category_id):
-    """
-    Удаляет категорию из базы данных, если к ней не привязаны товары.
+def get_product_count_by_category_id(conn, category_id):
+    return conn.execute(
+        "SELECT COUNT(*) FROM products WHERE id = ?", (category_id,)
+    ).fetchone()[0]
 
-    Сначала считает количество товаров с указанным category_id.
-    Если таких товаров нет, удаляет категорию и возвращает True.
-    Если в категории есть товары, не удаляет категорию и возвращает False.
-    """
-    conn = get_db_connection()
 
-    try:
-        products_count = conn.execute(
-            "SELECT COUNT(*) FROM products WHERE category_id = ?", (category_id,)
-        ).fetchone()[0]
-
-        if products_count > 0:
-            return False
-
-        cursor = conn.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-        conn.commit()
-        return cursor.rowcount > 0
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
+def delete_category(conn, category_id):
+    cursor = conn.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+    return cursor.rowcount > 0
 
 
 def get_all_categories():
-    """
-    Возвращает все категории товаров.
-
-    Загружает категории из таблицы categories и сортирует их по названию. Используется
-    в каталоге, админских фильтрах и формах создания или редактирования товара.
-    """
     conn = get_db_connection()
     categories = conn.execute("SELECT * FROM categories ORDER BY name").fetchall()
     conn.close()
     return categories
 
 
-def get_category_by_slug(slug):
-    """
-    Возвращает категорию по её slug.
-
-    Используется при фильтрации каталога или админского списка товаров по категории.
-    Если категория с таким slug не найдена, возвращает None.
-    """
-    conn = get_db_connection()
-    category = conn.execute(
-        "SELECT * FROM categories WHERE slug = ?", (slug,)
+def find_category_by_name(conn, name):
+    return conn.execute(
+        "SELECT * FROM categories WHERE name = ?",
+        (name,),
     ).fetchone()
-    conn.close()
-    return category
+
+
+def find_category_by_slug(conn, slug):
+    return conn.execute(
+        "SELECT * FROM categories WHERE slug = ?",
+        (slug,),
+    ).fetchone()
+
+
+def get_category_by_slug(slug):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        return find_category_by_slug(conn, slug)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def get_category_by_name(name):
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        return find_category_by_slug(conn, name)
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def get_category_by_id(category_id):
