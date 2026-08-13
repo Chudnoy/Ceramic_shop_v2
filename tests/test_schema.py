@@ -27,7 +27,7 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
 
     conn.close()
 
-    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7]
+    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8]
 
     assert category_count == 5
     assert tag_count == 6

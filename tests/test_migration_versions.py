@@ -534,3 +534,81 @@ def test_v007_normalizes_json_order_items_without_losing_data(db_connection):
     assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7]
 
     assert saved_versions[-1]["name"] == "normalize_order_items"
+
+
+def test_v008_creates_artistic_core(db_connection):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:8])
+
+    table_names = {
+        row["name"]
+        for row in conn.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+            """
+        ).fetchall()
+    }
+
+    work_columns = conn.execute("PRAGMA table_info(works)").fetchall()
+
+    work_foreign_keys = conn.execute("PRAGMA foreign_key_list(works)").fetchall()
+
+    saved_versions = conn.execute(
+        """
+        SELECT version, name
+        FROM schema_migrations
+        ORDER BY version
+        """
+    ).fetchall()
+
+    conn.close()
+
+    new_tables = {
+        "projects",
+        "series",
+        "materials",
+        "works",
+        "project_images",
+        "work_images",
+        "work_categories",
+        "work_tags",
+        "work_materials",
+    }
+
+    assert new_tables <= table_names
+
+    assert {column["name"] for column in work_columns} == {
+        "id",
+        "slug",
+        "name",
+        "description",
+        "year",
+        "dimensions",
+        "project_id",
+        "series_id",
+        "project_position",
+        "is_published",
+        "is_commissionable",
+        "commission_note",
+    }
+
+    assert any(
+        foreign_key["table"] == "projects"
+        and foreign_key["from"] == "project_id"
+        and foreign_key["to"] == "id"
+        for foreign_key in work_foreign_keys
+    )
+
+    assert any(
+        foreign_key["table"] == "series"
+        and foreign_key["from"] == "series_id"
+        and foreign_key["to"] == "id"
+        for foreign_key in work_foreign_keys
+    )
+
+    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8]
+
+    assert saved_versions[-1]["name"] == "create_artistic_core"

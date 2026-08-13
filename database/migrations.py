@@ -29,6 +29,9 @@ from database.migration_versions.v006_add_tags import apply as apply_v006_add_ta
 from database.migration_versions.v007_normalize_order_items import (
     apply as apply_v007_normalize_order_items,
 )
+from database.migration_versions.v008_create_artistic_core import (
+    apply as apply_v008_create_artistic_core,
+)
 
 MIGRATIONS = (
     Migration(version=1, name="create_products", apply=apply_v001_create_products),
@@ -43,6 +46,9 @@ MIGRATIONS = (
     Migration(version=6, name="add_tags", apply=apply_v006_add_tags),
     Migration(
         version=7, name="normalize_order_items", apply=apply_v007_normalize_order_items
+    ),
+    Migration(
+        version=8, name="create_artistic_core", apply=apply_v008_create_artistic_core
     ),
 )
 
