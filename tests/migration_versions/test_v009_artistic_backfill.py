@@ -424,7 +424,7 @@ def test_backfill_works_maps_legacy_visibility_to_publication(
     assert saved_work["is_published"] == expected_is_published
 
 
-def test_backfill_work_imageы_copies_legacy_product_image(db_connection):
+def test_backfill_work_images_copies_legacy_product_image(db_connection):
     conn = db_connection()
 
     migrations.run_migrations(conn, migrations.MIGRATIONS[:8])
