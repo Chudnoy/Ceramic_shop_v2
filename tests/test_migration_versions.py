@@ -612,3 +612,122 @@ def test_v008_creates_artistic_core(db_connection):
     assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8]
 
     assert saved_versions[-1]["name"] == "create_artistic_core"
+
+
+def test_v009_backfills_artistic_core(db_connection):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:8])
+
+    conn.execute(
+        """
+        INSERT INTO products (
+            id,
+            name,
+            price,
+            materials,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "product-1",
+            "Башня",
+            30000,
+            "Каменная масса, глазурь",
+            "reserved",
+        ),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO orders (
+            id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            customer_address,
+            total,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            "order-1",
+            "Покупатель",
+            "buyer@example.com",
+            "12345",
+            "spb",
+            30000,
+            "new",
+        ),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO order_items (
+            order_id,
+            product_id,
+            product_name,
+            unit_price,
+            quantity
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "order-1",
+            "product-1",
+            "Башня",
+            30000,
+            1,
+        ),
+    )
+
+    conn.commit()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS)
+
+    saved_work = conn.execute(
+        """
+        SELECT id, name
+        FROM works
+        WHERE id = ?
+        """,
+        ("product-1",),
+    ).fetchone()
+
+    saved_order_item = conn.execute(
+        """
+        SELECT
+            order_id,
+            product_id,
+            product_name,
+            unit_price,
+            quantity
+        FROM order_items
+        WHERE order_id = ?
+        """,
+        ("order-1",),
+    ).fetchone()
+
+    saved_versions = conn.execute(
+        """
+        SELECT version, name
+        FROM schema_migrations
+        ORDER BY version
+        """
+    ).fetchall()
+
+    conn.close()
+
+    assert saved_work["id"] == "product-1"
+    assert saved_work["name"] == "Башня"
+
+    assert saved_order_item["order_id"] == "order-1"
+    assert saved_order_item["product_id"] == "product-1"
+    assert saved_order_item["product_name"] == "Башня"
+    assert saved_order_item["unit_price"] == 30000
+    assert saved_order_item["quantity"] == 1
+
+    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert saved_versions[-1]["name"] == "backfill_artistic_core"

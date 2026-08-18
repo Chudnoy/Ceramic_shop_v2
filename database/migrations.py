@@ -32,6 +32,9 @@ from database.migration_versions.v007_normalize_order_items import (
 from database.migration_versions.v008_create_artistic_core import (
     apply as apply_v008_create_artistic_core,
 )
+from database.migration_versions.v009_backfill_artistic_core import (
+    apply as apply_v009_backfill_artistic_core,
+)
 
 MIGRATIONS = (
     Migration(version=1, name="create_products", apply=apply_v001_create_products),
@@ -49,6 +52,11 @@ MIGRATIONS = (
     ),
     Migration(
         version=8, name="create_artistic_core", apply=apply_v008_create_artistic_core
+    ),
+    Migration(
+        version=9,
+        name="backfill_artistic_core",
+        apply=apply_v009_backfill_artistic_core,
     ),
 )
 

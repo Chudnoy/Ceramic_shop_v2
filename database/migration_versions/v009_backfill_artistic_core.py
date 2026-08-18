@@ -160,3 +160,145 @@ def preflight_material_tokens_are_known(conn):
 
     if unknown_materials:
         raise ValueError("Preflight failed: найдены неизвестные материалы")
+
+
+def preflight_material_tokens_are_unique(conn):
+    products = conn.execute(
+        "SELECT id, name, materials FROM products ORDER BY id"
+    ).fetchall()
+
+    invalid_products = []
+
+    for product in products:
+        normalized_tokens = [
+            token.strip().lower()
+            for token in product["materials"].split(",")
+            if token.strip()
+        ]
+
+        if len(normalized_tokens) != len(set(normalized_tokens)):
+            invalid_products.append(product)
+
+    if invalid_products:
+        raise ValueError("Preflight failed: найдены повторяющиеся материалы у Product")
+
+
+def backfill_materials(conn):
+    for material in MATERIAL_ALIASES.values():
+        conn.execute(
+            """
+            INSERT INTO materials (name, slug) VALUES (?, ?)
+            """,
+            (material["name"], material["slug"]),
+        )
+
+
+def backfill_works(conn):
+    conn.execute(
+        """
+        INSERT INTO works
+            (id, name, description, year, is_published)
+        SELECT 
+            id,
+            name,
+            description,
+            year,
+            CASE
+                WHEN is_visible = 1
+                    AND is_archived = 0
+                THEN 1
+                ELSE 0
+            END
+        FROM products
+        """
+    )
+
+
+def backfill_work_images(conn):
+    conn.execute(
+        """
+        INSERT INTO work_images
+            (work_id, image_path, position)
+        SELECT
+            id,
+            img,
+            1
+        FROM products
+        WHERE img IS NOT NULL
+            AND TRIM(img) != ''
+        """
+    )
+
+
+def backfill_work_categories(conn):
+    conn.execute(
+        """
+        INSERT INTO work_categories
+            (work_id, category_id)
+        SELECT
+            id, category_id
+        FROM products
+        WHERE category_id IS NOT NULL
+        """
+    )
+
+
+def backfill_work_tags(conn):
+    conn.execute(
+        """
+        INSERT INTO work_tags
+            (work_id, tag_id)
+        SELECT
+            product_id, tag_id
+        FROM product_tags
+        """
+    )
+
+
+def backfill_work_materials(conn):
+    products = conn.execute("SELECT id, materials FROM products ORDER BY id").fetchall()
+
+    for product in products:
+        material_tokens = product["materials"].split(",")
+
+        for token in material_tokens:
+            normalized_token = token.strip().lower()
+
+            material = MATERIAL_ALIASES[normalized_token]
+
+            saved_material = conn.execute(
+                "SELECT id FROM materials WHERE slug = ?", (material["slug"],)
+            ).fetchone()
+
+            conn.execute(
+                """
+                INSERT INTO work_materials
+                    (work_id, material_id)
+                VALUES (?, ?)
+                """,
+                (product["id"], saved_material["id"]),
+            )
+
+
+def preflight(conn):
+    preflight_backfill_targets_are_empty(conn)
+
+    preflight_products_have_materials(conn)
+    preflight_material_tokens_are_valid(conn)
+    preflight_material_tokens_are_known(conn)
+    preflight_material_tokens_are_unique(conn)
+
+    preflight_active_order_items_have_products(conn)
+    preflight_product_status_matches_active_orders(conn)
+
+
+def apply(conn):
+    preflight(conn)
+
+    backfill_materials(conn)
+    backfill_works(conn)
+
+    backfill_work_images(conn)
+    backfill_work_categories(conn)
+    backfill_work_tags(conn)
+    backfill_work_materials(conn)

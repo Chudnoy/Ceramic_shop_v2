@@ -113,7 +113,7 @@ def test_create_app_initializes_database_and_seeds_demo_data(tmp_path):
     }
 
     assert expected_tables <= table_names
-    assert migration_versions == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert migration_versions == [1, 2, 3, 4, 5, 6, 7, 8, 9]
     assert category_count == 5
     assert tag_count == 6
     assert product_count == 5
