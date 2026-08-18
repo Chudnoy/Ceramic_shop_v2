@@ -1,7 +1,7 @@
 import pytest
 
-import database.migrations as migrations
 import database.migration_versions.v009_backfill_artistic_core as v009
+import database.migrations as migrations
 
 
 def create_legacy_product(
