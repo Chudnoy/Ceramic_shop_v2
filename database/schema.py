@@ -4,6 +4,86 @@ from database.connection import get_db_connection
 from database.migrations import MIGRATIONS, run_migrations
 
 
+def seed_artistic_demo_data(conn):
+    work_count = conn.execute("SELECT COUNT(*) FROM works").fetchone()[0]
+
+    if work_count != 0:
+        return
+
+    conn.execute(
+        """
+        INSERT INTO works
+            (id, name, description, year, is_published)
+        SELECT
+            id,
+            name,
+            description,
+            year,
+            CASE
+                WHEN is_visible = 1
+                    AND is_archived = 0
+                THEN 1
+                ELSE 0
+            END
+        FROM products
+        """
+    )
+
+    conn.execute(
+        """
+        INSERT INTO work_images
+            (work_id, image_path, position)
+        SELECT
+            id,
+            img,
+            1
+        FROM products
+        WHERE img IS NOT NULL
+            AND TRIM(img) != ''
+        """
+    )
+
+    conn.execute(
+        """
+        INSERT INTO work_categories
+            (work_id, category_id)
+        SELECT id, category_id
+        FROM products
+        WHERE category_id IS NOT NULL
+        """
+    )
+
+    products = conn.execute("SELECT id, materials FROM products ORDER BY id").fetchall()
+
+    for product in products:
+        material_names = [
+            material.strip() for material in product["materials"].split(",")
+        ]
+
+        for material_name in material_names:
+            material = conn.execute(
+                "SELECT id FROM materials WHERE name = ?", (material_name,)
+            ).fetchone()
+
+            if material is None:
+                raise RuntimeError(f"Seed material is not canonical: {material_name}")
+
+            conn.execute(
+                "INSERT INTO work_materials (work_id, material_id) VALUES (?, ?)",
+                (product["id"], material["id"]),
+            )
+
+    conn.execute(
+        """
+        INSERT INTO work_tags
+            (work_id, tag_id)
+        SELECT
+            product_id, tag_id
+        FROM product_tags
+        """
+    )
+
+
 def seed_initial_data():
     conn = get_db_connection()
 
@@ -47,7 +127,7 @@ def seed_initial_data():
                 "/static/img/tower.jpg",
                 5,
                 2025,
-                "Каменная масса, глазури, фарфор",
+                "Каменная масса, Глазурь, Фарфор",
             ),
             (
                 str(uuid.uuid4()),
@@ -57,7 +137,7 @@ def seed_initial_data():
                 "/static/img/dom_v3.jpg",
                 5,
                 2025,
-                "Каменная масса, фарфор, глазури",
+                "Каменная масса, Фарфор, Глазурь",
             ),
             (
                 str(uuid.uuid4()),
@@ -67,7 +147,7 @@ def seed_initial_data():
                 "/static/img/dreams_of_karelia.jpg",
                 1,
                 2025,
-                "Каменная масса, глазури",
+                "Каменная масса, Глазурь",
             ),
             (
                 str(uuid.uuid4()),
@@ -77,7 +157,7 @@ def seed_initial_data():
                 "/static/img/destruction.jpg",
                 5,
                 2025,
-                "Каменная масса, фарфор, глазури",
+                "Каменная масса, Фарфор, Глазурь",
             ),
             (
                 str(uuid.uuid4()),
@@ -87,13 +167,15 @@ def seed_initial_data():
                 "/static/img/easter_dome.jpg",
                 1,
                 2025,
-                "Каменная масса, глазури, фарфор",
+                "Каменная масса, Глазурь, Фарфор",
             ),
         ]
         conn.executemany(
             "INSERT INTO products (id, name, description, price, img, category_id, year, materials) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             products,
         )
+
+    seed_artistic_demo_data(conn)
 
     conn.commit()
     conn.close()
