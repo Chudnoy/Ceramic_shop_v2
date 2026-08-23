@@ -446,6 +446,32 @@ def test_shop_item_has_safe_default_state(db_connection):
     assert saved["is_retired"] == 0
 
 
+def test_shop_item_allows_boolean_flags_to_be_enabled(db_connection):
+    conn = db_connection()
+
+    prepare_v010(conn)
+
+    conn.execute(
+        """
+        INSERT INTO shop_items
+            (id, name, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        ("shop-item-1", "Тестовый товар", 1000, "stock", 5, 1, 1, 1),
+    )
+
+    saved = conn.execute(
+        "SELECT is_published, is_orderable, is_retired FROM shop_items WHERE id = ?",
+        ("shop-item-1",),
+    ).fetchone()
+
+    conn.close()
+
+    assert saved["is_published"] == 1
+    assert saved["is_orderable"] == 1
+    assert saved["is_retired"] == 1
+
+
 @pytest.mark.parametrize(
     ("is_published", "is_orderable", "is_retired"),
     [(2, 0, 0), (-1, 0, 0), (0, 2, 0), (0, -1, 0), (0, 0, 2), (0, 0, -1)],

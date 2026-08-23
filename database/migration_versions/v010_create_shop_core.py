@@ -123,7 +123,7 @@ def create_shop_item_tags_table(conn):
     )
 
 
-def create_shop_item_material_table(conn):
+def create_shop_item_materials_table(conn):
     conn.execute(
         """
         CREATE TABLE shop_item_materials (
@@ -147,4 +147,4 @@ def apply(conn):
     create_shop_item_images_table(conn)
     create_shop_item_categories_table(conn)
     create_shop_item_tags_table(conn)
-    create_shop_item_material_table(conn)
+    create_shop_item_materials_table(conn)
