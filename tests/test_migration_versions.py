@@ -729,5 +729,5 @@ def test_v009_backfills_artistic_core(db_connection):
     assert saved_order_item["unit_price"] == 30000
     assert saved_order_item["quantity"] == 1
 
-    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    assert saved_versions[-1]["name"] == "backfill_artistic_core"
+    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert saved_versions[-2]["name"] == "backfill_artistic_core"
