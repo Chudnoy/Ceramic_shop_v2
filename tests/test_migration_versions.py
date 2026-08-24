@@ -718,6 +718,8 @@ def test_v009_backfills_artistic_core(db_connection):
         """
     ).fetchall()
 
+    saved_migrations = {row["version"]: row["name"] for row in saved_versions}
+
     conn.close()
 
     assert saved_work["id"] == "product-1"
@@ -729,5 +731,86 @@ def test_v009_backfills_artistic_core(db_connection):
     assert saved_order_item["unit_price"] == 30000
     assert saved_order_item["quantity"] == 1
 
-    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    assert saved_versions[-2]["name"] == "backfill_artistic_core"
+    assert [row["version"] for row in saved_versions] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+    ]
+    assert saved_migrations[9] == "backfill_artistic_core"
+
+
+def test_v011_upgrades_existing_v010_database_with_shop_backfill(db_connection):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:8])
+
+    conn.execute(
+        "INSERT INTO products (id, name, price) VALUES (?, ?, ?)",
+        ("product-1", "Башня", 30000),
+    )
+
+    conn.commit()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:10])
+
+    work_before_upgrade = conn.execute(
+        "SELECT id FROM works WHERE id = ?", ("product-1",)
+    ).fetchone()
+    shop_item_before_upgrade = conn.execute(
+        "SELECT id FROM shop_items WHERE work_id = ?", ("product-1",)
+    ).fetchone()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS)
+
+    shop_item_after_upgrade = conn.execute(
+        """
+        SELECT
+            work_id, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired
+        FROM shop_items
+        WHERE work_id = ?
+        """,
+        ("product-1",),
+    ).fetchone()
+
+    saved_versions = conn.execute(
+        "SELECT version, name FROM schema_migrations ORDER BY version"
+    ).fetchall()
+
+    saved_migrations = {row["version"]: row["name"] for row in saved_versions}
+
+    conn.close()
+
+    assert work_before_upgrade is not None
+    assert shop_item_before_upgrade is None
+
+    assert shop_item_after_upgrade is not None
+    assert shop_item_after_upgrade["work_id"] == "product-1"
+    assert shop_item_after_upgrade["price"] == 30000
+    assert shop_item_after_upgrade["inventory_type"] == "unique"
+    assert shop_item_after_upgrade["stock_quantity"] == 1
+    assert shop_item_after_upgrade["is_published"] == 1
+    assert shop_item_after_upgrade["is_orderable"] == 1
+    assert shop_item_after_upgrade["is_retired"] == 0
+
+    assert [row["version"] for row in saved_versions] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+    ]
+    assert saved_migrations[11] == "backfill_shop_core"

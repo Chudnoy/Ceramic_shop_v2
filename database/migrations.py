@@ -38,6 +38,9 @@ from database.migration_versions.v009_backfill_artistic_core import (
 from database.migration_versions.v010_create_shop_core import (
     apply as apply_v010_create_shop_core,
 )
+from database.migration_versions.v011_backfill_shop_core import (
+    apply as apply_v011_backfill_shop_core,
+)
 
 MIGRATIONS = (
     Migration(version=1, name="create_products", apply=apply_v001_create_products),
@@ -62,6 +65,9 @@ MIGRATIONS = (
         apply=apply_v009_backfill_artistic_core,
     ),
     Migration(version=10, name="create_shop_core", apply=apply_v010_create_shop_core),
+    Migration(
+        version=11, name="backfill_shop_core", apply=apply_v011_backfill_shop_core
+    ),
 )
 
 

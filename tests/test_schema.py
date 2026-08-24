@@ -29,6 +29,14 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
         row["id"] for row in conn.execute("SELECT id FROM products").fetchall()
     }
     work_ids = {row["id"] for row in conn.execute("SELECT id FROM works").fetchall()}
+    shop_items = conn.execute(
+        """
+        SELECT
+            work_id, inventory_type, stock_quantity, is_published, is_orderable, is_retired
+        FROM shop_items
+        ORDER BY work_id
+        """
+    ).fetchall()
     work_image_count = conn.execute("SELECT COUNT(*) FROM work_images").fetchone()[0]
     work_category_count = conn.execute(
         "SELECT COUNT(*) FROM work_categories"
@@ -53,7 +61,19 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
 
     conn.close()
 
-    assert [row["version"] for row in saved_versions] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert [row["version"] for row in saved_versions] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+    ]
 
     assert category_count == 5
     assert tag_count == 6
@@ -69,3 +89,13 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
         "Каменная масса",
         "Фарфор",
     ]
+
+    assert len(shop_items) == 5
+
+    assert {row["work_id"] for row in shop_items} == product_ids
+
+    assert all(row["inventory_type"] == "unique" for row in shop_items)
+    assert all(row["stock_quantity"] == 1 for row in shop_items)
+    assert all(row["is_published"] == 1 for row in shop_items)
+    assert all(row["is_orderable"] == 1 for row in shop_items)
+    assert all(row["is_retired"] == 0 for row in shop_items)

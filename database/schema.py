@@ -84,6 +84,44 @@ def seed_artistic_demo_data(conn):
     )
 
 
+def seed_shop_demo_data(conn):
+    shop_item_count = conn.execute("SELECT COUNT(*) FROM shop_items").fetchone()[0]
+
+    if shop_item_count != 0:
+        return
+
+    products = conn.execute(
+        """
+        SELECT
+            id, price, is_visible, is_for_sale
+        FROM products
+        WHERE status = 'available'
+            AND is_for_sale = 1
+            AND is_archived = 0
+        ORDER BY id
+        """
+    ).fetchall()
+
+    for product in products:
+        conn.execute(
+            """
+            INSERT INTO shop_items
+                (id, work_id, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(uuid.uuid4()),
+                product["id"],
+                product["price"],
+                "unique",
+                1,
+                product["is_visible"] * product["is_for_sale"],
+                product["is_for_sale"],
+                0,
+            ),
+        )
+
+
 def seed_initial_data():
     conn = get_db_connection()
 
@@ -176,6 +214,7 @@ def seed_initial_data():
         )
 
     seed_artistic_demo_data(conn)
+    seed_shop_demo_data(conn)
 
     conn.commit()
     conn.close()
