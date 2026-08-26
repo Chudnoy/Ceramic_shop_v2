@@ -1,5 +1,4 @@
 import database.migrations as migrations
-
 from database.migration_versions import v012_add_shop_item_to_order_items as v012
 
 
