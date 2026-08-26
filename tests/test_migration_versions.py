@@ -743,6 +743,7 @@ def test_v009_backfills_artistic_core(db_connection):
         9,
         10,
         11,
+        12,
     ]
     assert saved_migrations[9] == "backfill_artistic_core"
 
@@ -812,5 +813,118 @@ def test_v011_upgrades_existing_v010_database_with_shop_backfill(db_connection):
         9,
         10,
         11,
+        12,
     ]
     assert saved_migrations[11] == "backfill_shop_core"
+
+
+def test_v012_upgrades_existing_v011_database_with_order_item_shop_bridge(
+    db_connection,
+):
+    conn = db_connection()
+
+    migrations.run_migrations(
+        conn,
+        migrations.MIGRATIONS[:11],
+    )
+
+    conn.execute(
+        """
+        INSERT INTO products
+            (id, name, price)
+        VALUES (?, ?, ?)
+        """,
+        ("product-1", "Башня", 30000),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO orders
+            (id, customer_name, customer_email, total, status)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "order-1",
+            "Покупатель",
+            "buyer@example.com",
+            30000,
+            "new",
+        ),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO order_items
+            (
+                order_id,
+                product_id,
+                product_name,
+                unit_price,
+                quantity
+            )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "order-1",
+            "product-1",
+            "Башня",
+            30000,
+            1,
+        ),
+    )
+
+    conn.commit()
+
+    migrations.run_migrations(
+        conn,
+        migrations.MIGRATIONS,
+    )
+
+    saved_item = conn.execute(
+        """
+        SELECT
+            product_id,
+            shop_item_id,
+            product_name,
+            unit_price,
+            quantity
+        FROM order_items
+        WHERE order_id = ?
+        """,
+        ("order-1",),
+    ).fetchone()
+
+    saved_versions = conn.execute(
+        """
+        SELECT version, name
+        FROM schema_migrations
+        ORDER BY version
+        """
+    ).fetchall()
+
+    saved_migrations = {row["version"]: row["name"] for row in saved_versions}
+
+    conn.close()
+
+    assert saved_item["product_id"] == "product-1"
+    assert saved_item["shop_item_id"] is None
+    assert saved_item["product_name"] == "Башня"
+    assert saved_item["unit_price"] == 30000
+    assert saved_item["quantity"] == 1
+
+    assert [row["version"] for row in saved_versions] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+    ]
+
+    assert saved_migrations[12] == "add_shop_item_to_order_items"
