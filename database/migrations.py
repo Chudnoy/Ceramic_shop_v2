@@ -44,6 +44,9 @@ from database.migration_versions.v011_backfill_shop_core import (
 from database.migration_versions.v012_add_shop_item_to_order_items import (
     apply as apply_v012_add_shop_item_to_order_items,
 )
+from database.migration_versions.v013_backfill_order_item_shop_bridge import (
+    apply as apply_v013_backfill_order_item_shop_bridge,
+)
 
 MIGRATIONS = (
     Migration(version=1, name="create_products", apply=apply_v001_create_products),
@@ -75,6 +78,11 @@ MIGRATIONS = (
         version=12,
         name="add_shop_item_to_order_items",
         apply=apply_v012_add_shop_item_to_order_items,
+    ),
+    Migration(
+        version=13,
+        name="backfill_order_item_shop_bridge",
+        apply=apply_v013_backfill_order_item_shop_bridge,
     ),
 )
 

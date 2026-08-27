@@ -74,6 +74,7 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
         10,
         11,
         12,
+        13,
     ]
 
     assert category_count == 5

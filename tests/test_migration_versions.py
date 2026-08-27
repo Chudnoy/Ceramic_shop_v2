@@ -685,7 +685,7 @@ def test_v009_backfills_artistic_core(db_connection):
 
     conn.commit()
 
-    migrations.run_migrations(conn, migrations.MIGRATIONS)
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:9])
 
     saved_work = conn.execute(
         """
@@ -741,9 +741,6 @@ def test_v009_backfills_artistic_core(db_connection):
         7,
         8,
         9,
-        10,
-        11,
-        12,
     ]
     assert saved_migrations[9] == "backfill_artistic_core"
 
@@ -769,7 +766,7 @@ def test_v011_upgrades_existing_v010_database_with_shop_backfill(db_connection):
         "SELECT id FROM shop_items WHERE work_id = ?", ("product-1",)
     ).fetchone()
 
-    migrations.run_migrations(conn, migrations.MIGRATIONS)
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:11])
 
     shop_item_after_upgrade = conn.execute(
         """
@@ -813,7 +810,6 @@ def test_v011_upgrades_existing_v010_database_with_shop_backfill(db_connection):
         9,
         10,
         11,
-        12,
     ]
     assert saved_migrations[11] == "backfill_shop_core"
 
@@ -877,7 +873,7 @@ def test_v012_upgrades_existing_v011_database_with_order_item_shop_bridge(
 
     migrations.run_migrations(
         conn,
-        migrations.MIGRATIONS,
+        migrations.MIGRATIONS[:12],
     )
 
     saved_item = conn.execute(
@@ -928,3 +924,102 @@ def test_v012_upgrades_existing_v011_database_with_order_item_shop_bridge(
     ]
 
     assert saved_migrations[12] == "add_shop_item_to_order_items"
+
+
+def test_v013_upgrades_existing_v012_database_with_order_item_shop_backfill(
+    db_connection,
+):
+    conn = db_connection()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:8])
+
+    conn.execute(
+        """
+        INSERT INTO products
+            (id, name, price, status, is_for_sale)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        ("product-1", "Башня", 30000, "reserved", 0),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO orders
+            (id, customer_name, customer_email, total, status)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        ("order-1", "Покупатель", "buyer@example.com", 30000, "new"),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO order_items
+            (order_id, product_id, product_name, unit_price, quantity)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        ("order-1", "product-1", "Башня", 30000, 1),
+    )
+
+    conn.commit()
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:12])
+
+    shop_item_before_v013 = conn.execute(
+        "SELECT id, work_id FROM shop_items WHERE work_id = ?", ("product-1",)
+    ).fetchone()
+
+    order_item_before_v013 = conn.execute(
+        "SELECT product_id, shop_item_id FROM order_items WHERE order_id = ?",
+        ("order-1",),
+    ).fetchone()
+
+    assert shop_item_before_v013 is not None
+    assert shop_item_before_v013["work_id"] == "product-1"
+
+    assert order_item_before_v013["product_id"] == "product-1"
+    assert order_item_before_v013["shop_item_id"] is None
+
+    migrations.run_migrations(conn, migrations.MIGRATIONS[:13])
+
+    saved_item = conn.execute(
+        """
+        SELECT
+            order_id, product_id, shop_item_id, product_name, unit_price, quantity
+        FROM order_items
+        WHERE order_id = ?
+        """,
+        ("order-1",),
+    ).fetchone()
+
+    saved_versions = conn.execute(
+        "SELECT version, name FROM schema_migrations ORDER BY version"
+    ).fetchall()
+
+    saved_migrations = {row["version"]: row["name"] for row in saved_versions}
+
+    conn.close()
+
+    assert saved_item["product_id"] == "product-1"
+    assert saved_item["shop_item_id"] == shop_item_before_v013["id"]
+
+    assert saved_item["product_name"] == "Башня"
+    assert saved_item["unit_price"] == 30000
+    assert saved_item["quantity"] == 1
+
+    assert [row["version"] for row in saved_versions] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+    ]
+
+    assert saved_migrations[13] == "backfill_order_item_shop_bridge"
