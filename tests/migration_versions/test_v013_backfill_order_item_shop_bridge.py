@@ -210,6 +210,7 @@ def test_v013_backfills_correct_shop_item_id_for_each_active_order_item(db_conne
         SELECT product_id, shop_item_id
         FROM order_items
         WHERE order_id = ?
+        ORDER BY product_id
         """,
         ("order-1",),
     ).fetchall()
