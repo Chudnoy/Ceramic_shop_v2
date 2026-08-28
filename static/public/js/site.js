@@ -5,6 +5,6 @@ if (navigation && toggle) {
     toggle.addEventListener("click", () => {
         const isOpen = navigation.classList.toggle("is-open");
 
-        toggle.setAttribute("aria-expanded", String("is-open"));
+        toggle.setAttribute("aria-expanded", String(isOpen));
     });
 }
