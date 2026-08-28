@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}Полина Яланская{% endblock %}
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='public/css/site.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="site-nav" aria-label="Основная навигация">
+            <ul class="site-nav__primary" id="primary-navigation">
+                <li><a href="#projects">Проекты</a></li>
+                <li><a href="#work">Работы</a></li>
+                <li><a href="#shop">Магазин</a></li>
+            </ul>
+            <a href="{{ url_for('public.home') }}" class="site-brand" aria-label="Полина Яланская - на главную">
+                <span class="site-brand__name">Полина Яланская</span>
+                <span class="site-brand__subtitle">керамика</span>
+            </a>
+            <ul class="site-nav__secondary" id="secondary-navigation">
+                <li><a href="#about">О Полине</a></li>
+                <li><a href="#contacts">Контакты</a></li>
+            </ul>
+            <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="primary-navigation secondary-navigation">Меню</button>
+        </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='public/js/site.js') }}"></script>
+</body>
+</html>

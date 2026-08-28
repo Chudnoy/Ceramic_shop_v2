@@ -17,6 +17,7 @@ from flask import Flask, flash, redirect, request, session, url_for
 from database.schema import init_db
 from routes.admin import admin_bp
 from routes.main import main_bp
+from routes.public import public_bp
 from services.cart_service import get_cart_count
 from services.csrf_service import get_csrf_token, validate_csrf_from_form
 
@@ -52,6 +53,7 @@ def create_app(test_config=None):
 
     app.register_blueprint(admin_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(public_bp)
 
     @app.before_request
     def protect_from_csrf():
