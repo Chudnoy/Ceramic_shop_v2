@@ -190,6 +190,24 @@ button:focus-visible {
     color: var(--color-text);
 }
 
+.home-header__toggle {
+    display: none;
+    padding: 0;
+    border: 0;
+    color: var(--color-text);
+    background: transparent;
+    font-size: 0.7rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.home-header__toggle-icon {
+    display: inline-block;
+    font-size: 1rem;
+    transition: transform 200ms ease;
+}
+
 
 /* ==========================================
    INTRO CONTENT
@@ -862,5 +880,183 @@ SITE FOOTER
     .site-footer__secondary a:hover,
     .site-footer__contact a:hover {
         color: var(--color-text);
+    }
+}
+
+
+/* ======================================
+TABLET
+====================================== */
+
+@media (max-width: 900px) {
+    
+    /* HOME HEADER */
+
+    .home-header {
+        gap: 1rem;
+        padding: 2rem var(--page-end) 1.5rem var(--page-start);
+    }
+
+    .home-header__brand {
+        font-size: clamp(1.25rem, 2.6vw, 1.55rem);
+    }
+
+    .home-header__nav {
+        gap: clamp(1rem, 1.5vw, 1.3rem);
+    }
+
+    .home-header__nav a {
+        font-size: 0.85rem;
+    }
+
+
+    /* HOME INTRO */
+
+    .home-intro__content {
+        padding: 0 clamp(2rem, 8vw, 5rem) 7vh;
+    }
+
+    .home-intro__statement {
+        min-width: 15rem;
+        font-size: clamp(1.25rem, 2.6vw, 1.6rem);
+        line-height: 1.5;
+    }
+
+    .home-intro__media img {
+        -webkit-mask-image:
+            linear-gradient(
+                to bottom,
+                transparent 0%,
+                #000 34%
+            ),
+            linear-gradient(
+                to right,
+                transparent 22%,
+                #000 62%
+            );
+
+        mask-image: 
+            linear-gradient(
+                to bottom,
+                transparent 0%,
+                #000 34%
+            ),
+            linear-gradient(
+                to right,
+                transparent 22%,
+                #000 62%
+            );
+    }
+}
+
+
+/* ==================================
+MOBILE
+================================== */
+
+@media (max-width: 640px) {
+    :root {
+        --page-start: 1rem;
+        --page-end: 1rem;
+    }
+
+    /* HOME INTRO */
+
+    .home-intro {
+        grid-template-rows: auto auto minmax(22rem, 58svh);
+        min-height: auto;
+    }
+
+
+    /* MOBILE HEADER */
+
+    .home-header {
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem var(--page-end) 1.25rem var(--page-start);
+        background: var(--color-background);
+    }
+
+    .home-header__brand {
+        grid-column: 1;
+        font-size: 1.25rem;
+    }
+
+    .home-header__toggle {
+        display: inline-flex;
+        grid-column: 2;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .home-header__nav {
+        display: none;
+        grid-column: 1/-1;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-block: 1.5rem 0.5rem;
+    }
+
+    .home-header__nav a {
+        font-size: 0.9rem;
+    }
+
+    .home-header.is-open .home-header__nav {
+        display: flex;
+    }
+
+    .home-header.is-open .home-header__toggle-icon {
+        transform: rotate(45deg);
+    }
+
+
+    /* INTRO CONTENT */
+
+    .home-intro__content {
+        grid-row: 2;
+        display: block;
+        padding: clamp(3.5rem, 14vw, 5rem) var(--page-end) clamp(3rem, 12vw, 4.5rem) var(--page-start);
+        background: var(--color-background);
+    }
+
+    .home-intro__text {
+        max-width: 19rem;
+    }
+
+    .home-intro__statement {
+        max-width: 16ch;
+        font-size: clamp(1.45rem, 7vw, 2rem);
+        line-height: 1.40;
+    }
+
+    .home-intro__cta {
+        margin-top: 2.75rem;
+    }
+
+    .home-intro__rule {
+        margin-bottom: 1.75rem;
+    }
+
+
+    /* INTRO IMAGE */
+
+    .home-intro__media {
+        grid-column: 1/-1;
+        grid-row: 3;
+        z-index: auto;
+        overflow: hidden;
+    }
+
+    .home-intro__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 70% center;
+        -webkit-mask-image: none;
+        mask-image: none;
     }
 }
