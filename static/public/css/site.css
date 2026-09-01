@@ -114,7 +114,7 @@ button:focus-visible {
         linear-gradient(
             to bottom,
             transparent 0%,
-            #000 30%
+            #000 40%
         ),
         linear-gradient(
             to right,
@@ -550,7 +550,6 @@ SHOP PREVIEW
 
 .shop-preview__intro {
     grid-column: 1/4;
-    align-items: start;
     padding-block-start: clamp(1rem, 2vw, 2rem);
 }
 
@@ -817,7 +816,7 @@ SITE FOOTER
     line-height: 1.45;
 }
 
-.site-footer__navidation {
+.site-footer__navigation {
     grid-column: 4/6;
 }
 
@@ -829,7 +828,7 @@ SITE FOOTER
     grid-column: 10/-1;
 }
 
-.site-footer__navidation,
+.site-footer__navigation,
 .site-footer__secondary,
 .site-footer__contact {
     display: flex;
@@ -838,7 +837,7 @@ SITE FOOTER
     gap: 0.55rem;
 }
 
-.site-footer__navidation a,
+.site-footer__navigation a,
 .site-footer__secondary a,
 .site-footer__contact a,
 .site-footer__contact p {
@@ -859,7 +858,7 @@ SITE FOOTER
 }
 
 @media (hover: hover) {
-    .site-footer__navidation a:hover,
+    .site-footer__navigation a:hover,
     .site-footer__secondary a:hover,
     .site-footer__contact a:hover {
         color: var(--color-text);
