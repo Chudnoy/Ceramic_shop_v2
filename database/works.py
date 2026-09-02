@@ -31,7 +31,7 @@ def get_work_images(conn, work_id):
 def get_work_cover_image(conn, work_id):
     cover_image = conn.execute(
         """
-        SELECT id, image_path
+        SELECT id, image_path, position
         FROM work_images
         WHERE work_id = ?
         AND position = 1
