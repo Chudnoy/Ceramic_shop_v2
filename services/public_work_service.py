@@ -2,7 +2,7 @@ from database import shop_items, works
 from database.connection import get_db_connection
 
 
-def get_publick_work_page_data(slug):
+def get_public_work_page_data(slug):
     conn = get_db_connection()
 
     try:
@@ -24,7 +24,7 @@ def get_publick_work_page_data(slug):
             "images": [dict(image) for image in images],
             "categories": [dict(category) for category in categories],
             "tags": [dict(tag) for tag in tags],
-            "materials": [dict[material] for material in materials],
+            "materials": [dict(material) for material in materials],
             "shop_item": dict(shop_item) if shop_item is not None else None,
         }
     finally:

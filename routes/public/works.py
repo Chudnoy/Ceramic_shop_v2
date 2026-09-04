@@ -1,13 +1,13 @@
 from flask import abort, render_template
 
-from services.public_work_service import get_publick_work_page_data
+from services.public_work_service import get_public_work_page_data
 
 from . import public_bp
 
 
 @public_bp.route("/works/<slug>")
 def work_detail(slug):
-    page_data = get_publick_work_page_data(slug)
+    page_data = get_public_work_page_data(slug)
 
     if page_data is None:
         abort(404)
