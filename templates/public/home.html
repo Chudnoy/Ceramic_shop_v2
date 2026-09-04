@@ -73,7 +73,7 @@
         <div class="selected-works__grid">
 
             {% for work in works %}
-                <a class="work-tile work-tile--slot-{{ loop.index0 }}" href="#">
+                <a class="work-tile work-tile--slot-{{ loop.index }}" href="#">
                     <figure class="work-tile__figure">
                         {% if work.cover_image_path %}
                             <img src="{{ work.cover_image_path }}" alt="{{ work.name }}">
