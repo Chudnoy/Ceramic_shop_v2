@@ -74,6 +74,20 @@ def get_work_tags(conn, work_id):
     return work_tags
 
 
+def get_work_materials(conn, work_id):
+    return conn.execute(
+        """
+        SELECT m.name, m.slug
+        FROM materials AS m
+        JOIN work_materials AS wm
+            ON wm.material_id = m.id
+        WHERE wm.work_id = ?
+        ORDER BY m.name
+        """,
+        (work_id,),
+    ).fetchall()
+
+
 def get_work_by_id(conn, work_id):
     return conn.execute("SELECT * FROM works WHERE id = ?", (work_id,)).fetchone()
 

@@ -680,3 +680,56 @@ def test_get_shop_item_materials_returns_work_materials_for_linked_item(
         ("Глина", "clay"),
         ("Шамот", "chamotte"),
     ]
+
+
+def test_get_published_shop_item_by_work_id_returns_linked_item(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_work(conn)
+
+    create_test_shop_item(
+        conn,
+        shop_item_id="shop-1",
+        work_id="work-1",
+        price=30000,
+    )
+
+    item = shop_items.get_published_shop_item_by_work_id(
+        conn,
+        "work-1",
+    )
+
+    conn.close()
+
+    assert item is not None
+    assert item["id"] == "shop-1"
+    assert item["work_id"] == "work-1"
+    assert item["price"] == 30000
+
+
+def test_get_published_shop_item_by_work_id_returns_none_for_unpublished_item(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_work(conn)
+
+    create_test_shop_item(
+        conn,
+        shop_item_id="shop-1",
+        work_id="work-1",
+        is_published=0,
+    )
+
+    item = shop_items.get_published_shop_item_by_work_id(
+        conn,
+        "work-1",
+    )
+
+    conn.close()
+
+    assert item is None

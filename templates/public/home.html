@@ -73,7 +73,7 @@
         <div class="selected-works__grid">
 
             {% for work in works %}
-                <a class="work-tile work-tile--slot-{{ loop.index }}" href="#">
+                <a class="work-tile work-tile--slot-{{ loop.index }}" href="{{ url_for('public.work_detail', slug=work.slug) }}">
                     <figure class="work-tile__figure">
                         {% if work.cover_image_path %}
                             <img src="{{ work.cover_image_path }}" alt="{{ work.name }}">
@@ -117,16 +117,18 @@
                                 <h3 class="shop-card__title">
                                     {{ shop_item.name }}
                                 </h3>
+
                                 <p class="shop-card__meta">
                                     керамика
                                     {% if shop_item.year %}
                                         • {{ shop_item.year }}
                                     {% endif %}
                                 </p>
-                                <p class="shop-card__price">
-                                    {{ "{:,}".format(shop_item.price).replace(",", " ") }} ₽
-                                </p>
                             </div>
+
+                            <p class="shop-card__price">
+                                {{ "{:,}".format(shop_item.price).replace(",", " ") }} ₽
+                            </p>
                         </div>
                     </a>
                 </article>

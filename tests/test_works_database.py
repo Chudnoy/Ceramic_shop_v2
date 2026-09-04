@@ -75,6 +75,16 @@ def create_test_project(
     )
 
 
+def create_test_material(conn, name="Шамот", slug="chamotte"):
+    return conn.execute(
+        """
+        INSERT INTO materials (name, slug)
+        VALUES (?, ?)
+        """,
+        (name, slug),
+    ).lastrowid
+
+
 def test_get_published_works_filters_orders_and_limits(empty_db, db_connection):
     conn = db_connection()
 
@@ -379,3 +389,53 @@ def test_get_published_works_by_project_id_filters_unpublished_works(
     conn.close()
 
     assert [work["id"] for work in project_works] == ["work-1"]
+
+
+def test_get_work_materials_returns_correct_and_ordered_materials(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_work(conn)
+    create_test_work(conn, work_id="work-2", name="Другая работа", slug="other")
+
+    chamotte_id = create_test_material(conn)
+    clay_id = create_test_material(conn, name="Глина", slug="clay")
+    faience_id = create_test_material(conn, name="Фаянс", slug="faience")
+
+    conn.execute(
+        """
+        INSERT INTO work_materials (work_id, material_id)
+        VALUES (?, ?)
+        """,
+        ("work-1", chamotte_id),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO work_materials (work_id, material_id)
+        VALUES (?, ?)
+        """,
+        ("work-1", clay_id),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO work_materials (work_id, material_id)
+        VALUES (?, ?)
+        """,
+        ("work-2", faience_id),
+    )
+
+    materials = works.get_work_materials(
+        conn,
+        "work-1",
+    )
+
+    conn.close()
+
+    assert [(material["name"], material["slug"]) for material in materials] == [
+        ("Глина", "clay"),
+        ("Шамот", "chamotte"),
+    ]

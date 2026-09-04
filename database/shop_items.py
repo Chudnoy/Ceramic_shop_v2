@@ -115,6 +115,27 @@ def get_published_shop_item_by_id(conn, shop_item_id):
     ).fetchone()
 
 
+def get_published_shop_item_by_work_id(conn, work_id):
+    return conn.execute(
+        """
+        SELECT
+            id,
+            work_id,
+            sales_note,
+            price,
+            inventory_type,
+            stock_quantity,
+            is_published,
+            is_orderable,
+            is_retired
+        FROM shop_items
+        WHERE work_id = ?
+            AND is_published = 1
+        """,
+        (work_id,),
+    ).fetchone()
+
+
 def get_shop_item_images(conn, shop_item_id):
     return conn.execute(
         """
