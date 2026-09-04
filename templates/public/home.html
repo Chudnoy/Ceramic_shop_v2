@@ -71,51 +71,20 @@
             <h2 class="sr-only" id="selected-works-title">Избранные работы</h2>
         </div>
         <div class="selected-works__grid">
-            <a class="work-tile work-tile--photo" href="#">
-                <figure class="work-tile__figure">
-                    <img
-                        src="{{ url_for('static', filename='public/img/projects/project-porous-forms-cover-no-bg.png') }}"
-                        alt="Группа пористых керамических объектов на светлом фоне"
-                    >
-                </figure>
-                <span class="sr-only">Открыть раздел с работами</span>
-            </a>
-            <a class="work-tile work-tile--blue-bowl work-tile--cutout" href="#">
-                <figure class="work-tile__figure">
-                    <img
-                        src="{{ url_for('static', filename='public/img/shop/shop-relief-glase-bowl-no-bg.png') }}"
-                        alt="Керамическая чаша со светлой глазурью и синими потёками"
-                    >
-                </figure>
-                <span class="sr-only">Открыть раздел с работами</span>
-            </a>
-            <a class="work-tile work-tile--open-bowl work-tile--cutout" href="#">
-                <figure class="work-tile__figure">
-                    <img
-                        src="{{ url_for('static', filename='public/img/works/work-glossy-lattice-vase-no-bg.png') }}"
-                        alt="Пористая открытая керамическая чаша"
-                    >
-                </figure>
-                <span class="sr-only">Открыть раздел с работами</span>
-            </a>
-            <a class="work-tile work-tile--mug work-tile--cutout" href="#">
-                <figure class="work-tile__figure">
-                    <img
-                        src="{{ url_for('static', filename='public/img/shop/shop-porous-textured-mug-no-bg.png') }}"
-                        alt="Пористая керамическая кружка"
-                    >
-                </figure>
-                <span class="sr-only">Открыть раздел с работами</span>
-            </a>
-            <a class="work-tile work-tile--drop-vessel work-tile--cutout" href="#">
-                <figure class="work-tile__figure">
-                    <img
-                        src="{{ url_for('static', filename='public/img/works/work-porous-sculpture-no-bg.png') }}"
-                        alt="Пористый керамический сосуд каплевидной формы"
-                    >
-                </figure>
-                <span class="sr-only">Открыть раздел с работами</span>
-            </a>
+
+            {% for work in works %}
+                <a class="work-tile work-tile--slot-{{ loop.index0 }}" href="#">
+                    <figure class="work-tile__figure">
+                        {% if work.cover_image_path %}
+                            <img src="{{ work.cover_image_path }}" alt="{{ work.name }}">
+                        {% endif %}
+                    </figure>
+                    <span class="sr-only">
+                        Открыть работу «{{ work.name }}»
+                    </span>
+                </a>
+            {% endfor %}
+            
             <a class="selected-works__all-link text-link" href="#">
                 Смотреть галерею
                 <span aria-hidden="true">→</span>
@@ -134,34 +103,35 @@
             </a>
         </div>
         <div class="shop-preview__products">
-            <article class="shop-card">
-                <a class="shop-card__link" href="#">
-                    <figure class="shop-card__media">
-                        <img src="{{ url_for('static', filename='public/img/shop/shop-porous-textured-mug-no-bg.png') }}" alt="Пористая керамическая кружка">
-                    </figure>
-                    <div class="shop-card__info">
-                        <div>
-                            <h3 class="shop-card__title"> Кружка</h3>
-                            <p class="shop-card__meta">керамика · 2026</p>
+            
+            {% for shop_item in shop_items %}
+                <article class="shop-card">
+                    <a href="#" class="shop-card__link">
+                        <figure class="shop-card__media">
+                            {% if shop_item.cover_image_path %}
+                                <img src="{{ shop_item.cover_image_path }}" alt="{{ shop_item.name }}">
+                            {% endif %}
+                        </figure>
+                        <div class="shop-card__info">
+                            <div>
+                                <h3 class="shop-card__title">
+                                    {{ shop_item.name }}
+                                </h3>
+                                <p class="shop-card__meta">
+                                    керамика
+                                    {% if shop_item.year %}
+                                        • {{ shop_item.year }}
+                                    {% endif %}
+                                </p>
+                                <p class="shop-card__price">
+                                    {{ "{:,}".format(shop_item.price).replace(",", " ") }} ₽
+                                </p>
+                            </div>
                         </div>
-                        <p class="shop-card__price">6 500 ₽</p>
-                    </div>
-                </a>
-            </article>
-            <article class="shop-card">
-                <a class="shop-card__link" href="#">
-                    <figure class="shop-card__media">
-                        <img src="{{ url_for('static', filename='public/img/shop/shop-relief-glase-bowl-no-bg.png') }}" alt="Керамическая чаша с рельефной глазурью">
-                    </figure>
-                    <div class="shop-card__info">
-                        <div>
-                            <h3 class="shop-card__title">Чаша</h3>
-                            <p class="shop-card__meta">керамика · 2026</p>
-                        </div>
-                        <p class="shop-card__price">11 600 ₽</p>
-                    </div>
-                </a>
-            </article>
+                    </a>
+                </article>
+            {% endfor %}
+
         </div>
     </section>
 

@@ -19,6 +19,7 @@ def get_published_shop_items(conn, limit):
                 THEN w.dimensions
                 ELSE si.dimensions
             END AS dimensions,
+            w.year AS year,
             si.sales_note,
             si.price,
             si.inventory_type,
@@ -58,6 +59,7 @@ def get_shop_item_by_id(conn, shop_item_id):
                 THEN w.dimensions
                 ELSE si.dimensions
             END AS dimensions,
+            w.year AS year,
             si.sales_note,
             si.price,
             si.inventory_type,
@@ -95,6 +97,7 @@ def get_published_shop_item_by_id(conn, shop_item_id):
                 THEN w.dimensions
                 ELSE si.dimensions
             END AS dimensions,
+            w.year AS year,
             si.sales_note,
             si.price,
             si.inventory_type,

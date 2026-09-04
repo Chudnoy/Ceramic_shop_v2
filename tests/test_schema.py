@@ -45,18 +45,34 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
         "SELECT COUNT(*) FROM work_materials"
     ).fetchone()[0]
 
-    tower = conn.execute("SELECT id FROM works WHERE name = ?", ("Башня",)).fetchone()
+    tower_product = conn.execute(
+        """
+        SELECT id
+        FROM products
+        WHERE name = ?
+        """,
+        ("Башня",),
+    ).fetchone()
 
-    tower_materials = conn.execute(
+    demo_work = conn.execute(
+        """
+        SELECT id, name
+        FROM works
+        WHERE id = ?
+        """,
+        (tower_product["id"],),
+    ).fetchone()
+
+    work_materials = conn.execute(
         """
         SELECT materials.name
         FROM work_materials
         JOIN materials
-        ON materials.id = work_materials.material_id
+            ON materials.id = work_materials.material_id
         WHERE work_materials.work_id = ?
         ORDER BY materials.name
         """,
-        (tower["id"],),
+        (demo_work["id"],),
     ).fetchall()
 
     conn.close()
@@ -82,11 +98,11 @@ def test_init_db_runs_migrations_and_seeds_data(db_connection):
     assert product_count == 5
     assert len(product_ids) == 5
     assert work_ids == product_ids
-    assert work_image_count == 5
+    assert work_image_count == 19
     assert work_category_count == 5
     assert work_material_count == 14
 
-    assert [row["name"] for row in tower_materials] == [
+    assert [row["name"] for row in work_materials] == [
         "Глазурь",
         "Каменная масса",
         "Фарфор",

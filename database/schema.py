@@ -84,6 +84,89 @@ def seed_artistic_demo_data(conn):
     )
 
 
+def seed_demo_work_images(conn):
+    demo_works = [
+        {
+            "legacy_name": "Башня",
+            "name": "Капля",
+            "slug": "kaplya",
+            "images": [
+                "/static/uploads/works/work-01/01-cover.png",
+                "/static/uploads/works/work-01/02-detail.png",
+                "/static/uploads/works/work-01/03-alt.png",
+                "/static/uploads/works/work-01/04-context.png",
+            ],
+        },
+        {
+            "legacy_name": "Проект «Дом». Версия 3",
+            "name": "Низкая чаша",
+            "slug": "nizkaya-chasha",
+            "images": [
+                "/static/uploads/works/work-02/01-cover.png",
+                "/static/uploads/works/work-02/02-detail.png",
+                "/static/uploads/works/work-02/03-alt.png",
+                "/static/uploads/works/work-02/04-context.png",
+            ],
+        },
+        {
+            "legacy_name": "Сны Карелии",
+            "name": "Колонна",
+            "slug": "kolonna",
+            "images": [
+                "/static/uploads/works/work-03/01-cover.png",
+                "/static/uploads/works/work-03/02-detail.png",
+                "/static/uploads/works/work-03/03-alt.png",
+                "/static/uploads/works/work-03/04-context.png",
+            ],
+        },
+        {
+            "legacy_name": "Destruction",
+            "name": "Белая чаша",
+            "slug": "belaya-chasha",
+            "images": [
+                "/static/uploads/works/work-04/01-cover.png",
+                "/static/uploads/works/work-04/02-detail.png",
+                "/static/uploads/works/work-04/03-alt.png",
+                "/static/uploads/works/work-04/04-context.png",
+            ],
+        },
+        {
+            "legacy_name": "Пасхальный купол",
+            "name": "Кружка",
+            "slug": "kruzhka",
+            "images": [
+                "/static/uploads/works/work-05/01-cover.png",
+                "/static/uploads/works/work-05/02-detail.png",
+                "/static/uploads/works/work-05/03-alt.png",
+            ],
+        },
+    ]
+
+    for demo_work in demo_works:
+        work = conn.execute(
+            "SELECT id FROM works WHERE name in (?, ?)",
+            (demo_work["legacy_name"], demo_work["name"]),
+        ).fetchone()
+
+        if work is None:
+            raise RuntimeError(
+                f"Demo work not found: {demo_work['legacy_name']} / {demo_work['name']}"
+            )
+
+        conn.execute(
+            "UPDATE works SET name = ?, slug = ? WHERE id = ?",
+            (demo_work["name"], demo_work["slug"], work["id"]),
+        )
+
+        conn.execute("DELETE FROM work_images WHERE work_id = ?", (work["id"],))
+
+        for position, image_path in enumerate(demo_work["images"], start=1):
+            conn.execute(
+                "INSERT INTO work_images (work_id, image_path, position) VALUES (?, ?, ?)",
+                (work["id"], image_path, position),
+            )
+
+
 def seed_shop_demo_data(conn):
     shop_item_count = conn.execute("SELECT COUNT(*) FROM shop_items").fetchone()[0]
 
@@ -214,6 +297,7 @@ def seed_initial_data():
         )
 
     seed_artistic_demo_data(conn)
+    seed_demo_work_images(conn)
     seed_shop_demo_data(conn)
 
     conn.commit()
