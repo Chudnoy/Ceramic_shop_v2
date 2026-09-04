@@ -16,6 +16,7 @@ def work_detail(slug):
         "public/work.html",
         work=page_data["work"],
         images=page_data["images"],
+        cover_image=page_data["cover_image"],
         categories=page_data["categories"],
         tags=page_data["tags"],
         materials=page_data["materials"],

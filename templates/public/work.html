@@ -2,8 +2,61 @@
 
 {% block title %}{{ work.name }} - Полина Яланская{% endblock %}
 
+{% block styles %}
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='public/css/work.css') }}"
+    >
+{% endblock %}
+
 {% block content %}
-<main>
-    <h1>{{ work.name }}</h1>
+<main class="work-page">
+
+    <section class="work-hero" aria-labelledby="work-title">
+        <div class="work-hero__content">
+            <p class="work-hero__eyebrow">Работа</p>
+            <h1 class="work-hero__title" id="work-title">
+                {{ work.name }}
+            </h1>
+            <dl class="work-hero__meta">
+
+                {% if work.year %}
+                    <div class="work-hero__meta-row">
+                        <dt>Год</dt>
+                        <dd>{{ work.year }}</dd>
+                    </div>
+                {% endif %}
+
+                {% if materials %}
+                    <div class="work-hero__meta-row">
+                        <dt>Материалы</dt>
+                        <dd>
+                            {% for material in materials %}
+                                {% if loop.first %}{{ material["name"].capitalize() }}{% else %}{{ material.name.lower() }}{% endif %}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </dd>
+                    </div>
+                {% endif %}
+
+                {% if work.dimensions %}
+                    <div class="work-hero__meta-row">
+                        <dt>Размеры</dt>
+                        <dd>{{ work.dimensions }}</dd>
+                    </div>
+                {% endif %}
+
+            </dl>
+
+            {% if shop_item %}
+                <p class="work-hero__status">Доступна</p>
+            {% endif %}
+
+        </div>
+        <figure class="work-hero__media">
+            {% if cover_image %}
+                <img src="{{ cover_image.image_path }}" alt="{{ work.name }}">
+            {% endif %}
+        </figure>
+    </section>
 </main>
 {% endblock %}

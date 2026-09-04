@@ -90,6 +90,7 @@ def seed_demo_work_images(conn):
             "legacy_name": "Башня",
             "name": "Капля",
             "slug": "kaplya",
+            "dimensions": "24 × 24 × 18 см",
             "images": [
                 "/static/uploads/works/work-01/01-cover.png",
                 "/static/uploads/works/work-01/02-detail.png",
@@ -101,6 +102,7 @@ def seed_demo_work_images(conn):
             "legacy_name": "Проект «Дом». Версия 3",
             "name": "Низкая чаша",
             "slug": "nizkaya-chasha",
+            "dimensions": "20 × 15 × 10 см",
             "images": [
                 "/static/uploads/works/work-02/01-cover.png",
                 "/static/uploads/works/work-02/02-detail.png",
@@ -112,6 +114,7 @@ def seed_demo_work_images(conn):
             "legacy_name": "Сны Карелии",
             "name": "Колонна",
             "slug": "kolonna",
+            "dimensions": "24 × 24 × 18 см",
             "images": [
                 "/static/uploads/works/work-03/01-cover.png",
                 "/static/uploads/works/work-03/02-detail.png",
@@ -123,6 +126,7 @@ def seed_demo_work_images(conn):
             "legacy_name": "Destruction",
             "name": "Белая чаша",
             "slug": "belaya-chasha",
+            "dimensions": "12 × 21 × 18 см",
             "images": [
                 "/static/uploads/works/work-04/01-cover.png",
                 "/static/uploads/works/work-04/02-detail.png",
@@ -134,6 +138,7 @@ def seed_demo_work_images(conn):
             "legacy_name": "Пасхальный купол",
             "name": "Кружка",
             "slug": "kruzhka",
+            "dimensions": "24 × 24 × 18 см",
             "images": [
                 "/static/uploads/works/work-05/01-cover.png",
                 "/static/uploads/works/work-05/02-detail.png",
@@ -154,8 +159,8 @@ def seed_demo_work_images(conn):
             )
 
         conn.execute(
-            "UPDATE works SET name = ?, slug = ? WHERE id = ?",
-            (demo_work["name"], demo_work["slug"], work["id"]),
+            "UPDATE works SET name = ?, slug = ?, dimensions = ? WHERE id = ?",
+            (demo_work["name"], demo_work["slug"], demo_work["dimensions"], work["id"]),
         )
 
         conn.execute("DELETE FROM work_images WHERE work_id = ?", (work["id"],))

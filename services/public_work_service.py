@@ -14,6 +14,7 @@ def get_public_work_page_data(slug):
         work_id = work["id"]
 
         images = works.get_work_images(conn, work_id)
+        cover_image = works.get_work_cover_image(conn, work_id)
         categories = works.get_work_categories(conn, work_id)
         tags = works.get_work_tags(conn, work_id)
         materials = works.get_work_materials(conn, work_id)
@@ -22,6 +23,7 @@ def get_public_work_page_data(slug):
         return {
             "work": dict(work),
             "images": [dict(image) for image in images],
+            "cover_image": dict(cover_image) if cover_image is not None else None,
             "categories": [dict(category) for category in categories],
             "tags": [dict(tag) for tag in tags],
             "materials": [dict(material) for material in materials],

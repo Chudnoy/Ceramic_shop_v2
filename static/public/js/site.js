@@ -1,9 +1,10 @@
-const navigation = document.querySelector("[data-nav]");
-const toggle = navigation?.querySelector(".home-header__toggle");
+const header = document.querySelector("[data-nav]");
+const toggle = header?.querySelector(".site-header__toggle");
+const navigation = header?.querySelector(".site-header__nav");
 
-if (navigation && toggle) {
+if (header && toggle && navigation) {
     toggle.addEventListener("click", () => {
-        const isOpen = navigation.classList.toggle("is-open");
+        const isOpen = header.classList.toggle("is-open");
 
         toggle.setAttribute(
             "aria-expanded",
@@ -12,15 +13,17 @@ if (navigation && toggle) {
     });
 
     navigation
-        .querySelectorAll(".home-header__nav a")
+        .querySelectorAll("a")
         .forEach((link) => {
-            link.addEventListener('click', () => {
-                navigation.classList.remove("is-open");
+            link.addEventListener("click", () => {
+                header.classList.remove("is-open");
 
                 toggle.setAttribute(
                     "aria-expanded",
-                    "false",
+                    "false"
                 );
             });
         });
-};
+
+    header.classList.add("is-enhanced");
+}
