@@ -47,7 +47,7 @@
 
             </dl>
 
-            {% if shop_item %}
+            {% if availability and availability.can_order %}
                 <p class="work-hero__status">Доступна</p>
             {% endif %}
 

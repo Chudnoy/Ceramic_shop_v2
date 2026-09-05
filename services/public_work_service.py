@@ -1,5 +1,6 @@
 from database import shop_items, works
 from database.connection import get_db_connection
+from services.shop_availability_service import get_shop_item_availability
 
 
 def get_public_work_page_data(slug):
@@ -19,6 +20,12 @@ def get_public_work_page_data(slug):
         tags = works.get_work_tags(conn, work_id)
         materials = works.get_work_materials(conn, work_id)
         shop_item = shop_items.get_published_shop_item_by_work_id(conn, work_id)
+        shop_item_data = dict(shop_item) if shop_item is not None else None
+        availability = (
+            get_shop_item_availability(conn, shop_item)
+            if shop_item is not None
+            else None
+        )
 
         return {
             "work": dict(work),
@@ -27,7 +34,8 @@ def get_public_work_page_data(slug):
             "categories": [dict(category) for category in categories],
             "tags": [dict(tag) for tag in tags],
             "materials": [dict(material) for material in materials],
-            "shop_item": dict(shop_item) if shop_item is not None else None,
+            "shop_item": shop_item_data,
+            "availability": availability,
         }
     finally:
         conn.close()
