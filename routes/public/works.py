@@ -17,6 +17,7 @@ def work_detail(slug):
         work=page_data["work"],
         images=page_data["images"],
         cover_image=page_data["cover_image"],
+        detail_images=page_data["detail_images"],
         categories=page_data["categories"],
         tags=page_data["tags"],
         materials=page_data["materials"],

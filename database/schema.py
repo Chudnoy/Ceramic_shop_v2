@@ -63,8 +63,11 @@ def seed_initial_data():
                 "kaplya",
                 "Капля",
                 (
-                    "Скульптурный керамический объект с пористой "
-                    "структурой и вытянутым силуэтом."
+                    """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
                 ),
                 2025,
                 "24 × 24 × 18 см",
@@ -79,7 +82,13 @@ def seed_initial_data():
                 NIZKAYA_CHASHA_ID,
                 "nizkaya-chasha",
                 "Низкая чаша",
-                ("Низкая открытая форма с выраженной фактурой поверхности."),
+                (
+                    """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
+                ),
                 2025,
                 "20 × 15 × 10 см",
                 None,
@@ -94,8 +103,11 @@ def seed_initial_data():
                 "kolonna",
                 "Колонна",
                 (
-                    "Высокий керамический объект, построенный "
-                    "на ритме отверстий и повторяющейся фактуры."
+                    """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
                 ),
                 2025,
                 "24 × 24 × 18 см",
@@ -111,8 +123,11 @@ def seed_initial_data():
                 "belaya-chasha",
                 "Белая чаша",
                 (
-                    "Чаша со светлой поверхностью и подчёркнутой "
-                    "нерегулярностью ручной формы."
+                    """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
                 ),
                 2025,
                 "12 × 21 × 18 см",
@@ -127,7 +142,13 @@ def seed_initial_data():
                 KRUZHKA_ID,
                 "kruzhka",
                 "Кружка",
-                ("Утилитарная керамическая форма с рельефной поверхностью."),
+                (
+                    """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
+                ),
                 2025,
                 "12 × 9 × 9 см",
                 None,
@@ -233,12 +254,12 @@ def seed_initial_data():
             ),
             (
                 BELAYA_CHASHA_ID,
-                "/static/uploads/works/work-04/03-top.png",
+                "/static/uploads/works/work-04/03-alt.png",
                 3,
             ),
             (
                 BELAYA_CHASHA_ID,
-                "/static/uploads/works/work-04/04-alt.png",
+                "/static/uploads/works/work-04/04-context.png",
                 4,
             ),
             (

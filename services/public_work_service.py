@@ -31,6 +31,9 @@ def get_public_work_page_data(slug):
             "work": dict(work),
             "images": [dict(image) for image in images],
             "cover_image": dict(cover_image) if cover_image is not None else None,
+            "detail_images": [
+                dict(image) for image in images if image["position"] != 1
+            ],
             "categories": [dict(category) for category in categories],
             "tags": [dict(tag) for tag in tags],
             "materials": [dict(material) for material in materials],

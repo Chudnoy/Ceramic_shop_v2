@@ -58,5 +58,81 @@
             {% endif %}
         </figure>
     </section>
+
+    {% if detail_images or work.description %}
+        <section
+            class="work-story"
+            aria-label="О работе"
+        >
+
+            <div class="work-story__side">
+
+                {% if detail_images|length > 0 %}
+                    <figure class="work-story__side-image work-story__side-image--top">
+                        <img
+                            src="{{ detail_images[0].image_path }}"
+                            alt=""
+                        >
+                    </figure>
+                {% endif %}
+
+                {% if detail_images|length > 1 %}
+                    <figure class="work-story__side-image work-story__side-image--bottom">
+                        <img
+                            src="{{ detail_images[1].image_path }}"
+                            alt=""
+                        >
+                    </figure>
+                {% endif %}
+
+            </div>
+
+
+            <div class="work-story__main">
+
+                {% if detail_images|length > 2 %}
+                    <figure class="work-story__main-image work-story__main-image--portrait">
+                        <img
+                            src="{{ detail_images[2].image_path }}"
+                            alt=""
+                        >
+                    </figure>
+                {% endif %}
+
+                {% if work.description %}
+                    <div class="work-story__content" data-story-content>
+                        <p class="work-story__description" id="work-story-description" data-story-description>
+                            {{ work.description }}
+                        </p>
+                        <button
+                            class="work-story__toggle"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="work-story-description"
+                            data-story-toggle
+                            hidden
+                        >
+                            <span data-story-toggle-label>Читать далее</span>
+                            <span aria-hidden="true">↓</span>
+                        </button>
+                    </div>
+                {% endif %}
+
+                {% if detail_images|length > 3 %}
+                    <figure class="work-story__main-image work-story__main-image--wide">
+                        <img
+                            src="{{ detail_images[3].image_path }}"
+                            alt=""
+                        >
+                    </figure>
+                {% endif %}
+
+            </div>
+
+        </section>
+    {% endif %}
 </main>
+{% endblock %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='public/js/work.js') }}"></script>
 {% endblock %}
