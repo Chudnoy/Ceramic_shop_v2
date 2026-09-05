@@ -7,6 +7,12 @@ KOLONNA_ID = "7e87e224-3962-4717-850f-36442ac0132d"
 BELAYA_CHASHA_ID = "21f813a5-cf21-4fa8-89e3-21879895c0d5"
 KRUZHKA_ID = "ab37a435-afb9-4dea-b8a9-4ce47e5e268f"
 
+LONG_DEMO_DESCRIPTION = """
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
+                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
+                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
+                    """
+
 
 def seed_initial_data():
     conn = get_db_connection()
@@ -62,13 +68,7 @@ def seed_initial_data():
                 KAPLYA_ID,
                 "kaplya",
                 "Капля",
-                (
-                    """
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
-                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
-                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
-                    """
-                ),
+                (LONG_DEMO_DESCRIPTION),
                 2025,
                 "24 × 24 × 18 см",
                 None,
@@ -82,13 +82,7 @@ def seed_initial_data():
                 NIZKAYA_CHASHA_ID,
                 "nizkaya-chasha",
                 "Низкая чаша",
-                (
-                    """
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
-                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
-                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
-                    """
-                ),
+                (LONG_DEMO_DESCRIPTION),
                 2025,
                 "20 × 15 × 10 см",
                 None,
@@ -102,13 +96,7 @@ def seed_initial_data():
                 KOLONNA_ID,
                 "kolonna",
                 "Колонна",
-                (
-                    """
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
-                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
-                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
-                    """
-                ),
+                (LONG_DEMO_DESCRIPTION),
                 2025,
                 "24 × 24 × 18 см",
                 None,
@@ -122,13 +110,7 @@ def seed_initial_data():
                 BELAYA_CHASHA_ID,
                 "belaya-chasha",
                 "Белая чаша",
-                (
-                    """
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
-                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
-                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
-                    """
-                ),
+                (LONG_DEMO_DESCRIPTION),
                 2025,
                 "12 × 21 × 18 см",
                 None,
@@ -142,13 +124,7 @@ def seed_initial_data():
                 KRUZHKA_ID,
                 "kruzhka",
                 "Кружка",
-                (
-                    """
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
-                    Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
-                    Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
-                    """
-                ),
+                (LONG_DEMO_DESCRIPTION),
                 2025,
                 "12 × 9 × 9 см",
                 None,

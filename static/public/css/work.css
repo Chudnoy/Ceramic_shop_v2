@@ -163,28 +163,19 @@ WORK STORY
 ================================== */
 
 .work-story {
-    --work-story-gap:
-        clamp(0.65rem, 1vw, 1rem);
-
-    --work-story-height:
-        clamp(27rem, 35vw, 35rem);
-
+    --work-story-gap: clamp(0.65rem, 1vw, 1rem);
+    --work-story-height: clamp(27rem, 35vw, 35rem);
     display: grid;
-
-    grid-template-columns:
-        minmax(10rem, 0.52fr)
-        minmax(0, 1.48fr);
-
+    grid-template-columns: minmax(10rem, 0.52fr) minmax(0, 1.48fr);
     gap: var(--work-story-gap);
-
     padding:
         clamp(1.5rem, 3vw, 3rem)
         var(--page-end)
         clamp(3rem, 5vw, 5rem)
         var(--page-start);
+
     align-items: stretch;
 }
-
 
 .work-story__side {
     display: grid;
@@ -194,7 +185,6 @@ WORK STORY
     min-inline-size: 0;
 }
 
-
 .work-story__main {
     display: grid;
     grid-template-columns: minmax(0, 0.65fr) minmax(15rem, 1.35fr);
@@ -203,7 +193,6 @@ WORK STORY
     block-size: var(--work-story-height);
     min-inline-size: 0;
 }
-
 
 .work-story.is-expanded .work-story__side,
 .work-story.is-expanded .work-story__main {
@@ -247,7 +236,9 @@ MAIN IMAGE + CONTENT
 .work-story__content {
     grid-column: 2;
     grid-row: 1;
+
     align-self: center;
+
     padding-inline: clamp(2rem, 4vw, 4rem);
 }
 
@@ -283,7 +274,7 @@ STORY TEXT
     text-wrap: pretty;
 }
 
-.work-story__content.is-collapsible
+.work-story.is-collapsible
 .work-story__description {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -292,11 +283,16 @@ STORY TEXT
     overflow: hidden;
 }
 
-.work-story__content.work-story__content.is-collapsible.is-expanded
+.work-story.is-expanded
 .work-story__description {
     display: block;
     overflow: visible;
 }
+
+
+/* ==================================
+STORY TOGGLE
+================================== */
 
 .work-story__toggle {
     display: inline-flex;
@@ -314,12 +310,12 @@ STORY TEXT
     cursor: pointer;
 }
 
-.work-story__toggle > span {
+.work-story__toggle-icon {
     color: var(--color-accent);
     transition: transform 180ms ease;
 }
 
-.work-story__content.is-expanded 
-.work-story__toggle > span:last-child {
+.work-story.is-expanded
+.work-story__toggle-icon {
     transform: rotate(180deg);
 }
