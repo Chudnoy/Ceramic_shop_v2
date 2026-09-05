@@ -1,235 +1,45 @@
-import uuid
-
 from database.connection import get_db_connection
 from database.migrations import MIGRATIONS, run_migrations
 
 
-def seed_artistic_demo_data(conn):
-    work_count = conn.execute("SELECT COUNT(*) FROM works").fetchone()[0]
-
-    if work_count != 0:
-        return
-
-    conn.execute(
-        """
-        INSERT INTO works
-            (id, name, description, year, is_published)
-        SELECT
-            id,
-            name,
-            description,
-            year,
-            CASE
-                WHEN is_visible = 1
-                    AND is_archived = 0
-                THEN 1
-                ELSE 0
-            END
-        FROM products
-        """
-    )
-
-    conn.execute(
-        """
-        INSERT INTO work_images
-            (work_id, image_path, position)
-        SELECT
-            id,
-            img,
-            1
-        FROM products
-        WHERE img IS NOT NULL
-            AND TRIM(img) != ''
-        """
-    )
-
-    conn.execute(
-        """
-        INSERT INTO work_categories
-            (work_id, category_id)
-        SELECT id, category_id
-        FROM products
-        WHERE category_id IS NOT NULL
-        """
-    )
-
-    products = conn.execute("SELECT id, materials FROM products ORDER BY id").fetchall()
-
-    for product in products:
-        material_names = [
-            material.strip() for material in product["materials"].split(",")
-        ]
-
-        for material_name in material_names:
-            material = conn.execute(
-                "SELECT id FROM materials WHERE name = ?", (material_name,)
-            ).fetchone()
-
-            if material is None:
-                raise RuntimeError(f"Seed material is not canonical: {material_name}")
-
-            conn.execute(
-                "INSERT INTO work_materials (work_id, material_id) VALUES (?, ?)",
-                (product["id"], material["id"]),
-            )
-
-    conn.execute(
-        """
-        INSERT INTO work_tags
-            (work_id, tag_id)
-        SELECT
-            product_id, tag_id
-        FROM product_tags
-        """
-    )
-
-
-def seed_demo_work_images(conn):
-    demo_works = [
-        {
-            "legacy_name": "Башня",
-            "name": "Капля",
-            "slug": "kaplya",
-            "dimensions": "24 × 24 × 18 см",
-            "images": [
-                "/static/uploads/works/work-01/01-cover.png",
-                "/static/uploads/works/work-01/02-detail.png",
-                "/static/uploads/works/work-01/03-alt.png",
-                "/static/uploads/works/work-01/04-context.png",
-            ],
-        },
-        {
-            "legacy_name": "Проект «Дом». Версия 3",
-            "name": "Низкая чаша",
-            "slug": "nizkaya-chasha",
-            "dimensions": "20 × 15 × 10 см",
-            "images": [
-                "/static/uploads/works/work-02/01-cover.png",
-                "/static/uploads/works/work-02/02-detail.png",
-                "/static/uploads/works/work-02/03-alt.png",
-                "/static/uploads/works/work-02/04-context.png",
-            ],
-        },
-        {
-            "legacy_name": "Сны Карелии",
-            "name": "Колонна",
-            "slug": "kolonna",
-            "dimensions": "24 × 24 × 18 см",
-            "images": [
-                "/static/uploads/works/work-03/01-cover.png",
-                "/static/uploads/works/work-03/02-detail.png",
-                "/static/uploads/works/work-03/03-alt.png",
-                "/static/uploads/works/work-03/04-context.png",
-            ],
-        },
-        {
-            "legacy_name": "Destruction",
-            "name": "Белая чаша",
-            "slug": "belaya-chasha",
-            "dimensions": "12 × 21 × 18 см",
-            "images": [
-                "/static/uploads/works/work-04/01-cover.png",
-                "/static/uploads/works/work-04/02-detail.png",
-                "/static/uploads/works/work-04/03-alt.png",
-                "/static/uploads/works/work-04/04-context.png",
-            ],
-        },
-        {
-            "legacy_name": "Пасхальный купол",
-            "name": "Кружка",
-            "slug": "kruzhka",
-            "dimensions": "24 × 24 × 18 см",
-            "images": [
-                "/static/uploads/works/work-05/01-cover.png",
-                "/static/uploads/works/work-05/02-detail.png",
-                "/static/uploads/works/work-05/03-alt.png",
-            ],
-        },
-    ]
-
-    for demo_work in demo_works:
-        work = conn.execute(
-            "SELECT id FROM works WHERE name in (?, ?)",
-            (demo_work["legacy_name"], demo_work["name"]),
-        ).fetchone()
-
-        if work is None:
-            raise RuntimeError(
-                f"Demo work not found: {demo_work['legacy_name']} / {demo_work['name']}"
-            )
-
-        conn.execute(
-            "UPDATE works SET name = ?, slug = ?, dimensions = ? WHERE id = ?",
-            (demo_work["name"], demo_work["slug"], demo_work["dimensions"], work["id"]),
-        )
-
-        conn.execute("DELETE FROM work_images WHERE work_id = ?", (work["id"],))
-
-        for position, image_path in enumerate(demo_work["images"], start=1):
-            conn.execute(
-                "INSERT INTO work_images (work_id, image_path, position) VALUES (?, ?, ?)",
-                (work["id"], image_path, position),
-            )
-
-
-def seed_shop_demo_data(conn):
-    shop_item_count = conn.execute("SELECT COUNT(*) FROM shop_items").fetchone()[0]
-
-    if shop_item_count != 0:
-        return
-
-    products = conn.execute(
-        """
-        SELECT
-            id, price, is_visible, is_for_sale
-        FROM products
-        WHERE status = 'available'
-            AND is_for_sale = 1
-            AND is_archived = 0
-        ORDER BY id
-        """
-    ).fetchall()
-
-    for product in products:
-        conn.execute(
-            """
-            INSERT INTO shop_items
-                (id, work_id, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                str(uuid.uuid4()),
-                product["id"],
-                product["price"],
-                "unique",
-                1,
-                product["is_visible"] * product["is_for_sale"],
-                product["is_for_sale"],
-                0,
-            ),
-        )
+KAPLYA_ID = "f05b463a-5d51-4c2b-8922-2fc38fcda0bf"
+NIZKAYA_CHASHA_ID = "d40d7b3e-0621-421b-8681-f85bdb7db392"
+KOLONNA_ID = "7e87e224-3962-4717-850f-36442ac0132d"
+BELAYA_CHASHA_ID = "21f813a5-cf21-4fa8-89e3-21879895c0d5"
+KRUZHKA_ID = "ab37a435-afb9-4dea-b8a9-4ce47e5e268f"
 
 
 def seed_initial_data():
     conn = get_db_connection()
 
-    cursor = conn.execute("SELECT COUNT(*) FROM categories")
-    if cursor.fetchone()[0] == 0:
+    try:
+        work_count = conn.execute(
+            "SELECT COUNT(*) FROM works"
+        ).fetchone()[0]
+
+        if work_count != 0:
+            return
+
         categories = [
-            ("Вазы", "vases", "Вазы утилитарные "),
-            ("Кружки", "mugs", "Кружки для разных целей"),
-            ("Тарелки", "plates", "Авторские тарелки для сервировки"),
-            ("Чашки", "cups", "Изысканные чашки для особых моментов"),
-            ("Объекты", "objects", "Объекты для интерьера"),
+            ("Вазы", "vases", "Вазы и сосуды"),
+            ("Кружки", "mugs", "Кружки и утилитарные формы"),
+            ("Тарелки", "plates", "Тарелки и плоские формы"),
+            ("Чаши", "bowls", "Чаши и открытые формы"),
+            ("Объекты", "objects", "Скульптурные и интерьерные объекты"),
         ]
+
         conn.executemany(
-            "INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)",
+            """
+            INSERT INTO categories (
+                name,
+                slug,
+                description
+            )
+            VALUES (?, ?, ?)
+            """,
             categories,
         )
 
-    cursor = conn.execute("SELECT COUNT(*) FROM tags")
-
-    if cursor.fetchone()[0] == 0:
         tags = [
             ("Дом", "home"),
             ("Память", "memory"),
@@ -239,74 +49,427 @@ def seed_initial_data():
             ("Природа", "nature"),
         ]
 
-        conn.executemany("INSERT INTO tags (name, slug) VALUES (?, ?)", tags)
-
-    cursor = conn.execute("SELECT COUNT(*) FROM products")
-
-    if cursor.fetchone()[0] == 0:
-        products = [
-            (
-                str(uuid.uuid4()),
-                "Башня",
-                "Тема дома красной нитью проходит сквозь всёмоё твочество. Он был разным, в зависимостиот моего состояния и меняющегося во временимира. Сейчас, я вдохновляюсь архитектуройсоветского постмодернизма, так как чувствуюсвязь, между происходящим сейчас итогда.Так я чувствую дом сейчас : какоборонительную башню, сохраняющуюхрупкость гнезда",
-                30000,
-                "/static/img/tower.jpg",
-                5,
-                2025,
-                "Каменная масса, Глазурь, Фарфор",
-            ),
-            (
-                str(uuid.uuid4()),
-                "Проект «Дом». Версия 3",
-                "Этот проект — о том, как личное становится общим, а прошлое превращается в часть настоящего. Для меня тема дома всегда была лакмусовой бумажкой. Во времена спокойствия — это убежище, кокон. Во времена перемен — хрупкая раковина. В его стенах, даже воображаемых, можно увидеть и мое собственное состояние, и эхо внешнегомира.",
-                25000,
-                "/static/img/dom_v3.jpg",
-                5,
-                2025,
-                "Каменная масса, Фарфор, Глазурь",
-            ),
-            (
-                str(uuid.uuid4()),
-                "Сны Карелии",
-                "Мы привыкли думать, что камни безмолвствуютвеками.Но в каждом изгибе, в каждой прожилке сокрыта тайна природы. Это не подражание, а преображение: мягкая глина застывает в образе вулканической породы, а глазурь хранит память отом, как свет играет на дне лесного озера.Прикоснитесь — и вы почувствуете не холод камня, а тепло, которое глина навсегда сберегла в памяти огня печи.",
-                15000,
-                "/static/img/dreams_of_karelia.jpg",
-                1,
-                2025,
-                "Каменная масса, Глазурь",
-            ),
-            (
-                str(uuid.uuid4()),
-                "Destruction",
-                "Проект посвящен эстетизации разрушенияи попытке навязать хаосу систему и форму.Природные катаклизмы, взрывы бытовогогаза, постепенное тление — все эти силы,уничтожающие архитектуру, находятотражение в керамических объектах, лишьотдаленно напоминающих постройки.",
-                10000,
-                "/static/img/destruction.jpg",
-                5,
-                2025,
-                "Каменная масса, Фарфор, Глазурь",
-            ),
-            (
-                str(uuid.uuid4()),
-                "Пасхальный купол",
-                "Объект синтезирует архаичную символику яйца и древнерусской архитектуры. Форма яйца — универсальный архетип зарождения жизни. Венчающая часть в виде купола с нитевидной фактурой отсылает кправославным луковичным главам,символизирующим пламя свечи и небесную сферу. Цветовая гаммаимитирует пигменты народных промыслов, а белая кракелюрная глазурь напоминает глазурь на пасхальном куличе. Этаскульптура — размышление о циклическом бытии: яйцо таит в себе потенциал, купол оберегает — вместе они воплощаютнепрерывное возрождение в хаосе жизни",
-                17000,
-                "/static/img/easter_dome.jpg",
-                1,
-                2025,
-                "Каменная масса, Глазурь, Фарфор",
-            ),
-        ]
         conn.executemany(
-            "INSERT INTO products (id, name, description, price, img, category_id, year, materials) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            products,
+            """
+            INSERT INTO tags (
+                name,
+                slug
+            )
+            VALUES (?, ?)
+            """,
+            tags,
         )
 
-    seed_artistic_demo_data(conn)
-    seed_demo_work_images(conn)
-    seed_shop_demo_data(conn)
 
-    conn.commit()
-    conn.close()
+        works = [
+            (
+                KAPLYA_ID,
+                "kaplya",
+                "Капля",
+                (
+                    "Скульптурный керамический объект с пористой "
+                    "структурой и вытянутым силуэтом."
+                ),
+                2025,
+                "24 × 24 × 18 см",
+                None,
+                None,
+                None,
+                1,
+                0,
+                None,
+            ),
+            (
+                NIZKAYA_CHASHA_ID,
+                "nizkaya-chasha",
+                "Низкая чаша",
+                (
+                    "Низкая открытая форма с выраженной фактурой "
+                    "поверхности."
+                ),
+                2025,
+                "20 × 15 × 10 см",
+                None,
+                None,
+                None,
+                1,
+                0,
+                None,
+            ),
+            (
+                KOLONNA_ID,
+                "kolonna",
+                "Колонна",
+                (
+                    "Высокий керамический объект, построенный "
+                    "на ритме отверстий и повторяющейся фактуры."
+                ),
+                2025,
+                "24 × 24 × 18 см",
+                None,
+                None,
+                None,
+                1,
+                0,
+                None,
+            ),
+            (
+                BELAYA_CHASHA_ID,
+                "belaya-chasha",
+                "Белая чаша",
+                (
+                    "Чаша со светлой поверхностью и подчёркнутой "
+                    "нерегулярностью ручной формы."
+                ),
+                2025,
+                "12 × 21 × 18 см",
+                None,
+                None,
+                None,
+                1,
+                1,
+                "Возможно изготовление близкой работы по запросу.",
+            ),
+            (
+                KRUZHKA_ID,
+                "kruzhka",
+                "Кружка",
+                (
+                    "Утилитарная керамическая форма с рельефной "
+                    "поверхностью."
+                ),
+                2025,
+                "12 × 9 × 9 см",
+                None,
+                None,
+                None,
+                1,
+                0,
+                None,
+            ),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO works (
+                id,
+                slug,
+                name,
+                description,
+                year,
+                dimensions,
+                project_id,
+                series_id,
+                project_position,
+                is_published,
+                is_commissionable,
+                commission_note
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            works,
+        )
+
+        work_images = [
+            (
+                KAPLYA_ID,
+                "/static/uploads/works/work-01/01-cover.png",
+                1,
+            ),
+            (
+                KAPLYA_ID,
+                "/static/uploads/works/work-01/02-detail.png",
+                2,
+            ),
+            (
+                KAPLYA_ID,
+                "/static/uploads/works/work-01/03-alt.png",
+                3,
+            ),
+            (
+                KAPLYA_ID,
+                "/static/uploads/works/work-01/04-context.png",
+                4,
+            ),
+
+            (
+                NIZKAYA_CHASHA_ID,
+                "/static/uploads/works/work-02/01-cover.png",
+                1,
+            ),
+            (
+                NIZKAYA_CHASHA_ID,
+                "/static/uploads/works/work-02/02-detail.png",
+                2,
+            ),
+            (
+                NIZKAYA_CHASHA_ID,
+                "/static/uploads/works/work-02/03-alt.png",
+                3,
+            ),
+            (
+                NIZKAYA_CHASHA_ID,
+                "/static/uploads/works/work-02/04-context.png",
+                4,
+            ),
+
+            (
+                KOLONNA_ID,
+                "/static/uploads/works/work-03/01-cover.png",
+                1,
+            ),
+            (
+                KOLONNA_ID,
+                "/static/uploads/works/work-03/02-detail.png",
+                2,
+            ),
+            (
+                KOLONNA_ID,
+                "/static/uploads/works/work-03/03-alt.png",
+                3,
+            ),
+            (
+                KOLONNA_ID,
+                "/static/uploads/works/work-03/04-context.png",
+                4,
+            ),
+
+            (
+                BELAYA_CHASHA_ID,
+                "/static/uploads/works/work-04/01-cover.png",
+                1,
+            ),
+            (
+                BELAYA_CHASHA_ID,
+                "/static/uploads/works/work-04/02-detail.png",
+                2,
+            ),
+            (
+                BELAYA_CHASHA_ID,
+                "/static/uploads/works/work-04/03-top.png",
+                3,
+            ),
+            (
+                BELAYA_CHASHA_ID,
+                "/static/uploads/works/work-04/04-alt.png",
+                4,
+            ),
+
+            (
+                KRUZHKA_ID,
+                "/static/uploads/works/work-05/01-cover.png",
+                1,
+            ),
+            (
+                KRUZHKA_ID,
+                "/static/uploads/works/work-05/02-detail.png",
+                2,
+            ),
+            (
+                KRUZHKA_ID,
+                "/static/uploads/works/work-05/03-alt.png",
+                3,
+            ),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO work_images (
+                work_id,
+                image_path,
+                position
+            )
+            VALUES (?, ?, ?)
+            """,
+            work_images,
+        )
+        
+        
+        category_ids = {
+            row["slug"]: row["id"]
+            for row in conn.execute(
+                "SELECT id, slug FROM categories"
+            ).fetchall()
+        }
+
+        tag_ids = {
+            row["slug"]: row["id"]
+            for row in conn.execute(
+                "SELECT id, slug FROM tags"
+            ).fetchall()
+        }
+
+        material_ids = {
+            row["slug"]: row["id"]
+            for row in conn.execute(
+                "SELECT id, slug FROM materials"
+            ).fetchall()
+        }
+        
+        
+        work_categories = [
+            (
+                KAPLYA_ID,
+                category_ids["objects"],
+            ),
+            (
+                NIZKAYA_CHASHA_ID,
+                category_ids["bowls"],
+            ),
+            (
+                KOLONNA_ID,
+                category_ids["objects"],
+            ),
+            (
+                BELAYA_CHASHA_ID,
+                category_ids["bowls"],
+            ),
+            (
+                KRUZHKA_ID,
+                category_ids["mugs"],
+            ),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO work_categories (
+                work_id,
+                category_id
+            )
+            VALUES (?, ?)
+            """,
+            work_categories,
+        )
+
+        work_tags = [
+            (KAPLYA_ID, tag_ids["fragility"]),
+            (KAPLYA_ID, tag_ids["nature"]),
+
+            (NIZKAYA_CHASHA_ID, tag_ids["nature"]),
+
+            (KOLONNA_ID, tag_ids["architecture"]),
+            (KOLONNA_ID, tag_ids["fragility"]),
+
+            (BELAYA_CHASHA_ID, tag_ids["fragility"]),
+
+            (KRUZHKA_ID, tag_ids["home"]),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO work_tags (
+                work_id,
+                tag_id
+            )
+            VALUES (?, ?)
+            """,
+            work_tags,
+        )
+
+        work_materials = [
+            (KAPLYA_ID, material_ids["stoneware"]),
+            (KAPLYA_ID, material_ids["glaze"]),
+
+            (NIZKAYA_CHASHA_ID, material_ids["stoneware"]),
+            (NIZKAYA_CHASHA_ID, material_ids["glaze"]),
+
+            (KOLONNA_ID, material_ids["stoneware"]),
+            (KOLONNA_ID, material_ids["porcelain"]),
+            (KOLONNA_ID, material_ids["glaze"]),
+
+            (BELAYA_CHASHA_ID, material_ids["porcelain"]),
+            (BELAYA_CHASHA_ID, material_ids["glaze"]),
+
+            (KRUZHKA_ID, material_ids["stoneware"]),
+            (KRUZHKA_ID, material_ids["glaze"]),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO work_materials (
+                work_id,
+                material_id
+            )
+            VALUES (?, ?)
+            """,
+            work_materials,
+        )
+        
+        
+        shop_items = [
+            (
+                "607e29e6-1aaf-4dd7-8719-934c89e61e01",
+                KAPLYA_ID,
+                None,
+                None,
+                None,
+                None,
+                30000,
+                "unique",
+                1,
+                1,
+                1,
+                0,
+            ),
+            (
+                "67beb49d-a621-47b0-903a-a101de072802",
+                NIZKAYA_CHASHA_ID,
+                None,
+                None,
+                None,
+                None,
+                18000,
+                "unique",
+                1,
+                1,
+                1,
+                0,
+            ),
+            (
+                "a2c59dc1-b349-47dd-8fb6-4318a43eaa03",
+                KRUZHKA_ID,
+                None,
+                None,
+                None,
+                "Небольшая серия ручной работы.",
+                6500,
+                "stock",
+                6,
+                1,
+                1,
+                0,
+            ),
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO shop_items (
+                id,
+                work_id,
+                name,
+                description,
+                dimensions,
+                sales_note,
+                price,
+                inventory_type,
+                stock_quantity,
+                is_published,
+                is_orderable,
+                is_retired
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            shop_items,
+        )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
 
 
 def init_db():

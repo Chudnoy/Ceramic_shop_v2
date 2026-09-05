@@ -287,3 +287,18 @@ def get_shop_item_materials(conn, shop_item_id):
         """,
         (shop_item_id, shop_item_id),
     ).fetchall()
+
+
+def get_reserved_quantity_for_shop_item(conn, shop_item_id):
+    return conn.execute(
+        """
+        SELECT
+        COALESCE(SUM(oi.quantity), 0) AS reserved_quantity
+        FROM order_items AS oi
+        JOIN orders AS o
+            ON o.id = oi.order_id
+        WHERE oi.shop_item_id = ?
+            AND o.status IN ('new', 'confirmed')
+        """,
+        (shop_item_id,)
+    ).fetchone()["reserved_quantity"]
