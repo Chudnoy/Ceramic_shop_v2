@@ -55,7 +55,7 @@ def test_create_app_rejects_missing_required_config(
         create_app(config)
 
 
-def test_create_app_initializes_database_and_seeds_demo_data(tmp_path):
+def test_create_app_initializes_database_and_seeds_initial_data(tmp_path):
     database_path = tmp_path / "factory-test.db"
 
     config = {
@@ -99,6 +99,11 @@ def test_create_app_initializes_database_and_seeds_demo_data(tmp_path):
         category_count = conn.execute("SELECT COUNT(*) FROM categories").fetchone()[0]
         tag_count = conn.execute("SELECT COUNT(*) FROM tags").fetchone()[0]
         product_count = conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
+        work_count = conn.execute("SELECT COUNT(*) FROM works").fetchone()[0]
+        shop_item_count = conn.execute("SELECT COUNT(*) FROM shop_items").fetchone()[0]
+        work_image_count = conn.execute("SELECT COUNT(*) FROM work_images").fetchone()[
+            0
+        ]
     finally:
         conn.close()
 
@@ -113,10 +118,30 @@ def test_create_app_initializes_database_and_seeds_demo_data(tmp_path):
     }
 
     assert expected_tables <= table_names
-    assert migration_versions == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
+    assert migration_versions == [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+    ]
+
     assert category_count == 5
     assert tag_count == 6
-    assert product_count == 5
+
+    assert product_count == 0
+    assert work_count == 5
+    assert shop_item_count == 3
+    assert work_image_count == 19
 
 
 def test_create_app_skips_database_initialization_when_disabled(tmp_path):

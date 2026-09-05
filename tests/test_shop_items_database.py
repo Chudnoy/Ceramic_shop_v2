@@ -167,26 +167,26 @@ def link_shop_item_material(conn, shop_item_id, material_id):
         """,
         (shop_item_id, material_id),
     )
-    
-    
-def create_test_order(conn, order_id='order-1', status='new'):
+
+
+def create_test_order(conn, order_id="order-1", status="new"):
     conn.execute(
         """
         INSERT INTO orders
             (id, customer_name, customer_email, total, status)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (order_id, "Денис", "denis@example.com", 10000, status)
+        (order_id, "Денис", "denis@example.com", 10000, status),
     )
-    
-    
+
+
 def create_test_order_item(
     conn,
     order_id="order-1",
     shop_item_id="shop-1",
     product_name="Кружка",
     unit_price=5000,
-    quantity=1
+    quantity=1,
 ):
     conn.execute(
         """
@@ -194,7 +194,7 @@ def create_test_order_item(
             (order_id, shop_item_id, product_name, unit_price, quantity)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (order_id, shop_item_id, product_name, unit_price, quantity)
+        (order_id, shop_item_id, product_name, unit_price, quantity),
     )
 
 
@@ -764,61 +764,69 @@ def test_get_published_shop_item_by_work_id_returns_none_for_unpublished_item(
     assert item is None
 
 
-def test_get_reserved_quantity_returns_zero_without_active_orders(empty_db, db_connection):
+def test_get_reserved_quantity_returns_zero_without_active_orders(
+    empty_db, db_connection
+):
     conn = db_connection()
-    
+
     create_test_shop_item(conn)
-    
+
     reserved_quantity = shop_items.get_reserved_quantity_for_shop_item(conn, "shop-1")
-    
+
     conn.close()
-    
+
     assert reserved_quantity == 0
-    
-    
+
+
 def test_get_reserved_quantity_sums_new_and_confirmed_orders(empty_db, db_connection):
     conn = db_connection()
-    
+
     create_test_shop_item(conn, inventory_type="stock", stock_quantity=10)
     create_test_order(conn, order_id="order-1", status="new")
     create_test_order(conn, order_id="order-2", status="confirmed")
     create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quantity=2)
     create_test_order_item(conn, order_id="order-2", shop_item_id="shop-1", quantity=3)
-    
+
     reserved_quantity = shop_items.get_reserved_quantity_for_shop_item(conn, "shop-1")
-    
+
     conn.close()
-    
+
     assert reserved_quantity == 5
-    
-    
-def test_get_reserved_quantity_ignores_completed_and_canceled_orders(empty_db, db_connection):
+
+
+def test_get_reserved_quantity_ignores_completed_and_canceled_orders(
+    empty_db, db_connection
+):
     conn = db_connection()
-    
+
     create_test_shop_item(conn, inventory_type="stock", stock_quantity=10)
     create_test_order(conn, order_id="order-1", status="completed")
     create_test_order(conn, order_id="order-2", status="canceled")
     create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quantity=2)
     create_test_order_item(conn, order_id="order-2", shop_item_id="shop-1", quantity=3)
-    
+
     reserved_quantity = shop_items.get_reserved_quantity_for_shop_item(conn, "shop-1")
-    
+
     conn.close()
-    
+
     assert reserved_quantity == 0
-    
-    
+
+
 def test_get_reserved_quantity_ignores_other_shop_items(empty_db, db_connection):
     conn = db_connection()
-    
-    create_test_shop_item(conn, shop_item_id="shop-1", inventory_type="stock", stock_quantity=10)
-    create_test_shop_item(conn, shop_item_id="shop-2", inventory_type="stock", stock_quantity=10)
+
+    create_test_shop_item(
+        conn, shop_item_id="shop-1", inventory_type="stock", stock_quantity=10
+    )
+    create_test_shop_item(
+        conn, shop_item_id="shop-2", inventory_type="stock", stock_quantity=10
+    )
     create_test_order(conn, order_id="order-1", status="new")
     create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quantity=2)
     create_test_order_item(conn, order_id="order-1", shop_item_id="shop-2", quantity=4)
-    
+
     reserved_quantity = shop_items.get_reserved_quantity_for_shop_item(conn, "shop-1")
-    
+
     conn.close()
-    
-    assert reserved_quantity == 2 
+
+    assert reserved_quantity == 2

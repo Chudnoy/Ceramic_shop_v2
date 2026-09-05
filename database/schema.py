@@ -1,7 +1,6 @@
 from database.connection import get_db_connection
 from database.migrations import MIGRATIONS, run_migrations
 
-
 KAPLYA_ID = "f05b463a-5d51-4c2b-8922-2fc38fcda0bf"
 NIZKAYA_CHASHA_ID = "d40d7b3e-0621-421b-8681-f85bdb7db392"
 KOLONNA_ID = "7e87e224-3962-4717-850f-36442ac0132d"
@@ -13,9 +12,7 @@ def seed_initial_data():
     conn = get_db_connection()
 
     try:
-        work_count = conn.execute(
-            "SELECT COUNT(*) FROM works"
-        ).fetchone()[0]
+        work_count = conn.execute("SELECT COUNT(*) FROM works").fetchone()[0]
 
         if work_count != 0:
             return
@@ -60,7 +57,6 @@ def seed_initial_data():
             tags,
         )
 
-
         works = [
             (
                 KAPLYA_ID,
@@ -83,10 +79,7 @@ def seed_initial_data():
                 NIZKAYA_CHASHA_ID,
                 "nizkaya-chasha",
                 "Низкая чаша",
-                (
-                    "Низкая открытая форма с выраженной фактурой "
-                    "поверхности."
-                ),
+                ("Низкая открытая форма с выраженной фактурой поверхности."),
                 2025,
                 "20 × 15 × 10 см",
                 None,
@@ -134,10 +127,7 @@ def seed_initial_data():
                 KRUZHKA_ID,
                 "kruzhka",
                 "Кружка",
-                (
-                    "Утилитарная керамическая форма с рельефной "
-                    "поверхностью."
-                ),
+                ("Утилитарная керамическая форма с рельефной поверхностью."),
                 2025,
                 "12 × 9 × 9 см",
                 None,
@@ -191,7 +181,6 @@ def seed_initial_data():
                 "/static/uploads/works/work-01/04-context.png",
                 4,
             ),
-
             (
                 NIZKAYA_CHASHA_ID,
                 "/static/uploads/works/work-02/01-cover.png",
@@ -212,7 +201,6 @@ def seed_initial_data():
                 "/static/uploads/works/work-02/04-context.png",
                 4,
             ),
-
             (
                 KOLONNA_ID,
                 "/static/uploads/works/work-03/01-cover.png",
@@ -233,7 +221,6 @@ def seed_initial_data():
                 "/static/uploads/works/work-03/04-context.png",
                 4,
             ),
-
             (
                 BELAYA_CHASHA_ID,
                 "/static/uploads/works/work-04/01-cover.png",
@@ -254,7 +241,6 @@ def seed_initial_data():
                 "/static/uploads/works/work-04/04-alt.png",
                 4,
             ),
-
             (
                 KRUZHKA_ID,
                 "/static/uploads/works/work-05/01-cover.png",
@@ -283,30 +269,22 @@ def seed_initial_data():
             """,
             work_images,
         )
-        
-        
+
         category_ids = {
             row["slug"]: row["id"]
-            for row in conn.execute(
-                "SELECT id, slug FROM categories"
-            ).fetchall()
+            for row in conn.execute("SELECT id, slug FROM categories").fetchall()
         }
 
         tag_ids = {
             row["slug"]: row["id"]
-            for row in conn.execute(
-                "SELECT id, slug FROM tags"
-            ).fetchall()
+            for row in conn.execute("SELECT id, slug FROM tags").fetchall()
         }
 
         material_ids = {
             row["slug"]: row["id"]
-            for row in conn.execute(
-                "SELECT id, slug FROM materials"
-            ).fetchall()
+            for row in conn.execute("SELECT id, slug FROM materials").fetchall()
         }
-        
-        
+
         work_categories = [
             (
                 KAPLYA_ID,
@@ -344,14 +322,10 @@ def seed_initial_data():
         work_tags = [
             (KAPLYA_ID, tag_ids["fragility"]),
             (KAPLYA_ID, tag_ids["nature"]),
-
             (NIZKAYA_CHASHA_ID, tag_ids["nature"]),
-
             (KOLONNA_ID, tag_ids["architecture"]),
             (KOLONNA_ID, tag_ids["fragility"]),
-
             (BELAYA_CHASHA_ID, tag_ids["fragility"]),
-
             (KRUZHKA_ID, tag_ids["home"]),
         ]
 
@@ -369,17 +343,13 @@ def seed_initial_data():
         work_materials = [
             (KAPLYA_ID, material_ids["stoneware"]),
             (KAPLYA_ID, material_ids["glaze"]),
-
             (NIZKAYA_CHASHA_ID, material_ids["stoneware"]),
             (NIZKAYA_CHASHA_ID, material_ids["glaze"]),
-
             (KOLONNA_ID, material_ids["stoneware"]),
             (KOLONNA_ID, material_ids["porcelain"]),
             (KOLONNA_ID, material_ids["glaze"]),
-
             (BELAYA_CHASHA_ID, material_ids["porcelain"]),
             (BELAYA_CHASHA_ID, material_ids["glaze"]),
-
             (KRUZHKA_ID, material_ids["stoneware"]),
             (KRUZHKA_ID, material_ids["glaze"]),
         ]
@@ -394,8 +364,7 @@ def seed_initial_data():
             """,
             work_materials,
         )
-        
-        
+
         shop_items = [
             (
                 "607e29e6-1aaf-4dd7-8719-934c89e61e01",

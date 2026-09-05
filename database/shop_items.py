@@ -300,5 +300,5 @@ def get_reserved_quantity_for_shop_item(conn, shop_item_id):
         WHERE oi.shop_item_id = ?
             AND o.status IN ('new', 'confirmed')
         """,
-        (shop_item_id,)
+        (shop_item_id,),
     ).fetchone()["reserved_quantity"]
