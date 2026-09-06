@@ -7,6 +7,8 @@ KOLONNA_ID = "7e87e224-3962-4717-850f-36442ac0132d"
 BELAYA_CHASHA_ID = "21f813a5-cf21-4fa8-89e3-21879895c0d5"
 KRUZHKA_ID = "ab37a435-afb9-4dea-b8a9-4ce47e5e268f"
 
+PORISTYE_FORMY_ID = "d3c91fd6-55bf-4f8c-b8e7-2bb644a97d01"
+
 LONG_DEMO_DESCRIPTION = """
                     Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
                     Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
@@ -63,6 +65,27 @@ def seed_initial_data():
             tags,
         )
 
+        projects = [
+            (
+                PORISTYE_FORMY_ID,
+                "Пористые формы",
+                "poristye-formy",
+                "Исследование пучтоты, опоры и хрупкости формы",
+                LONG_DEMO_DESCRIPTION,
+                "2024-2026",
+                1,
+            )
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO projects
+                (id, name, slug, intro, text, period, is_published)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            projects,
+        )
+
         works = [
             (
                 KAPLYA_ID,
@@ -71,9 +94,9 @@ def seed_initial_data():
                 (LONG_DEMO_DESCRIPTION),
                 2025,
                 "24 × 24 × 18 см",
+                PORISTYE_FORMY_ID,
                 None,
-                None,
-                None,
+                1,
                 1,
                 0,
                 None,
@@ -99,9 +122,9 @@ def seed_initial_data():
                 (LONG_DEMO_DESCRIPTION),
                 2025,
                 "24 × 24 × 18 см",
+                PORISTYE_FORMY_ID,
                 None,
-                None,
-                None,
+                2,
                 1,
                 0,
                 None,
@@ -113,9 +136,9 @@ def seed_initial_data():
                 (LONG_DEMO_DESCRIPTION),
                 2025,
                 "12 × 21 × 18 см",
+                PORISTYE_FORMY_ID,
                 None,
-                None,
-                None,
+                3,
                 1,
                 1,
                 "Возможно изготовление близкой работы по запросу.",
@@ -265,6 +288,23 @@ def seed_initial_data():
             VALUES (?, ?, ?)
             """,
             work_images,
+        )
+
+        project_images = [
+            (
+                PORISTYE_FORMY_ID,
+                "/static/uploads/projects/poristye-formmy/01-cover.jpg",
+                1,
+            )
+        ]
+
+        conn.executemany(
+            """
+            INSERT INTO project_images
+                (project_id, image_path, position)
+            VALUES (?, ?, ?)
+            """,
+            project_images,
         )
 
         category_ids = {

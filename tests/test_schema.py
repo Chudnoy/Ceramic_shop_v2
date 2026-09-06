@@ -76,6 +76,29 @@ def test_init_db_runs_migrations_and_seeds_initial_data(db_connection):
         """
     ).fetchall()
 
+    project_count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
+
+    project = conn.execute(
+        """
+        SELECT
+            id, name, slug, period, is_published
+        FROM projects
+        WHERE slug = ?
+        """,
+        ("poristye-formy",),
+    ).fetchone()
+
+    project_works = conn.execute(
+        """
+        SELECT
+            name, project_position
+        FROM works
+        WHERE project_id = ?
+        ORDER BY project_position
+        """,
+        (project["id"],),
+    ).fetchall()
+
     conn.close()
 
     assert [row["version"] for row in saved_versions] == [
@@ -143,3 +166,16 @@ def test_init_db_runs_migrations_and_seeds_initial_data(db_connection):
 
     assert shop_states_by_name["Кружка"]["inventory_type"] == "stock"
     assert shop_states_by_name["Кружка"]["stock_quantity"] == 6
+
+    assert project_count == 1
+
+    assert project["name"] == "Пористые формы"
+    assert project["slug"] == "poristye-formy"
+    assert project["period"] == "2024-2026"
+    assert project["is_published"] == 1
+
+    assert [(work["name"], work["project_position"]) for work in project_works] == [
+        ("Капля", 1),
+        ("Колонна", 2),
+        ("Белая чаша", 3),
+    ]
