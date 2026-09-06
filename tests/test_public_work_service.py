@@ -49,16 +49,18 @@ def create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quan
         """,
         (order_id, shop_item_id, "Капля", 30000, quantity),
     )
-    
-    
-def create_test_work_image(conn, work_id="work-1", image_path="static/test.jpg", position=1):
+
+
+def create_test_work_image(
+    conn, work_id="work-1", image_path="static/test.jpg", position=1
+):
     conn.execute(
         """
         INSERT INTO work_images
             (work_id, image_path, position)
         VALUES (?, ?, ?)
         """,
-        (work_id, image_path, position)
+        (work_id, image_path, position),
     )
 
 
@@ -111,31 +113,31 @@ def test_get_public_work_page_data_returns_shop_item_with_availability(
         "reserved_quantity": 1,
         "available_quantity": 2,
         "can_order": True,
-        "stock_state": "available"
+        "stock_state": "available",
     }
 
 
-def test_get_public_work_page_data_separates_cover_and_detail_images(empty_db, db_connection):
+def test_get_public_work_page_data_separates_cover_and_detail_images(
+    empty_db, db_connection
+):
     conn = db_connection()
-    
+
     create_test_work(conn)
     create_test_work_image(conn)
     create_test_work_image(conn, image_path="static/detail-1", position=2)
     create_test_work_image(conn, image_path="static/detail-2", position=3)
     create_test_work_image(conn, image_path="static/detail-3", position=4)
-    
+
     conn.commit()
     conn.close()
-    
+
     page_data = get_public_work_page_data("kaplya")
-    
+
     assert page_data is not None
-    
+
     assert page_data["cover_image"]["image_path"] == "static/test.jpg"
     assert page_data["cover_image"]["position"] == 1
-    
-    assert [(image["image_path"], image["position"]) for image in page_data["detail_images"]] == [
-        ("static/detail-1", 2),
-        ("static/detail-2", 3),
-        ("static/detail-3", 4)
-    ]
+
+    assert [
+        (image["image_path"], image["position"]) for image in page_data["detail_images"]
+    ] == [("static/detail-1", 2), ("static/detail-2", 3), ("static/detail-3", 4)]

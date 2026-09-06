@@ -1,6 +1,5 @@
-def get_published_shop_items(conn, limit):
-    return conn.execute(
-        """
+def get_published_shop_items(conn, limit=None):
+    query = """
         SELECT
             si.id,
             si.work_id,
@@ -32,10 +31,15 @@ def get_published_shop_items(conn, limit):
             ON w.id = si.work_id
         WHERE si.is_published = 1
         ORDER BY name
-        LIMIT ?
-        """,
-        (limit,),
-    ).fetchall()
+    """
+
+    params = ()
+
+    if limit is not None:
+        query += "\nLIMIT ?"
+        params = (limit,)
+
+    return conn.execute(query, params).fetchall()
 
 
 def get_shop_item_by_id(conn, shop_item_id):
