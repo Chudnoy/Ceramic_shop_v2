@@ -1,3 +1,5 @@
+import pytest
+
 from database import shop_items
 from services.shop_availability_service import get_shop_item_availability
 
@@ -133,6 +135,7 @@ def test_get_shop_item_availability_subtracts_reserved_quantity(
         "reserved_quantity": 2,
         "available_quantity": 4,
         "can_order": True,
+        "stock_state": "available"
     }
 
 
@@ -165,6 +168,7 @@ def test_get_shop_item_availability_returns_full_stock_without_reservations(
         "reserved_quantity": 0,
         "available_quantity": 1,
         "can_order": True,
+        "stock_state": "available"
     }
 
 
@@ -330,3 +334,61 @@ def test_get_shop_item_availability_cannot_order_unpublished_item(
     conn.close()
 
     assert availability["can_order"] is False
+
+
+def test_get_shop_item_availability_returns_available_stock_state(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_shop_item(conn, shop_item_id="shop-1", inventory_type="stock", stock_quantity=6)
+    create_test_order(conn, order_id="order-1", status="new")
+    create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quantity=2)
+    
+    shop_item = shop_items.get_shop_item_by_id(conn, "shop-1")
+    availability = get_shop_item_availability(conn, shop_item)
+    
+    conn.close()
+    
+    assert availability["stock_state"] == "available"
+    
+    
+def test_get_shop_item_availability_returns_fully_reserved_stock_state(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_shop_item(conn, shop_item_id="shop-1", inventory_type="unique", stock_quantity=1)
+    create_test_order(conn, order_id="order-1", status="new")
+    create_test_order_item(conn, order_id="order-1", shop_item_id="shop-1", quantity=1)
+    
+    shop_item = shop_items.get_shop_item_by_id(conn, "shop-1")
+    availability = get_shop_item_availability(conn, shop_item)
+    
+    conn.close()
+    
+    assert availability["stock_state"] == "fully_reserved"
+    
+    
+def test_get_shop_item_availability_returns_out_of_stock_state(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_shop_item(conn, shop_item_id="shop-1", inventory_type="unique", stock_quantity=0)
+    
+    shop_item = shop_items.get_shop_item_by_id(conn, "shop-1")
+    availability = get_shop_item_availability(conn, shop_item)
+    
+    conn.close()
+    
+    assert availability["stock_state"] == "out_of_stock"
+    
+    
+def test_get_shop_item_availability_raises_error_for_over_reservation(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_shop_item(conn, shop_item_id="shop-1", inventory_type="unique", stock_quantity=1)
+    create_test_order(conn, order_id="order-1", status="confirmed")
+    create_test_order_item(conn, shop_item_id="shop-1", order_id="order-1", quantity=3)
+    
+    shop_item = shop_items.get_shop_item_by_id(conn, "shop-1")
+    
+    with pytest.raises(ValueError, match="reserved_quantity cannot exceed stock_quantity"):
+        get_shop_item_availability(conn, shop_item)
+        
+    conn.close()
