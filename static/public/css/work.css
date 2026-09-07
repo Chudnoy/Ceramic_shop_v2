@@ -319,3 +319,111 @@ STORY TOGGLE
 .work-story__toggle-icon {
     transform: rotate(180deg);
 }
+
+
+/* ================================
+WORK PROJECT
+================================ */
+
+.work-project {
+    padding: 0 var(--page-end) clamp(4rem, 4vw, 4rem) var(--page-start);
+    background: var(--color-background);
+}
+
+.work-project__card {
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 1.22fr);
+    grid-template-rows: minmax(0, 1fr);
+    block-size: clamp(14rem, 19vw, 23rem);
+    color: var(--color-background);
+    background: var(--color-dark);
+    overflow: hidden;
+}
+
+.work-project__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    min-inline-size: 0;
+    padding: clamp(1.75rem, 3vw, 2.5rem) clamp(1.75rem, 3vw, 3rem);
+}
+
+.work-project__eyebrow {
+    color: rgba(241, 236, 228, 0.58);
+    font-size: 0.62rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+}
+
+.work-project__title {
+    max-inline-size: 12ch;
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+}
+
+.work-project__description {
+    max-inline-size: 30ch;
+    color: rgba(241, 236, 228, 0.72);
+    font-size: clamp(0.85rem, 0.95vw, 0.98rem);
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+
+.work-project__period {
+    color: rgba(241, 236, 228, 0.5);
+    font-size: 0.72rem;
+    line-height: 1;
+    letter-spacing: 0.06em;
+}
+
+.work-project__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+
+
+    padding-block-end: 0.35rem;
+    border-bottom: 1px solid rgba(241, 236, 228, 0.32);
+
+    font-size: 0.75rem;
+    line-height: 1;
+    letter-spacing: 0.03em;
+}
+
+.work-project__link > span {
+    color: var(--color-accent);
+    transition: transform 200ms ease;
+}
+
+.work-project__media {
+    min-inline-size: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.work-project__media img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 72% 70%;
+    transition: transform 320ms ease;
+}
+
+.work-project--no-image .work-project__card {
+    grid-template-columns: 1fr;
+}
+
+@media (hover: hover) {
+    .work-project__card:hover .work-project__media img {
+        transform: scale(1.03);
+    }
+
+    .work-project__card:hover .work-project__link > span {
+        transform: translateX(4px);
+    }
+}

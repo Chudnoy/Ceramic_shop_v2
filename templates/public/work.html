@@ -123,6 +123,42 @@
         </div>
     </section>
 {% endif %}
+
+{% if project_preview %}
+{% set project_url = "#" %}
+<section
+    class="work-project{% if not project_preview.cover_image_path %} work-project--no-image {% endif %}"
+    aria-labelledby="work-project-title">
+    <a href="{{ project_url }}" class="work-project__card">
+        <div class="work-project__content">
+            <p class="work-project__eyebrow">Часть проекта</p>
+            <h2 class="work-project__title">
+                {{ project_preview.name }}
+            </h2>
+            {% if project_preview.intro %}
+                <p class="work-project__description">
+                    {{ project_preview.intro }}
+                </p>
+            {% endif %}
+            {% if project_preview.period %}
+                <p class="work-project__period">
+                    {{ project_preview.period }}
+                </p>
+            {% endif %}
+            <span class="work-project__link">
+                Смотреть проект
+                <span aria-hidden="true">→</span>
+            </span>
+        </div>
+
+        {% if project_preview.cover_image_path %}
+            <figure class="work-project__media">
+                <img src="{{ project_preview.cover_image_path }}" alt="">
+            </figure>
+        {% endif %}
+    </a>
+</section>
+{% endif %}
 </main>
 {% endblock %}
 {% block scripts %}
