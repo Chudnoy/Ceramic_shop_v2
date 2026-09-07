@@ -1,14 +1,14 @@
 from services.public_work_service import get_public_work_page_data
 
 
-def create_test_work(conn, work_id="work-1", slug="kaplya", name="Капля"):
+def create_test_work(conn, work_id="work-1", slug="kaplya", name="Капля", project_id=None, project_position=None):
     conn.execute(
         """
         INSERT INTO works
-            (id, slug, name, is_published)
-        VALUES (?, ?, ?, ?)
+            (id, slug, name, project_id, project_position, is_published)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (work_id, slug, name, 1),
+        (work_id, slug, name, project_id, project_position, 1),
     )
 
 
@@ -61,6 +61,28 @@ def create_test_work_image(
         VALUES (?, ?, ?)
         """,
         (work_id, image_path, position),
+    )
+    
+    
+def create_test_project(conn, project_id="project-1", name="Пористые формы", slug="poristye-formy", is_published=1):
+    conn.execute(
+        """
+        INSERT INTO projects
+            (id, name, slug, intro, period, is_published)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (project_id, name, slug, "Исследование пустоты и формы", "2024-2026", is_published)
+    )
+    
+    
+def create_test_project_image(conn, project_id="project-1", image_path="static/project-cover.jpg", position=1):
+    conn.execute(
+        """
+        INSERT INTO project_images
+            (project_id, image_path, position)
+        VALUES (?, ?, ?)
+        """,
+        (project_id, image_path, position)
     )
 
 

@@ -1,4 +1,4 @@
-from database import shop_items, works
+from database import projects, shop_items, works
 from database.connection import get_db_connection
 from services.shop_availability_service import get_shop_item_availability
 
@@ -26,6 +26,43 @@ def get_public_work_page_data(slug):
             if shop_item is not None
             else None
         )
+        
+        project_preview = None
+        
+        project_id = work["project_id"]
+        
+        if project_id is not None:
+            project = projects.get_published_project_by_id(conn, project_id)
+            
+            if project is not None:
+                project_cover_image = projects.get_project_cover_image(conn, project_id)
+                
+                published_project_works = works.get_published_works_by_project_id(conn, project_id)
+                
+                project_works_data = []
+                
+                for project_work in published_project_works:
+                    project_work_cover = works.get_work_cover_image(conn, project_work["id"])
+                    
+                    project_works_data.append(
+                        {
+                            "id": project_work["id"],
+                            "slug": project_work["slug"],
+                            "name": project_work["name"],
+                            "project_position": project_work["project_position"],
+                            "cover_image_path": (project_work_cover["image_path"] if project_work_cover is not None else None)
+                        }
+                    )
+                    
+                project_preview = {
+                    "id": project["id"],
+                    "name": project["name"],
+                    "slug": project["slug"],
+                    "intro": project["intro"],
+                    "period": project["period"],
+                    "cover_image_path": (project_cover_image["image_path"] if project_cover_image is not None else None),
+                    "project_works": project_works_data
+                }
 
         return {
             "work": dict(work),
@@ -39,6 +76,7 @@ def get_public_work_page_data(slug):
             "materials": [dict(material) for material in materials],
             "shop_item": shop_item_data,
             "availability": availability,
+            "project_preview": project_preview
         }
     finally:
         conn.close()

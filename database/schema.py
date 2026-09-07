@@ -70,7 +70,7 @@ def seed_initial_data():
                 PORISTYE_FORMY_ID,
                 "Пористые формы",
                 "poristye-formy",
-                "Исследование пучтоты, опоры и хрупкости формы",
+                "Исследование пустоты, опоры и хрупкости формы",
                 LONG_DEMO_DESCRIPTION,
                 "2024-2026",
                 1,
@@ -293,7 +293,7 @@ def seed_initial_data():
         project_images = [
             (
                 PORISTYE_FORMY_ID,
-                "/static/uploads/projects/poristye-formmy/01-cover.jpg",
+                "/static/uploads/projects/poristye-formy/01-cover.png",
                 1,
             )
         ]
