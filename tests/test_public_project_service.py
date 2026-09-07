@@ -170,3 +170,73 @@ def test_get_public_project_page_data_returns_project_with_works(empty_db, db_co
             "cover_image_path": "static/belaya-cover.jpg",
         },
     ]
+    
+    
+def test_get_public_project_page_data_returns_none_for_unpublished_project(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_project(
+        conn,
+        slug="draft",
+        is_published=0,
+    )
+
+    conn.commit()
+    conn.close()
+
+    page_data = get_public_project_page_data("draft")
+
+    assert page_data is None
+    
+    
+def test_get_public_project_page_data_excludes_unpublished_works(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_project(conn)
+
+    create_test_work(
+        conn,
+        work_id="work-1",
+        slug="kaplya",
+        name="Капля",
+        project_position=1,
+        is_published=1,
+    )
+
+    create_test_work(
+        conn,
+        work_id="work-2",
+        slug="draft-work",
+        name="Черновая работа",
+        project_position=2,
+        is_published=0,
+    )
+
+    create_test_work_image(
+        conn,
+        work_id="work-1",
+        image_path="static/kaplya-cover.jpg",
+    )
+
+    conn.commit()
+    conn.close()
+
+    page_data = get_public_project_page_data("poristye-formy")
+
+    assert page_data is not None
+
+    assert page_data["project_works"] == [
+        {
+            "id": "work-1",
+            "slug": "kaplya",
+            "name": "Капля",
+            "project_position": 1,
+            "cover_image_path": "static/kaplya-cover.jpg",
+        }
+    ]
