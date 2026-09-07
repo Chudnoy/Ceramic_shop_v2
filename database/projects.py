@@ -9,6 +9,17 @@ def get_published_project_by_id(conn, project_id):
         """,
         (project_id,),
     ).fetchone()
+    
+    
+def get_published_project_by_slug(conn, slug):
+    return conn.execute(
+        """
+        SELECT * FROM projects
+        WHERE slug = ?
+            AND is_published = 1
+        """,
+        (slug,)
+    ).fetchone()
 
 
 def get_project_images(conn, project_id):

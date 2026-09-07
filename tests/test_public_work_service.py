@@ -235,36 +235,13 @@ def test_get_public_work_page_data_reurns_project_preview(empty_db, db_connectio
     assert page_data is not None
 
     assert page_data["project_preview"] == {
-        "id": "project-1",
-        "name": "Пористые формы",
-        "slug": "poristye-formy",
-        "intro": "Исследование пустоты и формы",
-        "period": "2024-2026",
-        "cover_image_path": "static/project-cover.jpg",
-        "project_works": [
-            {
-                "id": "work-1",
-                "slug": "kaplya",
-                "name": "Капля",
-                "project_position": 1,
-                "cover_image_path": "static/kaplya-cover.jpg",
-            },
-            {
-                "id": "work-2",
-                "slug": "kolonna",
-                "name": "Колонна",
-                "project_position": 2,
-                "cover_image_path": "static/kolonna-cover.jpg",
-            },
-            {
-                "id": "work-3",
-                "slug": "belaya-chasha",
-                "name": "Белая чаша",
-                "project_position": 3,
-                "cover_image_path": "static/belaya-cover.jpg",
-            },
-        ],
-    }
+    "id": "project-1",
+    "name": "Пористые формы",
+    "slug": "poristye-formy",
+    "intro": "Исследование пустоты и формы",
+    "period": "2024-2026",
+    "cover_image_path": "static/project-cover.jpg",
+}
 
 
 def test_get_public_work_page_data_hodes_unpublished_project_preview(

@@ -91,3 +91,32 @@ def test_get_project_cover_image_returns_position_one(empty_db, db_connection):
     assert cover_image["id"] == cover_id
     assert cover_image["image_path"] == "img/cover.jpg"
     assert cover_image["position"] == 1
+
+
+def test_get_published_project_by_slug_filters_unpublished_project(
+    empty_db,
+    db_connection,
+):
+    conn = db_connection()
+
+    create_test_project(conn)
+
+    create_test_project(
+        conn,
+        project_id="project-2",
+        name="Черновик",
+        slug="draft",
+        is_published=0,
+    )
+
+    published_project = projects.get_published_project_by_slug(conn, "poristye-formy",)
+
+    unpublished_project = projects.get_published_project_by_slug(conn, "draft",)
+
+    conn.close()
+
+    assert published_project is not None
+    assert published_project["id"] == "project-1"
+    assert published_project["name"] == "Пористые формы"
+
+    assert unpublished_project is None

@@ -37,31 +37,6 @@ def get_public_work_page_data(slug):
             if project is not None:
                 project_cover_image = projects.get_project_cover_image(conn, project_id)
 
-                published_project_works = works.get_published_works_by_project_id(
-                    conn, project_id
-                )
-
-                project_works_data = []
-
-                for project_work in published_project_works:
-                    project_work_cover = works.get_work_cover_image(
-                        conn, project_work["id"]
-                    )
-
-                    project_works_data.append(
-                        {
-                            "id": project_work["id"],
-                            "slug": project_work["slug"],
-                            "name": project_work["name"],
-                            "project_position": project_work["project_position"],
-                            "cover_image_path": (
-                                project_work_cover["image_path"]
-                                if project_work_cover is not None
-                                else None
-                            ),
-                        }
-                    )
-
                 project_preview = {
                     "id": project["id"],
                     "name": project["name"],
@@ -73,7 +48,6 @@ def get_public_work_page_data(slug):
                         if project_cover_image is not None
                         else None
                     ),
-                    "project_works": project_works_data,
                 }
 
         return {
