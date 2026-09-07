@@ -23,4 +23,5 @@ def work_detail(slug):
         materials=page_data["materials"],
         shop_item=page_data["shop_item"],
         availability=page_data["availability"],
+        project_preview=page_data["project_preview"],
     )
