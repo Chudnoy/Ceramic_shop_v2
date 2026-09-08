@@ -23,3 +23,41 @@ if (story && storyDescription && storyToggle && storyToggleLabel) {
         story.classList.remove("is-collapsible");
     }
 }
+
+
+const workCarousel = document.querySelector("[data-work-carousel]");
+const workCarouselTrack = workCarousel?.querySelector("[data-work-carousel-track]");
+const workCarouselItems = workCarousel?.querySelectorAll("[data-work-carousel-item]");
+const workCarouselPrev = workCarousel?.querySelector("[data-work-carousel-prev]");
+const workCarouselNext = workCarousel?.querySelector("[data-work-carousel-next]");
+
+if (workCarousel && 
+    workCarouselTrack && 
+    workCarouselItems && 
+    workCarouselPrev && 
+    workCarouselNext
+) {
+    let currentIndex = 0;
+    
+    const visibleItems = 3;
+    const maxIndex = workCarouselItems.length - visibleItems;
+    
+    const updateCarousel = () => {
+        const step = workCarouselItems[1].offsetLeft - workCarouselItems[0].offsetLeft;
+        
+        workCarouselTrack.style.transform = `translateX(${-currentIndex * step}px)`;
+        
+        workCarouselPrev.disabled = currentIndex === 0;
+        workCarouselNext.disabled = currentIndex === maxIndex;
+    };
+    
+    workCarouselPrev.addEventListener('click', () => {
+        currentIndex -= 1;
+        updateCarousel();
+    });
+    
+    workCarouselNext.addEventListener('click', () => {
+        currentIndex += 1;
+        updateCarousel();
+    })
+}
