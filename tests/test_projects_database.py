@@ -109,9 +109,15 @@ def test_get_published_project_by_slug_filters_unpublished_project(
         is_published=0,
     )
 
-    published_project = projects.get_published_project_by_slug(conn, "poristye-formy",)
+    published_project = projects.get_published_project_by_slug(
+        conn,
+        "poristye-formy",
+    )
 
-    unpublished_project = projects.get_published_project_by_slug(conn, "draft",)
+    unpublished_project = projects.get_published_project_by_slug(
+        conn,
+        "draft",
+    )
 
     conn.close()
 

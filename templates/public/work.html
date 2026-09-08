@@ -159,6 +159,61 @@
     </a>
 </section>
 {% endif %}
+
+{% if shop_item or work.is_commissionable %}
+    <section class="work-shop" aria-labelledby="work-shop-title">
+        <div class="work-shop__heading">
+            <p class="work-shop__eyebrow">Приобретение</p>
+            <h2 class="work-shop__title" id="work-shop-title">
+                {% if shop_item and availability.can_order %}
+                    Работа доступна
+                {% elif shop_item and availability.stock_state == "fully_reserved" %}
+                    Работа зарезервирована
+                {% elif shop_item and availability.stock_state == "out_of_stock" %}
+                    Сейчас нет в наличии
+                {% elif shop_item %}
+                    Заказ недоступен
+                {% elif work.is_commissionable %}
+                    Возможно изготовление по запросу
+                {% endif %}
+            </h2>
+        </div>
+
+        {% if shop_item %}
+            <div class="work-shop__offer">
+                <p class="work-shop__price">
+                    {{ "{:,}".format(shop_item.price).replace(",", " ") }} ₽
+                </p>
+                {% if shop_item.sales_note %}
+                    <p class="work-shop__note">
+                        {{ shop_item.sales_note}}
+                    </p>
+                {% endif %}
+                {% if availability.can_order %}
+                    <a href="#" class="work-shop__action">Приобрести
+                        <span aria-hidden="true">→</span>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if work.is_commissionable %}
+            <div class="work-shop__commission">
+                <p class="work-shop__commission-label">По запросу</p>
+
+                {% if work.commission_note %}
+                    <p class="work-shop__commission-note">
+                        {{ work.commission_note }}
+                    </p>
+                {% endif %}
+
+                <a href="#" class="work-shop__commission-link">Обсудить заказ
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
 </main>
 {% endblock %}
 {% block scripts %}

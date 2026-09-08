@@ -9,8 +9,8 @@ def get_published_project_by_id(conn, project_id):
         """,
         (project_id,),
     ).fetchone()
-    
-    
+
+
 def get_published_project_by_slug(conn, slug):
     return conn.execute(
         """
@@ -18,7 +18,7 @@ def get_published_project_by_slug(conn, slug):
         WHERE slug = ?
             AND is_published = 1
         """,
-        (slug,)
+        (slug,),
     ).fetchone()
 
 

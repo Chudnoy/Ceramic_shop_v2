@@ -235,13 +235,13 @@ def test_get_public_work_page_data_reurns_project_preview(empty_db, db_connectio
     assert page_data is not None
 
     assert page_data["project_preview"] == {
-    "id": "project-1",
-    "name": "Пористые формы",
-    "slug": "poristye-formy",
-    "intro": "Исследование пустоты и формы",
-    "period": "2024-2026",
-    "cover_image_path": "static/project-cover.jpg",
-}
+        "id": "project-1",
+        "name": "Пористые формы",
+        "slug": "poristye-formy",
+        "intro": "Исследование пустоты и формы",
+        "period": "2024-2026",
+        "cover_image_path": "static/project-cover.jpg",
+    }
 
 
 def test_get_public_work_page_data_hodes_unpublished_project_preview(

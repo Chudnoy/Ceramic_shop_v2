@@ -56,11 +56,7 @@ def get_public_project_page_data(slug):
         return {
             "project": dict(project),
             "images": [dict(image) for image in images],
-            "cover_image": (
-                dict(cover_image)
-                if cover_image is not None
-                else None
-            ),
+            "cover_image": (dict(cover_image) if cover_image is not None else None),
             "project_works": project_works_data,
         }
 
