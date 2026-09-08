@@ -14,6 +14,20 @@ def get_published_works(conn, limit):
     return works
 
 
+def get_other_published_works(conn, work_id):
+    return conn.execute(
+        """
+        SELECT
+            id, slug, name, year, dimensions
+        FROM works
+        WHERE is_published = 1
+            AND id != ?
+        ORDER BY name
+        """,
+        (work_id,),
+    ).fetchall()
+
+
 def get_work_images(conn, work_id):
     work_images = conn.execute(
         """

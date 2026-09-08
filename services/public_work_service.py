@@ -50,6 +50,26 @@ def get_public_work_page_data(slug):
                     ),
                 }
 
+        other_published_works = works.get_other_published_works(conn, work_id)
+
+        other_works = []
+
+        for other_work in other_published_works:
+            other_work_cover = works.get_work_cover_image(conn, other_work["id"])
+
+            other_works.append(
+                {
+                    "id": other_work["id"],
+                    "slug": other_work["slug"],
+                    "name": other_work["name"],
+                    "year": other_work["year"],
+                    "dimensions": other_work["dimensions"],
+                    "cover_image_path": other_work_cover["image_path"]
+                    if other_work_cover is not None
+                    else None,
+                }
+            )
+
         return {
             "work": dict(work),
             "images": [dict(image) for image in images],
@@ -63,6 +83,7 @@ def get_public_work_page_data(slug):
             "shop_item": shop_item_data,
             "availability": availability,
             "project_preview": project_preview,
+            "other_works": other_works,
         }
     finally:
         conn.close()

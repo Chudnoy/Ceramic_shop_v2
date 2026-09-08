@@ -214,6 +214,68 @@
         {% endif %}
     </section>
 {% endif %}
+
+{% if other_works %}
+<section class="work-more" aria-labelledby="work-more-title" data-work-carousel>
+    <header class="work-more__header">
+        <div>
+            <p class="work-more__eyebrow">Смотреть так же</p>
+            <h2 class="work-more__title" id="work-more-title">Другие работы</h2>
+        </div>
+        {% if other_works|length > 3 %}
+            <div class="work-more__controls" aria-label="Навигация по работам">
+                <button
+                    class="work-more__control"
+                    type-="button"
+                    aria-label="Предыдущие работы"
+                    data-work-carousel-prev
+                >
+                    ←
+                </button>
+                <button
+                    class="work-more__control"
+                    type="button"
+                    aria-label="Следующие работы"
+                    data-work-carousel-next
+                >
+                    →
+                </button>
+            </div>
+        {% endif %}
+    </header>
+
+    <div class="work-more__viewport">
+        <div class="work-more__track" data-work0carousel-track>
+
+            {% for other_work in other_works %}
+                <article class="work-more__item" data-work-carousel-item>
+                    <a
+                        href="{{ url_for('public.work_detail', slug=other_work.slug) }}"
+                        class="work-more__link"
+                    >
+                        <figure class="work-more__media">
+                            {% if other_work.cover_image_path %}
+                                <img src="{{ other_work.cover_image_path }}" alt="{{ other_work.name }}">
+                            {% endif %}
+                        </figure>
+
+                        <div class="work-more__info">
+                            <h3 class="work-more__name">
+                                {{ other_work.name }}
+                            </h3>
+                            {% if other_work.year %}
+                                <p class="work-more__year">
+                                    {{ other_work.year }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 </main>
 {% endblock %}
 {% block scripts %}
