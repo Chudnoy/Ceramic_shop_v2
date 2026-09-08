@@ -264,7 +264,7 @@ def test_get_public_work_page_data_hodes_unpublished_project_preview(
 
 def test_get_public_work_page_data_hides_unpublished_shop_item(empty_db, db_connection):
     conn = db_connection()
-    
+
     create_test_work(conn)
     conn.execute(
         """
@@ -272,22 +272,24 @@ def test_get_public_work_page_data_hides_unpublished_shop_item(empty_db, db_conn
             (id, work_id, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        ("shop-1", "work-1", 30000, "unique", 1, 0, 1, 0)
+        ("shop-1", "work-1", 30000, "unique", 1, 0, 1, 0),
     )
-    
+
     conn.commit()
     conn.close()
-    
+
     page_data = get_public_work_page_data("kaplya")
-    
+
     assert page_data is not None
     assert page_data["shop_item"] is None
     assert page_data["availability"] is None
-    
-    
-def test_get_public_work_page_data_keeps_available_stock_when_ordering_disabled(empty_db, db_connection):
+
+
+def test_get_public_work_page_data_keeps_available_stock_when_ordering_disabled(
+    empty_db, db_connection
+):
     conn = db_connection()
-    
+
     create_test_work(conn)
     conn.execute(
         """
@@ -295,19 +297,19 @@ def test_get_public_work_page_data_keeps_available_stock_when_ordering_disabled(
             (id, work_id, price, inventory_type, stock_quantity, is_published, is_orderable, is_retired)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        ("shop-1", "work-1", 30000, "unique", 1, 1, 0, 0)
+        ("shop-1", "work-1", 30000, "unique", 1, 1, 0, 0),
     )
-    
+
     conn.commit()
     conn.close()
-    
+
     page_data = get_public_work_page_data("kaplya")
-    
+
     assert page_data is not None
     assert page_data["shop_item"] is not None
     assert page_data["availability"] == {
         "reserved_quantity": 0,
         "available_quantity": 1,
         "can_order": False,
-        "stock_state": "available"
+        "stock_state": "available",
     }

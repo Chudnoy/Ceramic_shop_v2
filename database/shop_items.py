@@ -3,6 +3,7 @@ def get_published_shop_items(conn, limit=None):
         SELECT
             si.id,
             si.work_id,
+            w.slug AS work_slug,
             CASE
                 WHEN si.work_id IS NOT NULL
                 THEN w.name
