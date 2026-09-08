@@ -31,33 +31,36 @@ const workCarouselItems = workCarousel?.querySelectorAll("[data-work-carousel-it
 const workCarouselPrev = workCarousel?.querySelector("[data-work-carousel-prev]");
 const workCarouselNext = workCarousel?.querySelector("[data-work-carousel-next]");
 
-if (workCarousel && 
-    workCarouselTrack && 
-    workCarouselItems && 
-    workCarouselPrev && 
+if (
+    workCarousel &&
+    workCarouselTrack &&
+    workCarouselItems &&
+    workCarouselPrev &&
     workCarouselNext
 ) {
     let currentIndex = 0;
-    
+
     const visibleItems = 3;
     const maxIndex = workCarouselItems.length - visibleItems;
-    
+
     const updateCarousel = () => {
         const step = workCarouselItems[1].offsetLeft - workCarouselItems[0].offsetLeft;
-        
+
         workCarouselTrack.style.transform = `translateX(${-currentIndex * step}px)`;
-        
+
         workCarouselPrev.disabled = currentIndex === 0;
         workCarouselNext.disabled = currentIndex === maxIndex;
     };
-    
-    workCarouselPrev.addEventListener('click', () => {
+
+    workCarouselPrev.addEventListener("click", () => {
         currentIndex -= 1;
         updateCarousel();
     });
-    
-    workCarouselNext.addEventListener('click', () => {
+
+    workCarouselNext.addEventListener("click", () => {
         currentIndex += 1;
         updateCarousel();
-    })
+    });
+
+    updateCarousel();
 }

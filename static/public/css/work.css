@@ -584,36 +584,54 @@ WORK MORE
 ================================== */
 
 .work-more {
-    padding: clamp(4rem, 6vw, 6rem) var(--page-end) clamp(5rem, 8vw, 7rem) var(--page-start);
+    padding: clamp(2.5rem, 4vw, 4rem) var(--page-end)
+             clamp(3rem, 5vw, 4.5rem) var(--page-start);
+
     background: var(--color-background);
+
     overflow: hidden;
 }
+
+
+/* ==================================
+WORK MORE HEADER
+================================== */
 
 .work-more__header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: 2rem;
-    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+
+    margin-bottom: clamp(1.5rem, 2.5vw, 2.5rem);
 }
 
 .work-more__eyebrow {
-    margin: 0 0 1rem;
+    margin: 0 0 0.9rem;
+
     color: var(--color-muted);
+
     font-size: 0.68rem;
     line-height: 1;
+
     text-transform: uppercase;
     letter-spacing: 0.16em;
 }
 
 .work-more__title {
     margin: 0;
+
     font-family: var(--font-serif);
     font-size: clamp(2rem, 3vw, 3.2rem);
     font-weight: 400;
     line-height: 1;
     letter-spacing: -0.025em;
 }
+
+
+/* ==================================
+WORK MORE CONTROLS
+================================== */
 
 .work-more__controls {
     display: flex;
@@ -623,17 +641,27 @@ WORK MORE
 .work-more__control {
     display: grid;
     place-items: center;
+
     inline-size: 2.75rem;
     block-size: 2.75rem;
+
     padding: 0;
+
     border: 1px solid rgba(36, 29, 24, 0.18);
     border-radius: 50%;
+
     color: var(--color-text);
     background: transparent;
+
     font-size: 1rem;
     line-height: 1;
+
     cursor: pointer;
-    transition: border-color 180ms ease, color 180ms ease;
+
+    transition:
+        border-color 180ms ease,
+        color 180ms ease,
+        opacity 180ms ease;
 }
 
 .work-more__control:disabled {
@@ -641,73 +669,113 @@ WORK MORE
     cursor: default;
 }
 
+
+/* ==================================
+WORK MORE CAROUSEL
+================================== */
+
 .work-more__viewport {
     overflow: hidden;
 }
 
 .work-more__track {
+    --work-more-gap: clamp(8rem, 13vw, 15rem);
+
     display: flex;
-    gap: clamp(1rem, 2vw, 2rem);
+
+    gap: var(--work-more-gap);
+
     transition: transform 300ms ease;
 }
 
 .work-more__item {
-    flex: 0 0 calc((100% - 2 * clamp(1rem, 2vw, 2rem)) / 3);
-    mix-inline-size: 0;
+    flex: 0 0 calc((100% - 2 * var(--work-more-gap)) / 3);
+
+    min-inline-size: 0;
 }
+
+
+/* ==================================
+WORK MORE CARD
+================================== */
 
 .work-more__link {
     display: block;
+
     color: inherit;
 }
 
 .work-more__media {
     display: grid;
     place-items: center;
-    aspect-ratio: 4/5;
+
+    aspect-ratio: 4 / 5;
+
     margin: 0;
-    padding: clamp(1.5rem, 3vw, 3rem);
+
+    padding: clamp(1rem, 2vw, 2rem);
+
     background: #f7f3ed;
+
     overflow: hidden;
 }
 
 .work-more__media img {
     display: block;
+
     inline-size: auto;
     block-size: auto;
+
     max-inline-size: 100%;
     max-block-size: 100%;
+
     transition: transform 250ms ease;
 }
+
+
+/* ==================================
+WORK MORE INFO
+================================== */
 
 .work-more__info {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: 1rem;
-    padding-block-start: 1rem;
+
+    padding-block-start: 0.8rem;
+
     border-top: 1px solid rgba(36, 29, 24, 0.14);
 }
 
 .work-more__name {
     margin: 0;
+
     font-family: var(--font-serif);
-    font-size: clamp(1rem, 1.2vw, 1.25rem);
+    font-size: clamp(1rem, 1.2vw, 1.2rem);
     font-weight: 400;
     line-height: 1.1;
 }
 
 .work-more__year {
     margin: 0;
+
     color: var(--color-muted);
+
     font-size: 0.7rem;
-    line-height: 1.1;
+    line-height: 1;
 }
+
+
+/* ==================================
+WORK MORE HOVER
+================================== */
 
 @media (hover: hover) {
     .work-more__link:hover .work-more__media img {
         transform: scale(1.025);
     }
+
     .work-more__control:not(:disabled):hover {
         color: var(--color-accent);
         border-color: var(--color-accent);
