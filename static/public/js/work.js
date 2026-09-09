@@ -40,10 +40,13 @@ if (
 ) {
     let currentIndex = 0;
 
-    const visibleItems = 3;
-    const maxIndex = workCarouselItems.length - visibleItems;
-
     const updateCarousel = () => {
+        const visibleItems = window.matchMedia("(max-width: 640px)").matches ? 1 : 3;
+        const maxIndex = workCarouselItems.length - visibleItems;
+        
+        if (currentIndex > maxIndex) {
+            currentIndex = maxIndex
+        }
         const step = workCarouselItems[1].offsetLeft - workCarouselItems[0].offsetLeft;
 
         workCarouselTrack.style.transform = `translateX(${-currentIndex * step}px)`;
