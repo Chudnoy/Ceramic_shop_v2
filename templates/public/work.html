@@ -219,11 +219,11 @@
 <section class="work-more" aria-labelledby="work-more-title" data-work-carousel>
     <header class="work-more__header">
         <div>
-            <p class="work-more__eyebrow">Смотреть так же</p>
+            <p class="work-more__eyebrow">Смотреть также</p>
             <h2 class="work-more__title" id="work-more-title">Другие работы</h2>
         </div>
-        {% if other_works|length > 3 %}
-            <div class="work-more__controls" aria-label="Навигация по работам">
+        {% if other_works|length > 1 %}
+            <div class="work-more__controls" aria-label="Навигация по работам" data-work-carousel-controls>
                 <button
                     class="work-more__control"
                     type="button"
