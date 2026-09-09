@@ -781,3 +781,31 @@ WORK MORE HOVER
         border-color: var(--color-accent);
     }
 }
+
+
+/* ====================================
+TABLET 
+==================================== */
+
+@media (max-width: 900px) {
+    /* WORK HERO */
+
+    .work-hero {
+        grid-template-columns: minmax(15rem, 0.85fr) minmax(0, 1.15fr);
+        min-block-size: auto;
+        padding-block: clamp(2rem, 5vw, 3rem) clamp(3rem, 6vw, 4rem);
+    }
+
+    .work-hero__content {
+        padding-inline-end: clamp(1.5rem, 4vw, 3rem);
+    }
+
+    .work-hero__title {
+        margin-bottom: clamp(2rem, 4vw, 3rem);
+        font-size: clamp(2.75rem, 7vw, 4.5rem);
+    }
+
+    .work-hero__media img {
+        max-block-size: clamp(24rem, 58vw, 34rem);
+    }
+}

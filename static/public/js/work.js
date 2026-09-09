@@ -63,4 +63,6 @@ if (
     });
 
     updateCarousel();
+
+    window.addEventListener('resize', updateCarousel)
 }
