@@ -293,9 +293,54 @@ def seed_initial_data():
         project_images = [
             (
                 PORISTYE_FORMY_ID,
-                "/static/uploads/projects/poristye-formy/01-cover.png",
+                "/static/public/img/projects/porous-forms/01-cover-still-life-wide.png",
                 1,
-            )
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/02-bowl-sunlit-vertical.png",
+                2,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/03-surface-macro-dark.png",
+                3,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/04-kiln-process-wide.png",
+                4,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/05-forms-pair-window-vertical.png",
+                5,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/06-drop-form-sunlit-vertical.png",
+                6,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/07-cylinder-sunlit-vertical.png",
+                7,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/08-still-life-airy-wide.png",
+                8,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/09-forms-lineup-wide.png",
+                9,
+            ),
+            (
+                PORISTYE_FORMY_ID,
+                "/static/public/img/projects/porous-forms/10-surface-detail-sunlit-vertical.png",
+                10,
+            ),
         ]
 
         conn.executemany(
