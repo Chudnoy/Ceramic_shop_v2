@@ -1,4 +1,4 @@
-from flask import  abort, render_template
+from flask import abort, render_template
 
 from services.public_project_service import get_public_project_page_data
 
@@ -17,5 +17,5 @@ def project_detail(slug):
         project=page_data["project"],
         images=page_data["images"],
         cover_image=page_data["cover_image"],
-        project_works=["project_works"]
+        project_works=page_data["project_works"]
     )
