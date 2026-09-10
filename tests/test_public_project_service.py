@@ -61,6 +61,7 @@ def create_test_work(
     work_id,
     slug,
     name,
+    year=2025,
     project_id="project-1",
     project_position=None,
     is_published=1,
@@ -71,16 +72,18 @@ def create_test_work(
             id,
             slug,
             name,
+            year,
             project_id,
             project_position,
             is_published
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             work_id,
             slug,
             name,
+            year,
             project_id,
             project_position,
             is_published,
@@ -165,6 +168,7 @@ def test_get_public_project_page_data_returns_project_with_works(
             "id": "work-1",
             "slug": "kaplya",
             "name": "Капля",
+            "year": 2025,
             "project_position": 1,
             "cover_image_path": "static/kaplya-cover.jpg",
         },
@@ -172,6 +176,7 @@ def test_get_public_project_page_data_returns_project_with_works(
             "id": "work-2",
             "slug": "kolonna",
             "name": "Колонна",
+            "year": 2025,
             "project_position": 2,
             "cover_image_path": "static/kolonna-cover.jpg",
         },
@@ -179,6 +184,7 @@ def test_get_public_project_page_data_returns_project_with_works(
             "id": "work-3",
             "slug": "belaya-chasha",
             "name": "Белая чаша",
+            "year": 2025,
             "project_position": 3,
             "cover_image_path": "static/belaya-cover.jpg",
         },
@@ -249,6 +255,7 @@ def test_get_public_project_page_data_excludes_unpublished_works(
             "id": "work-1",
             "slug": "kaplya",
             "name": "Капля",
+            "year": 2025,
             "project_position": 1,
             "cover_image_path": "static/kaplya-cover.jpg",
         }

@@ -125,11 +125,10 @@
 {% endif %}
 
 {% if project_preview %}
-{% set project_url = "#" %}
 <section
     class="work-project{% if not project_preview.cover_image_path %} work-project--no-image {% endif %}"
     aria-labelledby="work-project-title">
-    <a href="{{ project_url }}" class="work-project__card">
+    <a href="{{ url_for('public.project_detail', slug=project_preview.slug) }}" class="work-project__card">
         <div class="work-project__content">
             <p class="work-project__eyebrow">Часть проекта</p>
             <h2 class="work-project__title" id="work-project-title">
