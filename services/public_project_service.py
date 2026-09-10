@@ -44,6 +44,7 @@ def get_public_project_page_data(slug):
                     "id": project_work["id"],
                     "slug": project_work["slug"],
                     "name": project_work["name"],
+                    "year": project_work["year"],
                     "project_position": project_work["project_position"],
                     "cover_image_path": (
                         project_work_cover["image_path"]
