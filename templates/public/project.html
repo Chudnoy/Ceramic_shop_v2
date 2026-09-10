@@ -1,1 +1,31 @@
 {% extends "public/base.html" %}
+
+{% block title %}
+    {{ project.name }} - Полина Яланская
+{% endblock %}
+
+{% block styles %}
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='public/css/project.css') }}"
+    >
+{% endblock %}
+
+{% block content %}
+<main class="project-page">
+    <section class="project-threshold" aria-labelledby="project-title">
+        <p class="project-threshold__eyebrow">Проект / Керамика</p>
+        <h1 class="project-threshold__title" id="project-title">{{ project.name }}</h1>
+        
+        {% if project.period %}
+            <p class="project-threshold__period">{{ project.period }}</p>
+        {% endif %}
+        
+        {% if cover_image %}
+            <figure class="project-threshold__media">
+                <img src="{{ cover_image.image_path }}" alt="{{ project.name }}">
+            </figure>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

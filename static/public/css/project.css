@@ -1,0 +1,85 @@
+/* ==================================
+PROJECT PAGE
+================================== */
+
+.project-page {
+    background: var(--color-background);
+}
+
+
+/* ==================================
+PROJECT THRESHOLD
+================================== */
+
+.project-threshold {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    block-size: calc(100svh - var(--site-header-height));
+    overflow: hidden;
+    background: var(--color-background);
+}
+
+/* COVER */
+
+.project-threshold__media {
+    grid-column: 5/-1;
+    grid-row: 1;
+    min-inline-size: 0;
+    margin: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.project-threshold__media img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* EYEBROW */
+
+.project-threshold__eyebrow {
+    grid-column: 3/6;
+    grid-row: 1;
+    align-content: start;
+    margin: clamp(2rem, 4vw, 4rem) 0 0;
+    font-size: 0.65rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    z-index: 1;
+}
+
+/* TITLE */
+
+.project-threshold__title {
+    grid-column: 1/9;
+    grid-row: 1;
+    align-self: start;
+    max-inline-size: 60vw;
+    margin: clamp(4rem, 8vw, 7rem) 0 0 calc(var(--page-start) * -0.35);
+    font-family: var(--font-serif);
+    font-size: clamp(5.5rem, 14.5vw, 13rem);
+    font-weight: 400;
+    line-height: 0.74;
+    letter-spacing: -0.055em;
+    color: var(--color-test);
+    z-index: 2;
+}
+
+/* PERIOD */
+
+.project-threshold__period {
+    grid-column: 2/4;
+    grid-row: 1;
+    margin: 0 0 clamp(3rem, 7vw, 6rem) var(--page-start);
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    line-height: 1;
+    color: var(--color-muted);
+    z-index: 2;
+}
