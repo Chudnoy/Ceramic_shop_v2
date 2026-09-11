@@ -388,3 +388,246 @@ PROJECT FIRST MOVEMENT
 .project-first-movement__work:hover .project-first-movement__media img {
     transform: scale(1.015);
 }
+
+
+/* ==============================
+PROJECT BREAK
+============================== */
+
+.project-break {
+    background: var(--color-background);
+}
+
+.project-break__stage {
+    inline-size: 100%;
+    block-size: clamp(36rem, 78svh, 54rem);
+    overflow: hidden;
+    background: #1d1916;
+}
+
+.project-break__media {
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+.project-break__media img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.project-break__afterword {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    min-block-size: clamp(20rem, 38svh, 28rem);
+    padding: clamp(2rem, 5vw, 5rem) var(--page-end) clamp(3rem, 6vw, 6rem) var(--page-start);
+    background: var(--color-background);
+}
+
+.project-break__chapter {
+    grid-column: 2/4;
+    align-self: start;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+}
+
+.project-break__chapter span,
+.project-break__chapter p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.project-break__text {
+    grid-column: 5/9;
+    align-self: center;
+    max-inline-size: 34ch;
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    font-size: clamp(1.05rem, 1.45vw, 1.35rem);
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+
+
+/* =================================
+PROJECT WORKS MOVEMENT
+================================= */
+
+.project-works-movement {
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+    block-size: clamp(34rem, 68svh, 46rem);
+    padding: clamp(2.5rem, 4vw, 4rem) var(--page-end) clamp(2.5rem, 4vw, 4rem) var(--page-start);
+    background: var(--color-background);
+}
+
+.project-works-movement__chapter {
+    grid-column: 1/4;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-self: start;
+    z-index: 2;
+}
+
+.project-works-movement__chapter span,
+.project-works-movement__chapter p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.project-works-movement__text {
+    grid-column: 2/5;
+    grid-row: 2;
+    align-self: center;
+    max-inline-size: 32ch;
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
+    line-height: 1.5;
+    text-wrap: pretty;
+    z-index: 2;
+}
+
+.project-works-movement__works {
+    grid-column: 5/13;
+    grid-row: 1/3;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
+    min-inline-size: 0;
+    min-block-size: 0;
+    gap: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+
+.project-works-movement__work {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    background: var(--color-background);
+}
+
+/* ONE WORK */
+
+.project-works-movement--works-1 .project-works-movement__work--1 {
+    grid-column: 2 / 8;
+    grid-row: 1 / 9;
+}
+
+
+/* TWO WORKS */
+
+.project-works-movement--works-2 .project-works-movement__work--1 {
+    grid-column: 1 / 5;
+    grid-row: 1 / 8;
+}
+
+.project-works-movement--works-2 .project-works-movement__work--2 {
+    grid-column: 5 / 9;
+    grid-row: 2 / 9;
+}
+
+
+/* THREE WORKS */
+
+.project-works-movement--works-3 .project-works-movement__work--1 {
+    grid-column: 1 / 5;
+    grid-row: 1 / 6;
+}
+
+.project-works-movement--works-3 .project-works-movement__work--2 {
+    grid-column: 5 / 9;
+    grid-row: 2 / 7;
+}
+
+.project-works-movement--works-3 .project-works-movement__work--3 {
+    grid-column: 2 / 6;
+    grid-row: 6 / 9;
+
+    z-index: 2;
+}
+
+.project-works-movement__media {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+.project-works-movement__media img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 500ms ease;
+}
+
+.project-works-movement__meta {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    padding: clamp(0.75rem, 1.2vw, 1rem);
+    background: var(--color-background);
+    z-index: 2;
+}
+
+.project-works-movement__meta h2,
+.project-works-movement__meta p {
+    margin: 0;
+}
+
+.project-works-movement__meta h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 1.4vw, 1.3rem);
+    font-weight: 400;
+    line-height: 1.05;
+}
+
+.project-works-movement__meta p {
+    margin-block-start: 0.3rem;
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+}
+
+.project-works-movement__work--without-image {
+    border: 1px solid rgba(36, 29, 24, 0.15);
+}
+
+.project-works-movement__work--without-image .project-works-movement__meta {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: end;
+}
+
+.project-works-movement__work:hover .project-works-movement__media img {
+    transform: scale(1.015);
+}

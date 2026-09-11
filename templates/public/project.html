@@ -125,5 +125,73 @@
             {% endif %}
         </section>
     {% endif %}
+
+    {% if break_image or project_paragraphs|length > 1 %}
+        <section class="project-break">
+            {% if break_image %}
+                <div class="project-break__stage">
+                    <figure class="project-break__media">
+                        <img src="{{ break_image.image_path }}" alt="Изображение проекта {{ project.name }}">
+                    </figure>
+                </div>
+            {% endif %}
+
+            {% if project_paragraphs|length > 1 %}
+                <div class="project-break__afterword">
+                    <div class="project-break__chapter">
+                        <span>04</span>
+                        <p>
+                            Сдвиг<br>
+                            материала
+                        </p>
+                    </div>
+                    <p class="project-break__text">{{ project_paragraphs[1] }}</p>
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% set movement_works = project_works[1:4] %}
+    {% if movement_works or project_paragraphs|length > 2 %}
+        <section class="project-works-movement project-works-movement--works-{{ movement_works|length }}">
+            <div class="project-works-movement__chapter">
+                <span>05</span>
+                <p>
+                    Работы<br>
+                    проекта
+                </p>
+            </div>
+
+            {% if project_paragraphs|length > 2 %}
+                <p class="project-works-movement__text">
+                    {{ project_paragraphs[2] }}
+                </p>
+            {% endif %}
+
+            {% if movement_works %}
+                <div class="project-works-movement__works">
+                    {% for work in movement_works %}
+                        <a 
+                            href="{{ url_for('public.work_detail', slug=work.slug) }}"
+                            class="project-works-movement__work project-works-movement__work--{{ loop.index }}{% if not work.cover_image_path %} project-works-movement__work--without-image{% endif %}"
+                        >
+                            {% if work.cover_image_path %}
+                                <figure class="project-works-movement__media">
+                                    <img src="{{ work.cover_image_path }}" alt="{{ work.name }}">
+                                </figure>
+                            {% endif %}
+
+                            <div class="project-works-movement__meta">
+                                <h2>{{ work.name }}</h2>
+                                {% if work.year %}
+                                    <p>{{ work.year }}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
 </main>
 {% endblock %}
