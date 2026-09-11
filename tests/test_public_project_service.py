@@ -122,6 +122,17 @@ def test_get_public_project_page_data_returns_project_with_works(
     create_test_project(conn)
     create_test_project_image(conn, image_path="static/project-cover.jpg", position=1)
     create_test_project_image(conn, image_path="static/project-detail.jpg", position=2)
+    create_test_project_image(conn, image_path="static/project-break.jpg", position=3)
+
+    create_test_project_image(conn, image_path="static/project-process.jpg", position=4)
+
+    create_test_project_image(conn, image_path="static/project-field-1.jpg", position=5)
+
+    create_test_project_image(
+        conn,
+        image_path="static/project-field-2.jpg",
+        position=6,
+    )
     create_test_work(
         conn, work_id="work-1", slug="kaplya", name="Капля", project_position=1
     )
@@ -156,7 +167,13 @@ def test_get_public_project_page_data_returns_project_with_works(
 
     assert page_data["cover_image"]["image_path"] == "static/project-cover.jpg"
     assert page_data["premise_image"]["image_path"] == "static/project-detail.jpg"
-    assert page_data["field_images"] == []
+    assert page_data["break_image"]["image_path"] == "static/project-break.jpg"
+    assert page_data["process_image"]["image_path"] == "static/project-process.jpg"
+
+    assert [image["image_path"] for image in page_data["field_images"]] == [
+        "static/project-field-1.jpg",
+        "static/project-field-2.jpg",
+    ]
 
     assert page_data["project_works"] == [
         {

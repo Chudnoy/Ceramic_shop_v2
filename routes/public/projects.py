@@ -19,6 +19,6 @@ def project_detail(slug):
         premise_image=page_data["premise_image"],
         break_image=page_data["break_image"],
         process_image=page_data["process_image"],
-        field_image=page_data["field_images"],
+        field_images=page_data["field_images"],
         project_works=page_data["project_works"],
     )
