@@ -1,166 +1,240 @@
 # Публичные сценарии
 
-## 1. Главная — `GET /`
+Сейчас существуют две публичные ветки: legacy и target `/v2`.
 
-Route получает:
-
-```text
-неархивные
-опубликованные
-избранные
-работы
-```
-
-и передаёт их в `index.html`.
-
-Главная сейчас использует `products.is_featured` как ручной редакционный выбор.
-
-## 2. Каталог — `GET /catalog`
-
-Параметры:
-
-| Параметр | Значение |
-|---|---|
-| `category` | slug категории |
-| `tag` | slug тега |
-| `q` | строка поиска |
-| `sort_by` | `name` или `price` |
-| `order` | `ASC` или `DESC` |
-
-Публичная выборка всегда исключает:
-
-- скрытые работы;
-- архивные работы.
-
-Некорректная категория или тег приводят к flash-сообщению и redirect в каталог.
-
-Текущее ограничение: при выбранном теге используется отдельная выборка, и комбинация тега с категорией, поиском и сортировкой пока не реализована.
-
-## 3. Страница работы — `GET /product/<id>`
-
-Загружаются:
-
-- поля работы;
-- категория;
-- связанные теги.
-
-Страница недоступна, когда:
+## 1. Legacy homepage
 
 ```text
-product not found
-OR is_visible != 1
-OR is_archived == 1
+GET /
+↓
+Product query
+only_visible
+not archived
+featured
+↓
+index.html
 ```
 
-Статус `sold` сам по себе не скрывает работу: это позволяет в будущем сохранять проданную работу в публичном портфолио.
+Это старая Product-oriented страница.
 
-## 4. Добавление в корзину — `POST /add_to_cart/<id>`
-
-Route:
-
-1. преобразует `quantity` в положительное целое;
-2. загружает работу;
-3. получает единую причину недоступности;
-4. добавляет `id → quantity` в session;
-5. возвращает redirect или AJAX JSON.
-
-Даже если карточка была открыта ранее, доступность проверяется заново.
-
-## 5. Представление корзины
-
-Session хранит минимум:
-
-```python
-{"product-uuid": 1}
-```
-
-Название, цена и статус не доверяются session и каждый раз загружаются из базы.
-
-`build_cart_summary()` формирует:
-
-- `products` — все найденные позиции с дополнительными полями;
-- `available_products` — только доступные;
-- `total` — сумма доступных;
-- `cart_count` — сумма количеств в session;
-- `has_unavailable_items`;
-- `unavailable_reason` для каждой позиции.
-
-Удалённый из базы ID определяется как недоступный, даже если запись больше не может быть показана.
-
-## 6. Удаление недоступных
-
-`POST /cart/remove_unavailable` повторно загружает работы и оставляет только ID, удовлетворяющие текущему правилу доступности.
-
-Недоступная позиция не удаляется автоматически во время простого просмотра. Пользователь видит изменение и сам решает убрать её.
-
-## 7. Checkout — GET
-
-`GET /checkout`:
-
-- отклоняет пустую корзину;
-- отклоняет корзину без доступных работ;
-- предупреждает о недоступных позициях;
-- показывает только доступную часть и её сумму.
-
-## 8. Checkout — POST
-
-### Валидация покупателя
-
-Обязательны:
-
-- имя;
-- email, содержащий `@`.
-
-Телефон и адрес сейчас необязательны.
-
-### Частичный заказ
-
-Если в session есть доступные и недоступные позиции, требуется:
+## 2. Legacy catalog
 
 ```text
-confirm_partial_order = 1
+GET /catalog
 ```
 
-Без явного согласия заказ не создаётся.
+Поддерживает:
 
-### Создание
+- category;
+- tag;
+- `q`;
+- sorting/order.
 
-```mermaid
-sequenceDiagram
-    participant R as Route
-    participant C as Cart service
-    participant O as Order service
-    participant DB as SQLite
+Route валидирует category/tag и получает Products из legacy database layer.
 
-    R->>C: build_cart_summary(session)
-    C-->>R: available products + unavailable flag
-    R->>O: create_order_with_items(data, items)
-    O->>DB: INSERT orders
-    O->>DB: INSERT order_items
-    loop каждая работа
-        O->>DB: available → reserved
-    end
-    alt все успешны
-        O->>DB: COMMIT
-        O-->>R: order_id
-        R->>C: remove only ordered IDs
-    else одна работа недоступна
-        O->>DB: ROLLBACK
-        O-->>R: error
-    end
+## 3. Legacy Product detail
+
+```text
+GET /product/<product_id>
 ```
 
-## 9. Страница успеха — `GET /order_success/<order_id>`
+Если Product отсутствует, скрыт или archived, пользователь возвращается в catalog.
 
-Показывает заказ и исторические позиции.
+## 4. Legacy cart
 
-Текущее ограничение безопасности: доступ определяется только знанием UUID заказа. Связь с конкретной browser-session пока не проверяется.
+Session:
 
-## 10. Пользовательские обещания системы
+```text
+cart = {
+    product_id: quantity
+}
+```
 
-- Цена заказа берётся с сервера, а не из формы.
-- Недоступная работа не включается молча.
-- Частичный заказ не создаётся без подтверждения.
-- Ошибка создания не очищает корзину.
-- После успеха удаляются только реально оформленные позиции.
-- История заказа не зависит от последующего редактирования работы.
+`build_cart_summary()` каждый раз повторно читает Products из БД.
+
+Это важно: session не считается источником цены/доступности.
+
+Summary строит:
+
+```text
+products
+available_products
+total
+has_unavailable_items
+cart_count
+```
+
+Недоступная позиция может оставаться видимой в cart, но не входит в `available_products` и `total`.
+
+## 5. Legacy checkout
+
+GET:
+
+```text
+cart summary
+↓
+есть cart?
+↓
+есть available_products?
+↓
+показать checkout
+```
+
+POST:
+
+```text
+rebuild cart from DB
+↓
+validate customer form
+↓
+если есть unavailable items:
+    требуется confirm_partial_order=1
+↓
+build OrderItems
+↓
+create_order_with_items
+↓
+remove only ordered Product IDs from session
+↓
+order success
+```
+
+## 6. Atomic legacy order creation
+
+`create_order_with_items()`:
+
+```text
+INSERT order
+↓
+INSERT order_items
+↓
+для каждого item:
+Product available → reserved
+↓
+COMMIT
+```
+
+Любой failed reserve:
+
+```text
+ROLLBACK
+```
+
+## 7. New public homepage
+
+```text
+GET /v2/
+↓
+get_home_page_data()
+↓
+published Works + covers
+published ShopItems + availability
+↓
+templates/public/home.html
+```
+
+Shop preview выбирает только items с `availability["can_order"]`.
+
+## 8. New Work detail
+
+```text
+GET /v2/works/<slug>
+```
+
+Service:
+
+```text
+published Work?
+↓ no → 404
+
+yes:
+images
+cover/detail images
+categories
+tags
+materials
+published ShopItem
+availability
+published Project preview
+other published Works
+```
+
+Template показывает художественную Work независимо от того, существует ли ShopItem.
+
+Это важное отличие от legacy Product page.
+
+## 9. New Project detail
+
+```text
+GET /v2/projects/<slug>
+```
+
+Неопубликованный Project → 404.
+
+Service:
+
+```text
+Project
+↓
+split text into paragraphs
+↓
+map project_images by position
+↓
+load published Works ordered by project_position
+↓
+add cover image per Work
+```
+
+Текущий template использует:
+
+- threshold;
+- premise;
+- first movement.
+
+Следующие параграфы, Works и дополнительные Project images уже приходят в read-model, но не все ещё выведены в текущем WIP template.
+
+## 10. Future Shop read-side уже частично существует
+
+`get_public_shop_page_data()` уже умеет собрать список ShopItems.
+
+Но route/template ещё не созданы.
+
+Это хороший пример backend runway: read-model может быть готов немного раньше визуального слоя.
+
+## 11. Не смешивать public visibility rules
+
+Для разных сущностей разные правила.
+
+Work detail:
+
+```text
+Work.is_published
+```
+
+Project detail:
+
+```text
+Project.is_published
+```
+
+Shop:
+
+```text
+ShopItem publication/order/lifecycle
++ linked Work publication
++ inventory state
+```
+
+Нельзя заменять это одним универсальным `visible`.
+
+## 12. Progressive enhancement
+
+Новый public frontend рассчитан так, чтобы основной контент существовал в HTML/Jinja.
+
+JS усиливает:
+
+- mobile navigation;
+- Work story disclosure;
+- Work carousel.
+
+Бизнес-контент и ссылки не должны зависеть от того, отработал ли JavaScript.

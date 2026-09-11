@@ -1,275 +1,178 @@
-# Дорожная карта до production
+# Roadmap до production
 
-Это костяк, а не жёсткий календарь. Этапы могут дробиться и переставляться, но зависимые решения нельзя безопасно выполнять в обратном порядке.
+Этот документ описывает не календарные сроки, а зависимость этапов.
 
-## Этап 0. Завершённое основание
+## Этап A — закончить новый публичный художественный read-side
 
-Уже выполнено:
-
-- фабрика приложения;
-- blueprints;
-- route/service/database разделение;
-- полноценный order lifecycle;
-- transaction rollback;
-- image compensation;
-- тестовые временные базы;
-- GitHub Actions;
-- migration runner;
-- `v001–v007`;
-- нормализация `order_items`;
-- удаление старого schema builder;
-- удаление отзывов;
-- локальная проверка чистого создания базы.
-
-## Этап 1. Независимое причёсывание
-
-Можно выполнять, пока Полина обдумывает предметные вопросы:
-
-1. заменить старую документацию этим комплектом;
-2. зафиксировать удаление `shop.db` из tracking;
-3. запустить Ruff в режиме чтения;
-4. небольшими коммитами убрать явный dead code и stale docstrings;
-5. подключить `pytest-cov` как отчёт;
-6. добавить Ruff в существующий Actions после настройки;
-7. подготовить базовое logging и error handlers;
-8. вынести development/production различия конфигурации.
-
-На этом этапе не меняется модель данных.
-
-## Этап 2. Предметное исследование с Полиной
-
-### 2.1. Project / Work / Shop item
-
-Разобрать реальные примеры и зафиксировать:
-
-- определение Project;
-- определение Work;
-- определение Shop item;
-- связь между ними;
-- публичный архив после продажи;
-- порядок работ внутри проекта;
-- обязательные и необязательные поля.
-
-### 2.2. Уникальные и складские позиции
-
-Для разных примеров определить:
-
-- один физический объект;
-- несколько одинаковых единиц;
-- серия с небольшими различиями;
-- изготовление после заказа;
-- ограниченный тираж;
-- остаток;
-- резерв;
-- списание;
-- возврат резерва.
-
-### 2.3. Информационная архитектура сайта
-
-Зафиксировать страницы и пользовательские цели:
-
-- главная;
-- проекты;
-- отдельный проект;
-- архив работ;
-- отдельная работа;
-- магазин;
-- карточка предложения;
-- об авторе;
-- выставки/события;
-- контакты;
-- корзина и заказ.
-
-Результат этапа — текстовая модель и карточки реальных примеров, а не SQL.
-
-## Этап 3. Проектирование будущей модели
-
-На основании ответов:
-
-1. нарисовать ER-диаграмму;
-2. определить поля и nullability;
-3. описать статусы и переходы;
-4. определить historical snapshots;
-5. разделить публикацию, продажу и фактическую доступность;
-6. определить уникальные/складские инварианты;
-7. решить судьбу текущей `products`;
-8. составить последовательность `v008+`.
-
-Перед кодом подготовить примеры «до/после» и план миграции существующих пяти seed-работ.
-
-## Этап 4. Новая схема и миграции
-
-Возможный, но не утверждённый набор:
+Сейчас:
 
 ```text
-v008 create_projects
-v009 create_works_or_rename_products
-v010 connect_projects_and_works
-v011 create_work_images
-v012 create_shop_items
-v013 introduce_inventory_model
-v014 adapt_order_items_snapshots
+new home          exists
+new Work detail   exists
+new Project       WIP
 ```
 
-Точные версии появятся только после предметного решения.
-
-Каждая версия проходит:
+Далее:
 
 ```text
-previous schema
-→ fixture data
-→ migration
-→ structure assertions
-→ data assertions
-→ application tests
+закончить Project detail
+↓
+Works index/archive
+↓
+Projects index
+↓
+общая навигация между ними
 ```
 
-## Этап 5. Публичная архитектура и дизайн
+Backend этих index pages можно готовить на один шаг раньше верстки.
 
-1. Каркас навигации.
-2. Главная как выразительная авторская входная точка.
-3. Страница проектов.
-4. Страница проекта с ручным порядком работ.
-5. Архив/портфолио.
-6. Отдельная Work.
-7. Shop как самостоятельный режим.
-8. Адаптивность и доступность.
-9. SEO metadata, Open Graph, sitemap.
-10. Контентная проверка с Полиной.
+## Этап B — Shop public
 
-## Этап 6. Админка новой модели
+Нужно определить:
 
-Админ должен управлять не таблицами, а понятными сценариями:
+- Shop index composition;
+- linked Work item vs standalone item;
+- состояния available / reserved / out of stock;
+- карточку standalone ShopItem;
+- что происходит при click linked item;
+- нужен ли отдельный ShopItem detail для linked Work или Work detail достаточно.
 
-- создать проект;
-- наполнить его работами;
-- задать порядок;
-- опубликовать;
-- создать Work без продажи;
-- связать Work с магазинным предложением;
-- создать самостоятельный Shop item;
-- управлять остатком/тиражом;
-- видеть причину недоступности;
-- загружать несколько изображений;
-- безопасно архивировать.
+После этого уже существующий `public_shop_service` можно довести до реального route/template contract.
 
-## Этап 7. Торговая модель
+## Этап C — target admin
 
-После разделения уникальных и складских вещей:
+Не начинать как полный rewrite.
 
-- серверный расчёт доступного количества;
-- атомарный резерв;
-- защита от overselling;
-- срок жизни резерва — при необходимости;
-- отмена и восстановление остатка;
-- snapshot SKU/title/price/variant;
-- доставка;
-- способ оплаты;
-- уведомления;
-- политика возврата.
+Вертикальные slices:
 
-Онлайн-оплата добавляется только после устойчивого order model.
+```text
+Project management
+↓
+Work management
+↓
+ShopItem management
+↓
+media/taxonomy ordering
+```
 
-## Этап 8. Изображения
+Сначала минимальные необходимые операции, затем удобство редактора.
 
-- gallery entity;
-- порядок;
-- alt-текст;
-- обложка;
-- thumbnail/medium/original;
-- проверка содержимого;
-- лимиты;
-- очистка orphan files;
-- внешнее object storage или гарантированное persistent volume;
-- backup policy.
+Page-section drag-and-drop — post-launch feature, если реальная потребность сохранится.
 
-## Этап 9. Качество
+## Этап D — commerce cutover
 
-- Ruff lint;
-- Ruff format отдельным осознанным этапом;
-- pytest-cov;
-- CI matrix при необходимости;
-- smoke tests;
-- route error tests;
-- accessibility audit;
-- performance profiling;
-- dependency review.
+Самая рискованная часть.
 
-## Этап 10. Production-конфигурация
+Новый cart:
 
-- отдельный production config;
-- `debug=False`;
-- WSGI server;
-- reverse proxy/managed platform;
+```text
+session stores ShopItem IDs
+```
+
+Новый availability:
+
+```text
+stock - active reservations
+```
+
+Order creation должна атомарно гарантировать:
+
+```text
+requested quantity <= available quantity
+```
+
+Order lifecycle должен корректно влиять на inventory/reservations.
+
+Нужно отдельно решить completed semantics для `stock_quantity`.
+
+## Этап E — legacy cleanup
+
+Только после подтверждённого cutover:
+
+- убрать legacy public catalog;
+- убрать Product-based cart/checkout;
+- убрать Product admin;
+- решить судьбу `products` и старых columns;
+- при необходимости отдельными migrations почистить schema.
+
+Cleanup не должен предшествовать replacement.
+
+## Этап F — production readiness
+
+### Runtime
+
+- production WSGI/app server;
+- debug off;
+- environment configuration;
+- error handling;
+- logging;
+- health endpoint;
+- graceful startup.
+
+### HTTP/platform
+
 - HTTPS;
-- secure cookies;
-- trusted proxy headers;
-- environment secrets;
-- database URL;
-- migration command;
-- logs;
-- health check;
-- error tracking;
-- rate limiting;
-- max upload size.
+- domain/DNS;
+- reverse proxy или PaaS routing;
+- static/media strategy.
 
-## Этап 11. База production
+### Data
 
-Выбор между SQLite и PostgreSQL принимается по условиям deployment.
-
-Для любого варианта нужны:
-
-- backup;
+- production DB path/storage;
+- backups;
 - restore test;
-- migration rehearsal;
-- ограничение доступа;
-- наблюдение за размером;
-- rollback plan.
+- migration procedure;
+- seed strategy отделена от production data.
 
-При PostgreSQL потребуется проверить SQL-совместимость всех database-модулей и заменить SQLite-специфичные детали.
+### Security
 
-## Этап 12. Staging
+- secure cookies;
+- secrets;
+- admin exposure;
+- upload validation;
+- CSRF audit.
 
-Staging должен повторять production настолько, насколько разумно:
+### Quality
 
-1. deploy;
-2. migrations;
-3. seed только специально подготовленных demo-данных;
-4. загрузка изображений;
-5. полный checkout;
-6. admin lifecycle;
-7. cancel/complete;
-8. backup/restore rehearsal;
-9. мобильная проверка;
-10. проверка Полиной.
+- full pytest/Ruff;
+- browser smoke path;
+- responsive pass;
+- accessibility pass;
+- broken links/placeholders cleanup.
 
-## Этап 13. Запуск
+## Этап G — первый release
 
-Перед открытием:
+Feature freeze перед release.
 
-- финальный контент;
-- домен;
-- HTTPS;
-- privacy/offer/delivery texts;
-- production admin password;
-- backup;
-- smoke test;
-- monitoring;
-- понятный способ остановить приём заказов;
-- план первых исправлений.
-
-## Как проходить маршрут без паники
-
-В работе существует только ближайший небольшой блок. Полный план нужен для порядка зависимостей, а не для одновременного удержания всего объёма в голове.
-
-Практический ритм:
+Критерий:
 
 ```text
-понять один вопрос
-→ зафиксировать решение
-→ сделать маленькое изменение
-→ написать тест
-→ проверить вручную
-→ обновить документацию
-→ зафиксировать commit
+основной сайт можно смотреть
+контент можно поддерживать
+магазин выполняет выбранный MVP-сценарий
+заказ не нарушает inventory invariants
+production runtime воспроизводим
 ```
+
+Не требуется до первого release:
+
+- page builder;
+- drag-and-drop всех sections;
+- универсальный CMS;
+- сложные animations;
+- бесконечный список «классных будущих фич».
+
+## После release
+
+Уже в работающем продукте можно добавлять:
+
+- reorderable sections;
+- richer Project editor;
+- event/exhibition sections;
+- charity sections;
+- advanced inventory;
+- notifications;
+- analytics;
+- более сложные editorial compositions.
+
+Главная защита проекта от вечного pre-release: разделять **release-critical** и **post-launch-interesting**.

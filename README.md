@@ -1,110 +1,116 @@
 # Ceramic Shop v2
 
-Сайт-портфолио и небольшая коммерческая витрина керамических работ художницы Полины Яланской.
+Персональный сайт художницы Полины Яланской, художественный архив и будущий магазин керамических работ.
 
-Проект сочетает две уже работающие части:
+Проект находится в переходном состоянии: в одном Flask-приложении одновременно живут **старый рабочий runtime на `Product`** и **новая предметная модель `Project → Work → ShopItem`**, на которую постепенно переводится публичный сайт. Это не случайный дубль и не два независимых приложения: новая система строится рядом со старой, пока отдельные вертикальные срезы не будут готовы к cutover.
 
-- публичную презентацию работ: главная, каталог, фильтры, смысловые теги и отдельные страницы;
-- небольшой магазин уникальных объектов: session-корзина, checkout, резервирование и административный жизненный цикл заказа.
+## Текущее состояние
 
-Сейчас это учебный, но уже содержательно цельный **модульный монолит на Flask и SQLite**. Проект ещё не готов к production: перед размещением предстоят предметное переосмысление `Project / Work / Shop item`, доработка безопасности, конфигурации, изображений и эксплуатационной инфраструктуры.
+По состоянию на `main` / commit `7d996da41b25bd033d2c52f431b4b6a84bfdcdce` от 11 сентября 2026 года:
 
-## Что уже реализовано
+- миграционная цепочка доведена до `v013`;
+- художественное ядро `Project / Work / Series / Material` уже существует в схеме;
+- коммерческое ядро `ShopItem` уже существует в схеме;
+- `order_items` содержит и legacy-связь `product_id`, и новый bridge `shop_item_id`;
+- новый публичный blueprint работает под `/v2`;
+- новая главная `/v2/` реализована;
+- новая страница Work `/v2/works/<slug>` реализована и имеет отдельный responsive CSS/JS;
+- страница Project `/v2/projects/<slug>` находится в активной верстке;
+- backend read-model для будущего публичного магазина уже существует, но отдельный `/v2/shop` route пока не зарегистрирован;
+- старый каталог, корзина, checkout и текущая админка всё ещё работают через `Product`.
 
-### Публичная часть
-
-- главная страница с избранными опубликованными работами;
-- каталог с категориями, поиском и сортировкой;
-- фильтрация по смысловым тегам;
-- отдельная страница опубликованной работы;
-- session-корзина;
-- повторная проверка доступности по базе;
-- удаление недоступных позиций;
-- полный и явно подтверждаемый частичный checkout;
-- страница успешного заказа.
-
-### Административная часть
-
-- вход по логину и хешу пароля из переменных окружения;
-- dashboard со статистикой;
-- создание, редактирование, публикация, избранное и архивирование работ;
-- управление категориями и тегами;
-- загрузка и замена изображений;
-- список и карточка заказов;
-- редактирование нового заказа;
-- подтверждение, выполнение, отмена и удаление отменённого заказа.
-
-### Данные и надёжность
-
-- SQLite с включёнными внешними ключами;
-- `products`, `categories`, `tags`, `product_tags`, `orders`, `order_items`;
-- история схемы через собственный migration runner;
-- миграции `v001–v007`;
-- снимки названия и цены в `order_items`;
-- транзакционные сценарии с `commit / rollback`;
-- временные тестовые базы;
-- автоматический запуск `pytest` в GitHub Actions.
-
-## Основные правила предметной модели
-
-Работа доступна для оформления, только когда она:
+## Главная идея предметной модели
 
 ```text
-существует
-не находится в архиве
-опубликована
-предназначена для продажи
-имеет status = available
+Project
+  └── 0..N Work
+
+Work
+  ├── 0..N images
+  ├── categories / tags / materials
+  └── 0..1 ShopItem
+
+ShopItem
+  ├── может быть связан с Work
+  └── может существовать самостоятельно
+
+Order
+  └── 1..N OrderItem
+            ├── legacy product_id
+            └── target shop_item_id
 ```
 
-Создание заказа выполняет переход:
+Разделение смыслов принципиально:
+
+- `Project` — авторский художественный контекст;
+- `Work` — художественная работа;
+- `ShopItem` — коммерческое предложение;
+- `OrderItem` — историческая позиция заказа.
+
+Work не становится «товаром» только потому, что его можно купить. ShopItem не обязан быть художественной Work, потому что в будущем магазин может содержать самостоятельные тиражные или утилитарные позиции.
+
+## Архитектура
+
+Приложение остаётся модульным монолитом:
 
 ```text
-product: available → reserved
-order: создаётся со status = new
+Browser
+  ↓
+Flask route / blueprint
+  ↓
+Service
+  ↓
+Database module / raw SQL
+  ↓
+SQLite
 ```
 
-Жизненный цикл заказа:
-
-```mermaid
-stateDiagram-v2
-    [*] --> new
-    new --> confirmed: подтверждение
-    new --> canceled: отмена
-    confirmed --> completed: выполнение
-    confirmed --> canceled: отмена
-    canceled --> [*]: окончательное удаление
-```
-
-Связанные состояния работы:
+Для новых публичных страниц применяется отдельный read-side:
 
 ```text
-создание заказа     available → reserved
-отмена заказа       reserved  → available
-выполнение заказа   reserved  → sold
+/v2 route
+  ↓
+public_*_service
+  ↓
+projects.py / works.py / shop_items.py
+  ↓
+target tables
 ```
+
+Legacy commerce пока идёт по старой ветке:
+
+```text
+/, /catalog, /cart, /checkout, /admin
+  ↓
+legacy routes/services
+  ↓
+products / product status
+```
+
+Подробно: [`PROJECT_MAP.md`](PROJECT_MAP.md), [`docs/02_ARCHITECTURE.md`](docs/02_ARCHITECTURE.md).
 
 ## Технологии
 
 - Python;
 - Flask 3;
 - SQLite;
+- raw SQL;
 - Jinja2;
-- Werkzeug;
-- python-dotenv;
-- HTML, CSS и немного JavaScript;
+- HTML / CSS / browser JavaScript;
 - pytest;
-- GitHub Actions.
+- Ruff;
+- GitHub Actions;
+- python-dotenv.
 
-## Быстрый запуск
+Production-зависимостей вроде Gunicorn, reverse proxy или внешнего object storage в текущем репозитории пока нет.
+
+## Локальный запуск
 
 ```bash
-git clone <URL-РЕПОЗИТОРИЯ>
-cd Ceramic_shop_v2
 python -m venv .venv
 ```
 
-Активация Linux/macOS:
+Linux/macOS:
 
 ```bash
 source .venv/bin/activate
@@ -116,13 +122,13 @@ Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
 ```
 
-Установка зависимостей для разработки:
+Зависимости разработки:
 
 ```bash
 python -m pip install -r requirements-dev.txt
 ```
 
-Создайте `.env` по образцу `.env.example`.
+Создать `.env` по файлу `.env.example`:
 
 ```env
 SECRET_KEY=...
@@ -130,74 +136,55 @@ ADMIN_LOGIN=admin
 ADMIN_PASSWORD_HASH=...
 ```
 
-Генерация значений:
+Секрет:
 
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Хеш пароля:
+
+```bash
 python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('ВАШ_ПАРОЛЬ'))"
 ```
 
-Локальный запуск:
+Запуск:
 
 ```bash
 python app.py
 ```
 
-При первом запуске приложение:
+`create_app()` при `AUTO_INIT_DB=True` вызывает `init_db()`, migration runner применяет все pending migrations, затем `seed_initial_data()` заполняет пустую target-базу демонстрационными данными.
 
-1. создаёт локальный `shop.db`;
-2. создаёт `schema_migrations`;
-3. последовательно применяет `v001–v007`;
-4. добавляет стартовые категории, теги и работы;
-5. запускает Flask на `http://127.0.0.1:8000`.
+Development server запускается на порту `8000` с `debug=True`. Это локальный режим, не production.
 
-Админка:
-
-```text
-http://127.0.0.1:8000/admin/login
-```
-
-> Текущий `app.py` запускает development server с `debug=True`. Это допустимо только локально и должно быть изменено до production.
-
-## Тесты
+## Тесты и качество кода
 
 ```bash
-python -m pytest
+python -m ruff check .
+python -m ruff format --check
+python -m pytest -q
 ```
 
-Тесты используют отдельные временные SQLite-файлы и создают схему через настоящий migration runner. Локальная `shop.db` при этом не затрагивается.
+GitHub Actions выполняет те же три шага на Python 3.14 при `push` и `pull_request`.
 
-GitHub Actions повторяет запуск тестов при `push` и `pull_request`.
+Документация не утверждает, что конкретный commit «зелёный», если статус CI отдельно не проверен. Здесь описана конфигурация репозитория.
 
-## Локальная база данных
+## Где читать дальше
 
-`shop.db` — локальное состояние приложения, а не часть исходного кода. Файл и его журналы перечислены в `.gitignore` и не должны отслеживаться Git:
+Начать с [`docs/00_INDEX.md`](docs/00_INDEX.md).
 
-```text
-shop.db
-shop.db-journal
-shop.db-shm
-shop.db-wal
-```
+Самые полезные документы для быстрого восстановления контекста:
 
-Проверка:
+- [`docs/01_CURRENT_STATE.md`](docs/01_CURRENT_STATE.md) — что уже сделано и что ещё legacy;
+- [`docs/03_DOMAIN_MODEL.md`](docs/03_DOMAIN_MODEL.md) — сущности, связи, инварианты;
+- [`docs/04_DATABASE_AND_MIGRATIONS.md`](docs/04_DATABASE_AND_MIGRATIONS.md) — v001–v013;
+- [`docs/16_FRONTEND_ARCHITECTURE.md`](docs/16_FRONTEND_ARCHITECTURE.md) — новый публичный frontend;
+- [`docs/17_RUNTIME_CUTOVER.md`](docs/17_RUNTIME_CUTOVER.md) — как старый и новый мир сосуществуют;
+- [`docs/11_ROADMAP_TO_PRODUCTION.md`](docs/11_ROADMAP_TO_PRODUCTION.md) — следующий маршрут.
 
-```bash
-git ls-files shop.db
-git check-ignore -v shop.db
-```
+## Статус проекта
 
-Первая команда должна ничего не вывести, вторая — показать правило из `.gitignore`.
+Это учебный проект, но его текущая сложность уже включает реальную эволюцию схемы, миграцию предметной модели, параллельный runtime, транзакционные бизнес-сценарии, responsive frontend и тестовую инфраструктуру.
 
-## Документация
-
-Начинать с [docs/00_INDEX.md](docs/00_INDEX.md).
-
-Ключевые документы:
-
-- [PROJECT_MAP.md](PROJECT_MAP.md) — компактная карта модулей и сценариев;
-- [docs/02_ARCHITECTURE.md](docs/02_ARCHITECTURE.md) — архитектурные границы;
-- [docs/03_DOMAIN_MODEL.md](docs/03_DOMAIN_MODEL.md) — текущая модель данных и инварианты;
-- [docs/04_DATABASE_AND_MIGRATIONS.md](docs/04_DATABASE_AND_MIGRATIONS.md) — устройство миграций;
-- [docs/10_KNOWN_LIMITATIONS.md](docs/10_KNOWN_LIMITATIONS.md) — честный список ограничений;
-- [docs/11_ROADMAP_TO_PRODUCTION.md](docs/11_ROADMAP_TO_PRODUCTION.md) — дальнейший путь.
+При этом production ещё не достигнут. Главная задача ближайшего периода — не добавлять максимум возможностей, а постепенно закончить новый public runtime, затем новую admin/runtime-ветку и только после этого провести коммерческий cutover и production hardening.

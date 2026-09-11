@@ -1,247 +1,285 @@
 # База данных и миграции
 
-## 1. Подключение
+## 1. Единственный путь построения схемы
 
-`database/connection.py` получает путь из:
-
-```python
-current_app.config["DATABASE"]
-```
-
-Для каждого соединения включается:
-
-```sql
-PRAGMA foreign_keys = ON;
-```
-
-И задаётся:
-
-```python
-conn.row_factory = sqlite3.Row
-```
-
-Поэтому строки читаются как `row["name"]`.
-
-## 2. Инициализация
-
-`init_db()` выполняет две независимые части:
+`init_db()`:
 
 ```text
-run_migrations(...)
-→ seed_initial_data()
+get_db_connection()
+↓
+run_migrations(MIGRATIONS)
+↓
+close
+↓
+seed_initial_data()
 ```
 
-Миграции определяют структуру. Seed добавляет демонстрационные данные только в пустые таблицы.
+Схема строится через migration runner.
 
-## 3. Migration runner
+`seed_initial_data()` выполняется после миграций и заполняет пустой target-мир демонстрационным контентом.
 
-### Объект миграции
+## 2. Registry
+
+Migration:
 
 ```python
 @dataclass(frozen=True)
 class Migration:
     version: int
     name: str
-    apply: Callable[[sqlite3.Connection], None]
+    apply: Callable
 ```
 
-`frozen=True` защищает объект реестра от случайного изменения после создания.
+Registry валидирует:
 
-### Реестр
+- version — положительный `int`;
+- версии уникальны;
+- name — непустая строка;
+- names уникальны.
 
-`MIGRATIONS` — упорядочиваемый набор всех известных версий. Runner не полагается на исходный порядок: pending-версии сортируются по `version`.
+## 3. Транзакция migration runner
 
-### Валидация реестра
-
-Проверяется:
-
-- версия — положительное целое число;
-- версии не повторяются;
-- имя — непустая строка;
-- имена не повторяются.
-
-### Применение
-
-```mermaid
-flowchart TD
-    A[validate registry] --> B[ensure schema_migrations]
-    B --> C[read applied versions]
-    C --> D[calculate and sort pending]
-    D --> E[BEGIN]
-    E --> F[migration.apply(conn)]
-    F --> G[record version and name]
-    G --> H[COMMIT]
-    F -->|exception| I[ROLLBACK]
-    I --> J[raise]
-    H --> K{next migration?}
-    K -->|yes| E
-```
-
-Каждая миграция получает собственную транзакцию. Уже завершённые версии сохраняются, а упавшая версия не записывается в журнал.
-
-## 4. История `v001–v007`
-
-### `v001_create_products`
-
-Создаёт начальную `products`:
+Для каждой pending migration:
 
 ```text
-id, name, description, price, img
+BEGIN
+↓
+migration.apply(conn)
+↓
+INSERT schema_migrations
+↓
+COMMIT
 ```
 
-### `v002_add_categories`
-
-Создаёт `categories` и добавляет `products.category_id`.
-
-### `v003_create_orders_with_json_items`
-
-Создаёт раннюю `orders`, где состав заказа временно хранится в `items TEXT` как JSON.
-
-### `v004_add_order_status`
-
-Добавляет checked-статусы:
+При исключении:
 
 ```text
-new, confirmed, completed, canceled
+ROLLBACK
+raise
 ```
 
-### `v005_expand_products`
+Запись о применении migration находится в той же транзакции, что и её изменение схемы/данных.
+
+## 4. v001–v007 — legacy foundation
+
+```text
+v001 create_products
+v002 add_categories
+v003 create_orders_with_json_items
+v004 add_order_status
+v005 expand_products
+v006 add_tags
+v007 normalize_order_items
+```
+
+`v007` переносит Order.items JSON в таблицу `order_items` и оставляет snapshots `product_name`, `unit_price`, `quantity`.
+
+## 5. v008 — artistic core
+
+Создаёт:
+
+```text
+projects
+series
+materials
+works
+project_images
+work_images
+work_categories
+work_tags
+work_materials
+```
+
+Ключевые ограничения:
+
+- `Work.project_id` и `series_id` взаимоисключающие;
+- `project_position > 0`;
+- `project_position` возможен только при Project;
+- `(project_id, project_position)` unique;
+- image positions positive and unique per owner.
+
+## 6. v009 — artistic backfill
+
+Перед записью выполняются preflight checks.
+
+### Materials
+
+Legacy `products.materials` должен:
+
+- быть непустым;
+- корректно делиться по запятым;
+- содержать только известные aliases;
+- не содержать повторов после normalize.
+
+Поддерживаемые aliases migration:
+
+```text
+каменная масса → stoneware
+фарфор         → porcelain
+глазурь        → glaze
+```
+
+### Active orders
+
+Активные `new/confirmed` OrderItems не могут иметь `product_id = NULL`.
+
+Проверяется согласованность Product status с активным количеством:
+
+```text
+available → active_quantity = 0
+reserved  → active_quantity = 1
+sold      → active_quantity = 0
+```
+
+### Target emptiness
+
+Перед backfill должны быть пусты:
+
+```text
+works
+materials
+work_images
+work_categories
+work_tags
+work_materials
+```
+
+### Backfill
+
+Product → Work сохраняет тот же `id`.
+
+Visibility mapping:
+
+```text
+Product is_visible=1 AND is_archived=0
+→ Work.is_published=1
+```
+
+Image Product становится Work image position 1.
+
+Category/tags/materials переносятся в target join tables.
+
+## 7. v010 — Shop core
+
+Создаёт ShopItem и standalone auxiliary tables.
+
+Ключевой принцип:
+
+```text
+linked ShopItem
+→ контент наследуется от Work
+
+standalone ShopItem
+→ собственный контент обязателен/разрешён
+```
+
+Для linked item собственные `name/description/dimensions` запрещены CHECK-ами.
+
+## 8. v011 — Shop backfill
+
+Backfill создаёт `unique` ShopItems только для legacy Products, которые должны участвовать в коммерческом runtime.
+
+Кандидаты:
+
+```text
+available
+AND is_for_sale=1
+AND is_archived=0
+
+OR
+
+reserved
+AND is_archived=0
+AND существует active new/confirmed order
+```
+
+Не создаются ShopItems для sold/archived и для available non-sale Products.
+
+Mapping:
+
+```text
+work_id        = product.id
+price          = product.price
+inventory_type = unique
+stock_quantity = 1
+is_published   = is_visible * is_for_sale
+is_orderable   = is_for_sale
+is_retired     = 0
+```
+
+Перед backfill:
+
+- target Shop tables должны быть пусты;
+- каждый candidate Product должен иметь соответствующую Work.
+
+## 9. v012 — bridge schema
 
 Добавляет:
 
-```text
-status
-check status available/reserved/sold
-year
-materials
-is_visible
-is_for_sale
-is_archived
-is_featured
+```sql
+order_items.shop_item_id
+REFERENCES shop_items(id)
+ON DELETE SET NULL
 ```
 
-Булевы поля защищены `CHECK (... IN (0, 1))`.
+## 10. v013 — bridge backfill
 
-### `v006_add_tags`
+Preflight:
 
-Создаёт `tags` и `product_tags`, включая каскадное удаление связей.
+- `order_items.shop_item_id` ещё нигде не заполнен;
+- каждый active OrderItem должен иметь matching ShopItem через `ShopItem.work_id = product_id`.
 
-### `v007_normalize_order_items`
-
-1. создаёт `order_items`;
-2. читает старый JSON каждого заказа;
-3. переносит позиции;
-4. сохраняет существующий `product_id`;
-5. записывает `NULL`, если исходной работы уже нет;
-6. удаляет колонку `orders.items`.
-
-Это первая миграция не только структуры, но и данных.
-
-## 5. Правила новой миграции
-
-Новая версия создаётся отдельным файлом:
+Backfill заполняет `shop_item_id` только для Orders:
 
 ```text
-database/migration_versions/v008_descriptive_name.py
+new
+confirmed
 ```
 
-Минимальный интерфейс:
+Исторические completed/canceled позиции не обязаны получать bridge этой migration.
 
-```python
-def apply(conn):
-    conn.execute("...")
+## 11. Почему preflight — часть migration
+
+Preflight — защита смысла, а не просто синтаксиса.
+
+Backfill, который выполнился технически успешно, но неправильно интерпретировал старые данные, опаснее migration, которая остановилась до изменения.
+
+Поэтому pattern:
+
+```text
+inspect old truth
+↓
+reject ambiguous/inconsistent state
+↓
+backfill
 ```
 
-Затем она импортируется и добавляется в конец `MIGRATIONS`.
+предпочтительнее «попробовать перенести всё».
 
-### Обязательные правила
+## 12. Правила новых миграций
 
-1. Уже применённые миграции не редактируются.
-2. Исправление схемы получает новый номер.
-3. Миграция использует переданный `conn`.
-4. Миграция не делает `commit` и `rollback` самостоятельно.
-5. Миграция не вызывает функции текущей бизнес-логики, способные измениться позже.
-6. Структурные изменения и перенос данных тестируются на базе предыдущей версии.
-7. Имя отражает изменение, а не настроение автора.
+Новые migration files:
 
-## 6. Почему внутри версий нет `IF NOT EXISTS`
+- не переписывают историю v001–v013;
+- делают одну понятную эволюцию;
+- используют preflight, если требуется интерпретация старых данных;
+- не полагаются на seed;
+- тестируются отдельно;
+- должны корректно работать через общий `run_migrations`;
+- не смешивают runtime cutover и schema migration без необходимости.
 
-Версия должна либо примениться к ожидаемому предыдущему состоянию, либо честно упасть. `IF NOT EXISTS` способен скрыть:
+## 13. Seed и migration — разные вещи
 
-- частично созданную схему;
-- ручное вмешательство;
-- ошибочно записанную историю;
-- несовместимую структуру таблицы с тем же именем.
+Migration:
 
-Идемпотентность обеспечивается не SQL-маскировкой, а `schema_migrations`.
-
-## 7. Тестирование миграций
-
-Есть два уровня.
-
-### Engine tests
-
-Проверяют:
-
-- создание журнала;
-- чтение применённых версий;
-- pending и сортировку;
-- пропуск завершённых версий;
-- rollback упавшей версии;
-- валидацию реестра;
-- неизменяемость `Migration`.
-
-### Version integration tests
-
-Последовательно строят реальные состояния и проверяют:
-
-- колонки;
-- внешние ключи;
-- `CHECK`;
-- значения по умолчанию;
-- перенос данных `v007`;
-- `CASCADE` и `SET NULL`.
-
-`test_schema.py` дополнительно вызывает `init_db()` два раза и подтверждает отсутствие повторных миграций и дублирования seed.
-
-## 8. Seed
-
-Текущий seed добавляет:
-
-- 5 категорий;
-- 6 тегов;
-- 5 демонстрационных работ.
-
-Каждый блок выполняется, если соответствующая таблица полностью пуста.
-
-Ограничение: это не универсальная синхронизация справочников. Частично заполненная таблица автоматически не дополняется.
-
-## 9. Локальная база и Git
-
-`shop.db` не является исходным кодом. Она должна:
-
-- существовать локально;
-- создаваться миграциями;
-- не входить в коммиты;
-- иметь отдельный backup перед рискованными ручными операциями.
-
-Проверка отслеживания:
-
-```bash
-git ls-files shop.db
+```text
+история схемы и переноса существующих данных
 ```
 
-Пустой вывод означает, что файл не отслеживается.
+Seed:
 
-## 10. Чистый прогон
-
-Для проверки полной истории на disposable-данных:
-
-```bash
-# остановить приложение
-mv shop.db shop.db.backup
-python app.py
-python -m pytest
+```text
+демонстрационные данные для пустой базы после migrations
 ```
 
-После проверки backup можно удалить или вернуть. Для production такая ручная схема недостаточна: потребуется формальная процедура backup → migrate → smoke test → rollback plan.
+Нельзя считать demo seed источником production-data migration.

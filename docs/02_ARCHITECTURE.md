@@ -1,217 +1,239 @@
 # Архитектура
 
-## 1. Архитектурный стиль
+## 1. Тип приложения
 
-Проект устроен как **модульный монолит**:
+Ceramic Shop v2 — модульный монолит на Flask и SQLite.
 
-- одно Flask-приложение;
-- одна база данных;
-- единый процесс;
-- разделение на route-, service- и database-слои;
-- отдельные модули по предметным областям.
+Намеренно не используется ORM. SQL находится в `database/`, бизнес-оркестрация — в `services/`, HTTP — в `routes/`.
 
-Это разумный уровень сложности для текущего масштаба. Микросервисы, очереди и отдельный frontend сейчас не нужны.
+Базовое направление зависимостей:
 
-## 2. Фабрика приложения
+```text
+route
+  ↓
+service
+  ↓
+database
+  ↓
+SQLite
+```
+
+Jinja templates получают уже собранные данные и не должны становиться местом бизнес-логики.
+
+## 2. App factory
 
 `create_app(test_config=None)`:
 
-1. создаёт `Flask`;
-2. задаёт длительность постоянной сессии;
-3. загружает секреты и путь к базе;
-4. позволяет тестам переопределить конфигурацию;
-5. проверяет наличие обязательных секретов;
-6. регистрирует `admin_bp` и `main_bp`;
-7. подключает глобальную CSRF-проверку;
-8. добавляет в шаблоны счётчик корзины и функцию токена.
+- создаёт Flask app;
+- читает config;
+- позволяет тестам переопределить config;
+- при `AUTO_INIT_DB=True` вызывает `init_db()`;
+- регистрирует три blueprints;
+- ставит глобальную CSRF-проверку для POST;
+- добавляет `cart_count` и `csrf_token` через context processors.
 
-Главная выгода фабрики — возможность создавать изолированное тестовое приложение без обращения к настоящей базе.
+Это позволяет тестам использовать отдельный database path без изменения local config.
 
 ## 3. Blueprints
 
+```text
+admin_bp
+main_bp
+public_bp
+```
+
 ### `main_bp`
 
-Публичные маршруты:
-
-- главная;
-- каталог;
-- карточка работы;
-- корзина;
-- checkout;
-- страница успешного заказа.
+Legacy public runtime без URL prefix.
 
 ### `admin_bp`
 
-Административные маршруты разделены по файлам:
+Legacy admin без общего blueprint prefix; сами routes объявлены как `/admin/...`.
 
-- `auth.py`;
-- `dashboard.py`;
-- `products.py`;
-- `orders.py`;
-- `categories.py`;
-- `tags.py`.
+### `public_bp`
 
-Все модули используют один blueprint, созданный в `routes/admin/__init__.py`.
+Новая публичная ветка:
 
-## 4. Слои ответственности
-
-### Route
-
-Route должен:
-
-- прочитать URL, query string, form и files;
-- проверить HTTP-специфичные условия;
-- вызвать service или простой read-запрос;
-- выбрать redirect, template или JSON;
-- показать flash-сообщение.
-
-Route не должен владеть большой транзакцией и координировать несколько записей вручную.
-
-### Service
-
-Service должен:
-
-- очистить и проверить данные формы;
-- сформулировать бизнес-условия;
-- открыть одно соединение для составного сценария;
-- вызвать несколько database-функций;
-- выполнить `commit` или `rollback`;
-- вернуть route понятный результат.
-
-Примеры:
-
-```text
-create_order_with_items
-complete_order
-update_product_with_tags
-archive_product_with_order_check
+```python
+Blueprint("public", __name__, url_prefix="/v2")
 ```
 
-### Database
+Это временная безопасная зона для развития target runtime рядом со старым сайтом.
 
-Database-модуль должен:
+## 4. Database modules
 
-- выполнять узкий SQL;
-- принимать `conn`, когда участвует в чужой транзакции;
-- возвращать данные или простой признак изменения;
-- не решать, можно ли бизнес-действие совершать.
+Database-модуль должен отвечать на узкие вопросы и получать `conn`, если операция участвует в более крупной транзакции.
 
-Примеры:
+Примеры target read-side:
 
 ```text
-insert_order
-update_order_status
-insert_order_items
-update_product_status
-replace_product_tags
+database/projects.py
+database/works.py
+database/shop_items.py
 ```
 
-## 5. Чтение и запись
-
-Для простых read-операций database-функция сама открывает и закрывает соединение:
+Примеры legacy:
 
 ```text
-get_product_by_id
-get_all_categories
-get_all_orders
+database/products.py
+database/orders.py
+database/order_items.py
 ```
 
-Для составной записи соединение передаётся сверху:
+`database/connection.py`:
+
+- берёт путь из `current_app.config["DATABASE"]`;
+- включает `PRAGMA foreign_keys = ON`;
+- задаёт `sqlite3.Row`.
+
+## 5. Service layer
+
+Service связывает несколько database-вызовов в один прикладной сценарий.
+
+Новая публичная ветка:
+
+```text
+public_home_service
+public_work_service
+public_project_service
+public_shop_service
+shop_availability_service
+```
+
+Legacy transactional/write-side:
+
+```text
+product_service
+cart_service
+order_service
+image_service
+```
+
+Пример Work read-model:
+
+```text
+route /v2/works/<slug>
+↓
+get_public_work_page_data(slug)
+↓
+Work
++ media
++ taxonomy
++ ShopItem
++ availability
++ Project preview
++ other Works
+↓
+public/work.html
+```
+
+Route остаётся тонким.
+
+## 6. Transaction ownership
+
+В write-сценариях транзакцией должен владеть слой, который видит бизнес-операцию целиком.
+
+Пример legacy order creation:
 
 ```text
 service opens conn
-→ database function A(conn)
-→ database function B(conn)
-→ commit / rollback
+↓
+INSERT order
+↓
+INSERT order_items
+↓
+reserve every Product
+↓
+commit
 ```
 
-Так одна бизнес-операция становится атомарной.
-
-## 6. Транзакции и файловая система
-
-SQLite умеет откатывать данные, но не умеет откатывать сохранённый файл. Поэтому работа с изображениями использует компенсацию.
-
-### Создание
+Если один reserve не проходит:
 
 ```text
-сохранить новый файл
-→ начать операции БД
-→ ошибка БД
-→ rollback
-→ удалить новый файл
+rollback whole operation
 ```
 
-### Редактирование
+Migration runner тоже имеет явную транзакционную границу, но на уровне одной migration.
+
+## 7. Read-model как отдельное понятие
+
+Новые `public_*_service.py` не обязаны возвращать строки таблиц «как есть».
+
+Они формируют данные именно для страницы.
+
+Например `public_project_service.py`:
 
 ```text
-сохранить новый файл
-→ UPDATE БД
-→ commit
-→ удалить старый файл
+Project.text
+↓ split by blank lines
+project_paragraphs
+
+project_images
+↓ position mapping
+cover / premise / break / process / field
+
+Works
+↓ cover lookup
+project_works_data
 ```
 
-Старый файл удаляется только после успешного commit: иначе база могла бы продолжить ссылаться на уже уничтоженное изображение.
+Это нормально: public read-model — представление предметной модели для конкретного интерфейса.
 
-### Удаление
+## 8. Две архитектурные эпохи в одном репозитории
+
+Сейчас проект нельзя описать одной схемой request flow.
+
+### Legacy
 
 ```text
-DELETE из БД
-→ commit
-→ удалить файл
+browser
+↓
+main/admin route
+↓
+Product-oriented service/database
+↓
+products
 ```
 
-Если файл удалить не удалось, запись уже удалена, а пользователь получает информационное сообщение. Это честная модель частичного сбоя между двумя разными системами хранения.
-
-## 7. Архитектура доступности работы
-
-Причина недоступности централизована в:
+### Target public
 
 ```text
-get_product_cart_unavailable_reason(product)
+browser
+↓
+public /v2 route
+↓
+public service
+↓
+Project / Work / ShopItem database modules
 ```
 
-Она используется при:
+Эти ветки должны сосуществовать только пока идёт cutover.
 
-- добавлении в корзину;
-- построении корзины;
-- удалении недоступных позиций;
-- checkout.
+## 9. Что не следует делать
 
-Это предотвращает расхождение правил между страницами.
+Не стоит:
 
-## 8. Защита от гонки при checkout
+- заставлять новый public runtime снова зависеть от Product;
+- переносить бизнес-правила availability в Jinja;
+- хранить derived availability отдельной колонкой;
+- переписывать весь runtime одним большим commit;
+- смешивать новую admin с legacy Product-формами без явной границы;
+- создавать универсальный page-builder до реального требования.
 
-Проверка корзины перед формой недостаточна: между просмотром и отправкой другая операция может зарезервировать работу.
+## 10. Целевая архитектурная траектория
 
-Поэтому внутри транзакции выполняется условное обновление:
-
-```sql
-UPDATE products
-SET status = 'reserved'
-WHERE id = ? AND status = 'available'
+```text
+Target schema ready
+↓
+Target public read-side
+↓
+Target admin/write-side
+↓
+Target cart/checkout/orders
+↓
+Cut legacy runtime
+↓
+Production hardening
 ```
 
-Если `rowcount == 0`, весь заказ откатывается.
-
-Это важнее предварительного `SELECT`, потому что проверка и изменение происходят одной SQL-операцией.
-
-## 9. Архитектурные границы, которые нельзя размывать
-
-- Route не создаёт собственный второй `conn` внутри service-транзакции.
-- Database-функция с переданным `conn` не делает самостоятельный `commit`.
-- Статус активного заказа проверяется на уровне service.
-- Исторические данные заказа не вычисляются заново из текущей работы.
-- Миграции не импортируют `schema.create_schema` и не зависят от будущей схемы.
-- Seed не является миграцией и не определяет структуру таблиц.
-
-## 10. Что архитектура пока не решает
-
-- production lifecycle приложения;
-- миграции при WSGI-запуске;
-- фоновые задачи;
-- внешнее файловое хранилище;
-- параллельную обработку большого потока заказов;
-- роли нескольких администраторов;
-- будущую границу между Work и Shop item.
-
-Эти вопросы должны добавляться по необходимости, а не превращать текущий проект в имитацию большой платформы.
+Развитие идёт вертикальными срезами, а не массовой заменой всех файлов одного слоя целиком.

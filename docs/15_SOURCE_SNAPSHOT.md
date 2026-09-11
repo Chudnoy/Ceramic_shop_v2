@@ -1,96 +1,120 @@
-# Граница актуальности и источники
+# Source snapshot
 
-## Снимок
+## Граница актуальности
 
-Документация подготовлена **5 августа 2026 года**.
-
-Изученная опубликованная ветка GitHub `main` находилась на commit:
+Эта документация подготовлена по состоянию:
 
 ```text
-e3d3e90321f241beef5606df2cf5b81660a12c2a
-«Окончание миграций»
+repository: Chudnoy/Ceramic_shop_v2
+branch: main
+commit: 7d996da41b25bd033d2c52f431b4b6a84bfdcdce
+commit message: WIP продолжение страницы project
+date: 2026-09-11
 ```
 
-Пользователь сообщил о локально выполненном:
+Она описывает код, а не планы из старых документов.
 
-```bash
-git rm --cached shop.db
+## Основные просмотренные источники
+
+### Root/config
+
+```text
+app.py
+README.md
+PROJECT_MAP.md
+requirements.txt
+requirements-dev.txt
+pyproject.toml
+.gitignore
+.github/workflows/tests.yml
 ```
-
-но изменение на момент подготовки архива ещё не было отправлено в GitHub. Поэтому документация описывает целевое и уже локально подготовленное состояние: `shop.db` не отслеживается.
-
-## Изученные области
-
-### Точка входа и конфигурация
-
-- `app.py`;
-- `.env` contract;
-- `requirements.txt`;
-- `requirements-dev.txt`;
-- `.github/workflows/tests.yml`;
-- `.gitignore`.
 
 ### Database
 
-- connection;
-- schema/seed;
-- migration runner;
-- `v001–v007`;
-- products;
-- categories;
-- tags;
-- orders;
-- order_items;
-- admin stats.
+```text
+database/connection.py
+database/migrations.py
+database/schema.py
+database/projects.py
+database/works.py
+database/shop_items.py
+database/orders.py
+database/order_items.py
+database/products.py
+```
+
+### Migrations
+
+```text
+v001–v013 registry
+v007_normalize_order_items.py
+v008_create_artistic_core.py
+v009_backfill_artistic_core.py
+v010_create_shop_core.py
+v011_backfill_shop_core.py
+v012_add_shop_item_to_order_items.py
+v013_backfill_order_item_shop_bridge.py
+```
 
 ### Services
 
-- cart;
-- products;
-- orders;
-- images;
-- CSRF;
-- category/tag form processing;
-- validation.
+```text
+cart_service.py
+order_service.py
+csrf_service.py
+public_home_service.py
+public_work_service.py
+public_project_service.py
+public_shop_service.py
+shop_availability_service.py
+```
 
 ### Routes
 
-- весь публичный blueprint;
-- admin auth;
-- dashboard;
-- products;
-- orders;
-- categories;
-- tags.
-
-### Tests
-
-- общие fixtures;
-- migration engine tests;
-- version integration tests;
-- double-run `init_db` test;
-- ранее сформированная database/service/route тестовая архитектура.
-
-## Что намеренно не объявлено фактом
-
-- точная будущая схема `Project / Work / Shop item`;
-- конкретный production-хостинг;
-- обязательность PostgreSQL;
-- платёжный провайдер;
-- служба доставки;
-- окончательный дизайн;
-- точное число production-пользователей;
-- необходимость микросервисов.
-
-## Как поддерживать актуальность
-
-После значимого изменения добавляйте в этот файл:
-
 ```text
-дата
-commit
-затронутые документы
-важные новые решения
+routes/main/*
+routes/admin/*
+routes/public/*
 ```
 
-Документация является снимком состояния, а не заменой Git-истории и тестов.
+### New frontend
+
+```text
+templates/public/base.html
+templates/public/home.html
+templates/public/work.html
+templates/public/project.html
+
+static/public/css/site.css
+static/public/css/work.css
+static/public/css/project.css
+
+static/public/js/site.js
+static/public/js/work.js
+```
+
+### Tests / CI
+
+Структура `tests/` и текущий GitHub Actions workflow.
+
+## Что специально не утверждается
+
+Документация не утверждает:
+
+- что latest commit прошёл CI;
+- точное текущее количество passing tests;
+- что Project page закончена;
+- что `/v2/shop` существует;
+- что target cart/checkout уже работает;
+- что production deployment настроен.
+
+## Как обновлять snapshot
+
+После крупного этапа:
+
+1. записать новый commit SHA;
+2. перечитать файлы, которые менялись архитектурно;
+3. обновить `01_CURRENT_STATE.md`;
+4. обновить `PROJECT_MAP.md`;
+5. поправить профильный документ;
+6. не переписывать docs ради чисто косметической CSS-правки, если архитектурный контракт не изменился.

@@ -1,6 +1,8 @@
-# Безопасность и конфигурация
+# Security и configuration
 
-## 1. Обязательные переменные окружения
+## 1. Текущая конфигурация
+
+`app.py` ожидает:
 
 ```text
 SECRET_KEY
@@ -8,163 +10,138 @@ ADMIN_LOGIN
 ADMIN_PASSWORD_HASH
 ```
 
-`create_app()` останавливает запуск с `RuntimeError`, если любое значение отсутствует.
+Database path по умолчанию:
 
-`.env` загружается из корня проекта и не должен попадать в Git.
-
-## 2. Пароль администратора
-
-В окружении хранится не пароль, а Werkzeug hash.
-
-Создание:
-
-```bash
-python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('ВАШ_ПАРОЛЬ'))"
+```text
+<project dir>/shop.db
 ```
 
-Проверка выполняется `check_password_hash`.
+`test_config` может переопределить настройки.
 
-## 3. Сессия
+## 2. `.env`
 
-После входа:
+Реальный `.env` игнорируется Git.
+
+В этом documentation pack добавлен `.env.example`, потому что старый README ссылался на такой файл, а в текущем root его нет.
+
+В `.env.example` нельзя помещать реальные секреты.
+
+## 3. Admin password
+
+Пароль не хранится в plaintext.
+
+`routes/admin/auth.py` использует:
 
 ```python
+werkzeug.security.check_password_hash
+```
+
+В config хранится hash.
+
+## 4. Session
+
+После успешного login:
+
+```text
 session.permanent = True
 session["is_admin"] = True
 ```
 
-Срок постоянной сессии — один день.
+`app.permanent_session_lifetime = 1 day`.
 
-Корзина также хранится в подписанной Flask-session. В ней лежат только ID и количества; цена и статус повторно читаются из базы.
+Это простая одноадминистраторская модель, а не полноценная user/role system.
 
-## 4. CSRF
+## 5. CSRF
 
-Проект использует собственный synchronizer token:
+`app.before_request` проверяет все POST requests.
 
-1. случайный token создаётся через `secrets.token_urlsafe(32)`;
-2. хранится в session;
-3. передаётся в формы через context processor;
-4. каждый POST проверяется глобальным `before_request`;
-5. обычный запрос получает flash + redirect;
-6. AJAX получает JSON с HTTP 400.
+Token:
 
-Это защищает и публичные, и административные POST-маршруты при условии, что каждая форма передаёт `csrf_token`.
+- создаётся через `secrets.token_urlsafe(32)`;
+- хранится в session;
+- передаётся в формы;
+- сравнивается с `request.form["csrf_token"]`.
 
-## 5. SQL
+Невалидный POST перенаправляется с flash error.
 
-Пользовательские значения передаются параметрами `?`, а не вставляются в строку.
+## 6. SQLite safety
 
-Динамические сортировки используют белый список полей и направлений.
+Каждое новое connection включает:
 
-## 6. Загрузка изображений
-
-Текущая защита:
-
-- разрешённые расширения;
-- `secure_filename`;
-- случайный префикс UUID;
-- отдельная папка `static/uploads`;
-- удаление только путей с ожидаемым URL-префиксом.
-
-Текущие ограничения:
-
-- проверяется расширение, но не фактический MIME/содержимое;
-- нет явного лимита размера запроса;
-- пользовательские файлы хранятся на локальном диске;
-- нет обработки изображений и удаления метаданных;
-- GIF разрешён, хотя для художественного каталога он может быть не нужен.
-
-## 7. Текущие production-разрывы
-
-### Development server
-
-`app.py` содержит:
-
-```python
-app.run(..., debug=True)
+```sql
+PRAGMA foreign_keys = ON
 ```
 
-Debug нельзя использовать в публичном окружении.
+Это необходимо для фактической работы FOREIGN KEY constraints в SQLite.
 
-### Сессионные cookie
+## 7. Local development risks
 
-Пока явно не настроены production-флаги:
+Текущий `app.py`:
+
+```python
+app.run(host="0.0.0.0", port=8000, debug=True)
+```
+
+`debug=True` недопустим для production.
+
+Built-in Flask development server не является production deployment strategy.
+
+## 8. Не реализовано как production security layer
+
+До публичного запуска следует отдельно решить:
+
+- production app server;
+- HTTPS/TLS termination;
+- secure cookie settings;
+- reverse proxy / platform config;
+- secret management;
+- upload limits и media validation;
+- logging без утечки чувствительных данных;
+- backup/restore;
+- error pages;
+- rate limits для чувствительных endpoints при необходимости.
+
+## 9. Admin hardening
+
+Текущая одноадминистраторская session-модель может быть достаточной для маленького приватного admin MVP, но перед production нужно проверить:
 
 ```text
 SESSION_COOKIE_SECURE
 SESSION_COOKIE_HTTPONLY
 SESSION_COOKIE_SAMESITE
+SECRET_KEY quality
+login exposure
+logout semantics
+CSRF on all state-changing forms
 ```
 
-`HttpOnly` имеет Flask default, но production-конфигурация должна задавать политику явно и проверяться тестом/чеклистом.
+## 10. Database files в репозитории
 
-### Авторизация
-
-Отсутствуют:
-
-- rate limiting логина;
-- блокировка перебора;
-- несколько пользователей;
-- роли;
-- 2FA;
-- аудит действий;
-- ротация session после входа как отдельное явно проверенное решение.
-
-### Страница заказа
-
-`/order_success/<uuid>` не проверяет, что заказ создан текущей session. UUID трудно угадать, но знание ссылки даёт доступ к контактным данным заказа.
-
-### Ошибки
-
-Нет формализованных production error pages, централизованного logging и мониторинга.
-
-## 8. Данные покупателей
-
-Заказ хранит:
-
-- имя;
-- email;
-- телефон;
-- адрес.
-
-До production необходимо определить:
-
-- правовое основание обработки;
-- политику конфиденциальности;
-- срок хранения;
-- кто имеет доступ;
-- процедуру удаления;
-- backup и защиту backup;
-- необходимость телефона и полного адреса до подтверждения доставки.
-
-## 9. Production-конфигурация — будущая форма
-
-Предполагаемое разделение:
+`.gitignore` исключает:
 
 ```text
-Base config
-Development config
-Testing config
-Production config
+shop.db
+shop.db-journal
+shop.db-shm
+shop.db-wal
 ```
 
-Production должен как минимум:
-
-- отключить debug;
-- требовать сильный SECRET_KEY;
-- использовать HTTPS cookie;
-- задавать путь/URL БД или PostgreSQL через окружение;
-- задавать хранилище uploads;
-- включать logging;
-- ограничивать размер uploads;
-- корректно обрабатывать reverse proxy.
-
-## 10. Безопасный принцип
-
-Нельзя считать функцию безопасной только потому, что форма скрыта в админке. Критические ограничения должны быть проверены на сервере:
+Но в текущем root репозитория присутствует отслеживаемый файл:
 
 ```text
-route/service/database constraint
+shop_before_runtime_rewrite.db
 ```
 
-Текущий проект уже следует этому принципу для статусов заказов, active order и CSRF; до production он должен быть последовательно распространён на остальные области.
+Это отдельный backup snapshot с другим именем и он не покрывается текущим правилом `shop.db`.
+
+Перед production/public repository стоит решить явно:
+
+- нужен ли этот backup в Git;
+- содержит ли он данные, которые вообще допустимо публиковать;
+- если это только локальный safety copy, перенести его вне repository и удалить из history при необходимости.
+
+## 11. Privacy/content placeholders
+
+В новом `templates/public/base.html` сейчас есть placeholder-like contact/footer links, например example email и `href="#"`.
+
+До релиза их нужно заменить реальными публичными данными и страницами/ссылками либо удалить.

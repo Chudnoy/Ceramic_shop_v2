@@ -1,218 +1,198 @@
 # Правила дальнейшей разработки
 
-## 1. Перед кодом формулируется инвариант
+## 1. Не переписывать всё одним движением
 
-Не начинать с названия таблицы или формы. Сначала ответить:
-
-```text
-Что должно всегда оставаться истинным?
-Какое состояние допустимо?
-Что должно произойти целиком?
-Что откатывается при ошибке?
-```
-
-Пример:
+Текущая стратегия:
 
 ```text
-«Активный заказ удерживает работу в reserved»
+expand schema
+↓
+backfill
+↓
+new read-side beside legacy
+↓
+vertical runtime slices
+↓
+cutover
+↓
+cleanup
 ```
 
-Из этого выводятся SQL condition, service-проверка и тесты.
+Рабочий legacy runtime удаляется только после появления заменяющего target slice.
 
-## 2. Выбор слоя
-
-### Route
-
-Добавляйте сюда только HTTP-работу:
-
-- request;
-- redirect;
-- response;
-- template;
-- flash;
-- status code.
-
-### Service
-
-Добавляйте сюда:
-
-- сценарий;
-- валидацию формы;
-- бизнес-условия;
-- транзакцию;
-- координацию БД и файлов.
-
-### Database
-
-Добавляйте сюда:
-
-- конкретный SELECT/INSERT/UPDATE/DELETE;
-- SQL condition;
-- rowcount;
-- преобразование строки результата при необходимости.
-
-## 3. Транзакционное правило
-
-Кто открыл транзакционное соединение, тот отвечает за:
+## 2. Данные и поведение мигрируются по-разному
 
 ```text
-commit
-rollback
-close
+данные
+→ migrations/backfill
+
+поведение
+→ tests + new services/routes
 ```
 
-Вложенная database-функция не коммитит переданный `conn`.
+Не пытаться «мигрировать код» SQL-migration.
 
-Рекомендуемый каркас:
+## 3. Route должен оставаться тонким
 
-```python
-conn = None
-try:
-    conn = get_db_connection()
-    # несколько связанных операций
-    conn.commit()
-    return True, ""
-except Exception:
-    if conn is not None:
-        conn.rollback()
-    raise
-finally:
-    if conn is not None:
-        conn.close()
-```
-
-Ожидаемые бизнес-отказы могут возвращать `(False, message)` после явного rollback. Неожиданные исключения не следует бездумно превращать в «что-то пошло не так»: они нужны тестам и logging.
-
-## 4. Условные изменения состояния
-
-Для переходов использовать ожидаемое предыдущее состояние:
-
-```sql
-UPDATE orders
-SET status = ?
-WHERE id = ? AND status = ?
-```
-
-`rowcount` показывает, состоялся ли переход.
-
-Это предпочтительнее схемы:
+Хорошо:
 
 ```text
-SELECT status
-→ Python if
-→ UPDATE без condition
+parse request
+↓
+call service
+↓
+404/redirect/render
 ```
 
-потому что уменьшает окно гонки.
-
-## 5. Миграции
-
-- Каждое изменение схемы — новая версия.
-- Старые версии не редактируются.
-- Версия использует только переданный `conn`.
-- Версия тестируется на предыдущей схеме.
-- Перенос данных проверяется конкретными старыми примерами.
-- После миграции обновляются docs/03 и docs/04.
-
-## 6. Тесты
-
-При исправлении бага сначала полезно написать тест, который воспроизводит ошибку.
-
-Минимальный набор для новой бизнес-функции:
-
-- happy path;
-- неправильное состояние;
-- несуществующий объект;
-- частичный сбой;
-- rollback;
-- повторный вызов, если он возможен.
-
-Тест не должен зависеть от порядка других тестов и локальной `shop.db`.
-
-## 7. Изображения
-
-При изменении БД и файла учитывать четыре состояния:
+Плохо:
 
 ```text
-БД success / file success
-БД failure / file success
-БД success / file failure
-БД failure / file failure
+route
+├── 5 SQL queries
+├── stock math
+├── transaction
+├── file operations
+└── render
 ```
 
-Новый файл удаляется после rollback. Старый — только после commit.
+## 4. Service — владелец сценария
 
-## 8. Документация
+Если операция затрагивает несколько записей и должна быть atomic, connection/transaction должна контролироваться на уровне сценария.
 
-Изменение требует обновить минимум один из файлов:
+## 5. Database module — raw SQL, узкая ответственность
 
-- route/flow → `05_PUBLIC_SCENARIOS` или `06_ADMIN_SCENARIOS`;
-- таблица/status → `03_DOMAIN_MODEL` и `04_DATABASE_AND_MIGRATIONS`;
-- architecture rule → `02_ARCHITECTURE`;
-- новый риск → `10_KNOWN_LIMITATIONS`;
-- новая принятая развилка → `12_DECISION_LOG`.
+Database function должна отвечать на конкретный вопрос.
 
-## 9. Git-гигиена
-
-Не коммитить:
+Не смешивать в одной функции:
 
 ```text
-.env
-shop.db
-shop.db-journal
-shop.db-shm
-shop.db-wal
-__pycache__
-.pytest_cache
-.venv
-локальные uploads с персональными данными — после отдельного решения о хранении
+SQL
+HTTP
+flash
+template decisions
+filesystem cleanup
 ```
 
-Перед commit:
+## 6. Derived state не хранить без необходимости
 
-```bash
-git status
-git diff
-python -m pytest
-```
-
-Коммиты должны отделять:
-
-- изменение поведения;
-- массовое форматирование;
-- документацию;
-- миграцию данных.
-
-## 10. Изменения без ответов Полины
-
-Пока предметная модель обсуждается, безопасно заниматься:
-
-- документацией;
-- Ruff и умеренным style cleanup;
-- pytest-cov как диагностикой;
-- security/config preparation;
-- CI;
-- logging;
-- исправлением независимых багов;
-- тестами существующих инвариантов.
-
-Не следует заранее:
-
-- переименовывать `products` в `works`;
-- создавать `projects` и `shop_items` на основании догадок;
-- проектировать остатки без реальных сценариев;
-- полностью переделывать админские формы под неутверждённую модель.
-
-## 11. Definition of Done
-
-Задача считается завершённой, когда:
+Target Shop:
 
 ```text
-поведение реализовано
-+ тесты зелёные локально
-+ GitHub Actions зелёный
-+ схема изменена только миграцией
-+ docs актуальны
-+ нет случайных файлов в git status
-+ выполнен ручной smoke test затронутого сценария
+stock_quantity — stored
+reserved_quantity — derived
+available_quantity — derived
+stock_state — derived
+can_order — derived
 ```
+
+Если новое состояние можно надёжно вывести из первичных фактов, сначала предпочитать вычисление.
+
+## 7. Public read-model разрешён
+
+Не надо заставлять template самому собирать:
+
+```text
+Project + images + Works
+```
+
+или:
+
+```text
+Work + ShopItem + availability
+```
+
+Service может вернуть специальный page data object/dict.
+
+## 8. Frontend
+
+Принцип:
+
+```text
+HTML = смысл и базовый контент
+CSS  = пространственная/визуальная система
+JS   = изменение состояния и progressive enhancement
+```
+
+JS не должен быть нужен только для того, чтобы посетитель вообще увидел основной текст страницы.
+
+## 9. CSS
+
+Текущая новая public design system уже активно использует:
+
+- custom properties;
+- logical properties;
+- Grid;
+- Flex;
+- `clamp`;
+- `aspect-ratio`;
+- `object-fit`;
+- responsive breakpoints;
+- capability query `@media (hover: hover)`.
+
+При новых компонентах сначала искать существующие design tokens и patterns, а не создавать новый локальный мир без причины.
+
+## 10. BEM-like naming
+
+Новый public frontend использует:
+
+```text
+.block
+.block__element
+.block--modifier
+```
+
+Это naming convention, не framework.
+
+JS-hooks лучше держать через `data-*`, если hook описывает поведение, а не визуальный стиль.
+
+## 11. Новая модульность страниц — позже
+
+Идея page sections / reorderable admin логична, но текущий принцип:
+
+```text
+сначала несколько реальных независимых sections
+↓
+потом наблюдаем повторяющийся контракт
+↓
+только потом абстрагируем Page/Section
+```
+
+Не строить собственный универсальный page builder до production.
+
+## 12. Backend runway
+
+Допустимо держать backend примерно на один экран/страницу впереди frontend.
+
+Ближайшие хорошие кандидаты:
+
+```text
+Works index read-model
+Projects index read-model
+Shop page route/read-model refinement
+```
+
+Не стоит на опережение полностью переписывать cart/checkout, пока Shop public UX ещё не определён.
+
+## 13. Исторические migrations immutable
+
+`v001–v013` — история.
+
+Новый schema change:
+
+```text
+v014+
+```
+
+а не редактирование старой migration, если она уже является частью истории проекта.
+
+## 14. Документация
+
+После существенного архитектурного изменения обновить:
+
+```text
+01_CURRENT_STATE
+PROJECT_MAP
+и профильный документ
+```
+
+Не обязательно менять все Markdown-файлы после каждой CSS-правки, если архитектурный контракт не изменился.

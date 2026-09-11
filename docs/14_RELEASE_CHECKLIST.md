@@ -1,150 +1,111 @@
-# Контрольные списки
+# Release checklist
 
-## 1. Перед обычным commit
+Это не утверждение, что release уже близко. Документ нужен, чтобы production не превратился в неструктурированную стену терминов.
 
-```text
-[ ] git status понятен
-[ ] нет .env, shop.db, cache и случайных uploads
-[ ] diff прочитан
-[ ] тесты затронутого модуля зелёные
-[ ] весь python -m pytest зелёный
-[ ] docs обновлены при изменении поведения
-[ ] commit не смешивает массовое форматирование и бизнес-логику
-```
+## 1. Product scope
 
-Команды:
+- [ ] определён первый release scope;
+- [ ] закончены обязательные public pages;
+- [ ] определён Shop MVP;
+- [ ] post-launch features вынесены из release-critical списка;
+- [ ] нет незавершённых placeholder sections, ведущих в никуда.
+
+## 2. Runtime cutover
+
+- [ ] новый public runtime больше не требует legacy Product для художественных страниц;
+- [ ] target cart/checkout использует ShopItem;
+- [ ] target order lifecycle согласован с inventory;
+- [ ] legacy routes отключены или явно перенаправлены;
+- [ ] legacy admin заменена в нужном объёме.
+
+## 3. Data
+
+- [ ] все migrations воспроизводятся на чистой базе;
+- [ ] migration procedure проверена на копии реальных данных;
+- [ ] production seed не создаёт demo content;
+- [ ] backup policy определена;
+- [ ] restore реально проверен;
+- [ ] tracked DB backups в repository проверены/удалены при необходимости.
+
+## 4. Configuration
+
+- [ ] реальные secrets не в Git;
+- [ ] `.env.example` актуален;
+- [ ] debug выключен;
+- [ ] production DATABASE path определён;
+- [ ] environment settings отделены от source.
+
+## 5. Security
+
+- [ ] CSRF работает на всех state-changing forms;
+- [ ] admin credentials безопасны;
+- [ ] secure session cookie settings включены для HTTPS;
+- [ ] upload/file validation проверена;
+- [ ] ошибки не показывают stack trace посетителю;
+- [ ] privacy policy/contact data реальные.
+
+## 6. Server
+
+- [ ] выбран production app server;
+- [ ] приложение запускается без debug server;
+- [ ] HTTPS работает;
+- [ ] domain/DNS настроены;
+- [ ] reverse proxy/PaaS routing проверен;
+- [ ] static/media serving определено;
+- [ ] health endpoint существует, если его требует platform.
+
+## 7. Observability
+
+- [ ] есть понятный application log;
+- [ ] ошибки startup видны;
+- [ ] ошибки order flow видны;
+- [ ] лог не содержит секреты/лишние customer data;
+- [ ] понятно, как проверить, что приложение живо.
+
+## 8. Quality
 
 ```bash
-git status
-git diff
-python -m pytest
-git ls-files shop.db
+python -m ruff check .
+python -m ruff format --check
+python -m pytest -q
 ```
 
-## 2. Перед новой миграцией
+- [ ] CI green на release commit;
+- [ ] manual desktop pass;
+- [ ] manual tablet pass;
+- [ ] manual mobile pass;
+- [ ] keyboard navigation pass;
+- [ ] basic screen-reader semantics pass;
+- [ ] cart/order smoke test;
+- [ ] broken links checked;
+- [ ] footer placeholders removed.
 
-```text
-[ ] предметное решение зафиксировано
-[ ] определено состояние до и после
-[ ] выбран следующий свободный номер
-[ ] старые migration files не изменяются
-[ ] apply использует переданный conn
-[ ] внутри apply нет commit/rollback
-[ ] написан integration test на старых данных
-[ ] проверены FK/CHECK/default/nullability
-[ ] протестирован rollback
-[ ] обновлены domain и migration docs
-```
+## 9. Content
 
-## 3. После изменения заказов
+- [ ] настоящие Project/Work texts;
+- [ ] alt texts достаточно осмысленны;
+- [ ] цены проверены;
+- [ ] availability соответствует данным;
+- [ ] контакты реальные;
+- [ ] social links реальные или скрыты;
+- [ ] demo Lorem Ipsum удалён.
 
-```text
-[ ] happy path
-[ ] неверный expected status
-[ ] отсутствующий заказ
-[ ] отсутствующая позиция
-[ ] rollback заказа
-[ ] rollback статусов работ
-[ ] snapshot не потерян
-[ ] cancel освобождает резерв
-[ ] complete продаёт работы
-[ ] повторное действие не проходит
-```
+## 10. Release
 
-## 4. После изменения работ
+- [ ] production migration/backup выполнены;
+- [ ] deploy;
+- [ ] smoke test на production URL;
+- [ ] проверить admin;
+- [ ] проверить один тестовый order flow;
+- [ ] проверить логи;
+- [ ] зафиксировать release commit/tag.
 
-```text
-[ ] публичная видимость
-[ ] архив
-[ ] продажа
-[ ] featured требует visible
-[ ] active order сохраняет reserved
-[ ] tags обновляются атомарно
-[ ] новое изображение удаляется после rollback
-[ ] старое изображение удаляется только после commit
-```
+## 11. После release
 
-## 5. Локальный smoke test
+Только после стабильного первого запуска возвращать из backlog:
 
-```text
-[ ] запуск на существующей базе
-[ ] повторный запуск
-[ ] главная
-[ ] каталог
-[ ] карточка
-[ ] корзина
-[ ] checkout
-[ ] order success
-[ ] admin login/logout
-[ ] создание/редактирование/архив работы
-[ ] confirm/cancel/complete заказа
-```
-
-## 6. Проверка чистой базы
-
-Только когда данные disposable или есть backup:
-
-```text
-[ ] остановить приложение
-[ ] переименовать shop.db в backup
-[ ] запустить приложение
-[ ] проверить schema_migrations 1–7
-[ ] проверить seed
-[ ] повторно запустить
-[ ] убедиться в отсутствии дублей
-```
-
-## 7. Перед staging
-
-```text
-[ ] production-like config
-[ ] debug off
-[ ] отдельные secrets
-[ ] migration command
-[ ] persistent uploads
-[ ] database backup
-[ ] restore test
-[ ] HTTPS
-[ ] secure cookies
-[ ] logging
-[ ] error pages
-[ ] health check
-[ ] max upload size
-[ ] privacy drafts
-[ ] full checkout lifecycle
-```
-
-## 8. Перед production
-
-```text
-[ ] финальные решения Project/Work/Shop item
-[ ] уникальные/складские инварианты
-[ ] контент утверждён Полиной
-[ ] домен и HTTPS
-[ ] production admin password
-[ ] debug=False
-[ ] WSGI deployment
-[ ] миграции rehearsed на копии
-[ ] backup создан и восстановлен в тесте
-[ ] uploads сохраняются между deployments
-[ ] персональные данные защищены
-[ ] order success закрыт от чужого доступа
-[ ] rate limiting login
-[ ] мониторинг и error tracking
-[ ] понятный аварийный способ отключить checkout
-[ ] первый post-release smoke test запланирован
-```
-
-## 9. После deployment
-
-```text
-[ ] приложение отвечает
-[ ] главная и статика загружаются
-[ ] база на ожидаемой migration version
-[ ] admin login работает
-[ ] тестовый заказ проходит
-[ ] cancel освобождает резерв
-[ ] logs не содержат новых ошибок
-[ ] backup job работает
-[ ] мобильная версия проверена
-```
+- drag-and-drop sections;
+- page builder;
+- расширенную CMS;
+- richer analytics;
+- дополнительные editorial experiments.

@@ -1,311 +1,332 @@
 # PROJECT MAP — Ceramic Shop v2
 
-Карта отражает текущее устройство проекта после завершения миграций `v001–v007` и удаления функциональности отзывов.
+Актуальная компактная карта репозитория.
 
-## 1. Общая архитектура
+**Срез:** `main`, commit `7d996da41b25bd033d2c52f431b4b6a84bfdcdce`, 2026-09-11.
+
+## 1. Общая система
 
 ```mermaid
 flowchart LR
-    Browser[Браузер] --> Routes[Flask routes / blueprints]
-    Routes --> Services[Services: бизнес-сценарии]
-    Services --> DB[Database modules: SQL]
-    DB --> SQLite[(SQLite)]
-    Services --> Files[Файлы изображений]
-    Routes --> Templates[Jinja2 templates]
+    Browser --> App[Flask app.py]
+    App --> Main[legacy main_bp]
+    App --> Admin[legacy admin_bp]
+    App --> Public[new public_bp /v2]
+
+    Main --> LegacyServices[legacy services]
+    Admin --> LegacyServices
+    LegacyServices --> ProductDB[products / orders / order_items]
+
+    Public --> PublicServices[public_* services]
+    PublicServices --> TargetDB[projects / works / shop_items]
+    PublicServices --> Availability[shop availability]
+
+    ProductDB --> SQLite[(SQLite)]
+    TargetDB --> SQLite
+    Availability --> SQLite
 ```
 
-Главное направление зависимостей:
-
-```text
-route → service → database
-```
-
-Route отвечает за HTTP. Service координирует бизнес-сценарий и транзакцию. Database-модуль выполняет узкие SQL-операции.
+Главный архитектурный факт текущего этапа: **схема уже target-ready, а runtime переведён только частично**.
 
 ## 2. Точка входа
 
+`app.py`:
+
 ```text
-app.py
-├── load_dotenv()
-├── create_app(test_config=None)
-│   ├── Flask
-│   ├── конфигурация
-│   ├── admin_bp
-│   ├── main_bp
-│   ├── глобальная CSRF-проверка POST
-│   ├── cart_count context processor
-│   └── csrf_token context processor
-└── локальный запуск
-    ├── init_db()
-    └── app.run(..., debug=True)
+load_dotenv(.env)
+↓
+create_app(test_config=None)
+├── Flask(__name__)
+├── config
+│   ├── SECRET_KEY
+│   ├── ADMIN_LOGIN
+│   ├── ADMIN_PASSWORD_HASH
+│   ├── DATABASE
+│   └── AUTO_INIT_DB
+├── init_db() при AUTO_INIT_DB
+├── register admin_bp
+├── register main_bp
+├── register public_bp
+├── global POST CSRF guard
+├── cart_count context processor
+└── csrf_token context processor
 ```
 
-`create_app()` позволяет тестам передать отдельный путь к базе и тестовые секреты.
+Локальный `__main__` запускает development server с `debug=True`.
 
-## 3. Структура кода
+## 3. Основные директории
 
 ```text
 Ceramic_shop_v2/
 ├── app.py
 ├── validation.py
-├── requirements.txt
-├── requirements-dev.txt
 ├── database/
 │   ├── connection.py
-│   ├── schema.py
 │   ├── migrations.py
-│   ├── migration_versions/
-│   │   ├── v001_create_products.py
-│   │   ├── v002_add_categories.py
-│   │   ├── v003_create_orders_with_json_items.py
-│   │   ├── v004_add_order_status.py
-│   │   ├── v005_expand_products.py
-│   │   ├── v006_add_tags.py
-│   │   └── v007_normalize_order_items.py
+│   ├── schema.py
+│   ├── migration_versions/v001...v013
 │   ├── products.py
-│   ├── categories.py
-│   ├── tags.py
+│   ├── projects.py
+│   ├── works.py
+│   ├── shop_items.py
 │   ├── orders.py
 │   ├── order_items.py
+│   ├── categories.py
+│   ├── tags.py
 │   └── stats.py
 ├── services/
-│   ├── cart_service.py
-│   ├── category_service.py
-│   ├── csrf_service.py
-│   ├── image_service.py
-│   ├── order_service.py
 │   ├── product_service.py
-│   └── tag_service.py
+│   ├── cart_service.py
+│   ├── order_service.py
+│   ├── category_service.py
+│   ├── tag_service.py
+│   ├── image_service.py
+│   ├── csrf_service.py
+│   ├── public_home_service.py
+│   ├── public_work_service.py
+│   ├── public_project_service.py
+│   ├── public_shop_service.py
+│   └── shop_availability_service.py
 ├── routes/
-│   ├── main.py
-│   └── admin/
-│       ├── __init__.py
-│       ├── auth.py
-│       ├── dashboard.py
-│       ├── products.py
-│       ├── orders.py
-│       ├── categories.py
-│       └── tags.py
+│   ├── main/
+│   ├── admin/
+│   └── public/
 ├── templates/
+│   ├── legacy templates...
+│   └── public/
+│       ├── base.html
+│       ├── home.html
+│       ├── work.html
+│       └── project.html
 ├── static/
+│   ├── legacy assets...
+│   └── public/
+│       ├── css/site.css
+│       ├── css/work.css
+│       ├── css/project.css
+│       ├── js/site.js
+│       └── js/work.js
 ├── tests/
-└── .github/workflows/tests.yml
+├── docs/
+├── .github/workflows/tests.yml
+├── requirements.txt
+├── requirements-dev.txt
+└── pyproject.toml
 ```
 
-## 4. Публичные сценарии
+## 4. Blueprints и маршруты
 
-### Главная
+### Legacy `main_bp`
+
+Без prefix:
 
 ```text
-GET /
-→ get_all_products(only_featured=True, only_visible=True, is_archived=False)
-→ index.html
+/                       legacy homepage
+/catalog                legacy Product catalog
+/product/<product_id>   legacy Product detail
+/cart                   legacy session cart
+/checkout               legacy checkout
+/order_success/<id>     legacy order success
 ```
 
-### Каталог
+Плюс POST-маршруты добавления/удаления/очистки корзины.
+
+### Legacy `admin_bp`
 
 ```text
-GET /catalog
-→ category / tag / q / sort_by / order
-→ проверка существования категории или тега
-→ database/products.py
-→ catalog.html
+/admin/login
+/admin/logout
+/admin/...
 ```
 
-### Страница работы
+Модули: auth, dashboard, products, orders, categories, tags.
+
+### New `public_bp`
+
+Prefix:
 
 ```text
-GET /product/<product_id>
-→ работа + категория
-→ проверка is_visible и is_archived
-→ теги
-→ product_page.html
+/v2
 ```
 
-### Корзина
+Реализовано:
 
 ```text
-session["cart"] = {product_id: quantity}
-        ↓
-build_cart_summary()
-        ├── повторно загружает работы из БД
-        ├── вычисляет unavailable_reason
-        ├── отделяет available_products
-        ├── считает total только по доступным
-        └── сохраняет недоступные позиции в отображении корзины
+/v2/                    new homepage
+/v2/works/<slug>        new Work detail
+/v2/projects/<slug>     new Project detail
 ```
 
-### Checkout
-
-```mermaid
-flowchart TD
-    A[POST /checkout] --> B[Пересобрать корзину из БД]
-    B --> C{Есть доступные работы?}
-    C -- нет --> X[Вернуться в корзину]
-    C -- да --> D[Проверить данные покупателя]
-    D --> E{Есть недоступные позиции?}
-    E -- да --> F{confirm_partial_order = 1?}
-    F -- нет --> Y[Попросить явное подтверждение]
-    F -- да --> G[Собрать order items]
-    E -- нет --> G
-    G --> H[Одна транзакция]
-    H --> I[INSERT orders]
-    I --> J[INSERT order_items]
-    J --> K[available → reserved для каждой работы]
-    K --> L{Все переходы успешны?}
-    L -- нет --> M[ROLLBACK]
-    L -- да --> N[COMMIT]
-    N --> O[Удалить из session только оформленные ID]
-```
-
-## 5. Административные сценарии
-
-### Доступ
+Ещё не зарегистрированы отдельные index/routes для:
 
 ```text
-admin_bp.before_request
-├── /admin/login разрешён без сессии
-└── остальные endpoints требуют session["is_admin"]
+/v2/works
+/v2/projects
+/v2/shop
 ```
 
-### Работа
+При этом backend `public_shop_service.py` уже существует.
 
-```text
-создание
-→ валидация формы и тегов
-→ сохранение нового изображения
-→ INSERT product + replace tags в одной транзакции
-→ rollback удаляет новый файл
-```
-
-```text
-редактирование
-→ проверка активного заказа
-→ необязательное новое изображение
-→ UPDATE product + replace tags
-→ commit
-→ только после commit удалить старый файл
-```
-
-```text
-архивирование
-→ работа существует
-→ ещё не архивна
-→ нет active order
-→ is_archived = 1
-```
-
-```text
-окончательное удаление
-→ работа предварительно архивирована
-→ нет active order
-→ удалить связи и запись
-→ commit
-→ удалить загруженный файл
-```
-
-### Заказ
-
-```mermaid
-stateDiagram-v2
-    new --> confirmed
-    new --> canceled
-    confirmed --> completed
-    confirmed --> canceled
-    canceled --> deleted
-```
-
-- редактировать можно только `new`;
-- подтвердить можно только `new`;
-- выполнить можно только `confirmed`;
-- отменить можно `new` или `confirmed`;
-- удалить можно только `canceled`.
-
-## 6. Модель данных
+## 5. Предметная модель
 
 ```mermaid
 erDiagram
-    CATEGORIES ||--o{ PRODUCTS : category_id
-    PRODUCTS ||--o{ PRODUCT_TAGS : product_id
-    TAGS ||--o{ PRODUCT_TAGS : tag_id
-    ORDERS ||--|{ ORDER_ITEMS : order_id
-    PRODUCTS o|--o{ ORDER_ITEMS : product_id
+    PROJECTS ||--o{ WORKS : contains
+    SERIES ||--o{ WORKS : groups
 
-    PRODUCTS {
-        text id PK
-        text name
-        integer price
-        text status
-        integer is_visible
-        integer is_for_sale
-        integer is_archived
-        integer is_featured
-    }
+    WORKS ||--o{ WORK_IMAGES : has
+    PROJECTS ||--o{ PROJECT_IMAGES : has
 
-    ORDERS {
-        text id PK
-        text status
-        integer total
-        timestamp created_at
-    }
+    WORKS ||--o{ WORK_CATEGORIES : classified
+    CATEGORIES ||--o{ WORK_CATEGORIES : classifies
 
-    ORDER_ITEMS {
-        integer id PK
-        text order_id FK
-        text product_id FK_nullable
-        text product_name
-        integer unit_price
-        integer quantity
-    }
+    WORKS ||--o{ WORK_TAGS : tagged
+    TAGS ||--o{ WORK_TAGS : tags
+
+    WORKS ||--o{ WORK_MATERIALS : uses
+    MATERIALS ||--o{ WORK_MATERIALS : material
+
+    WORKS o|--o| SHOP_ITEMS : commercial_offer
+
+    ORDERS ||--|{ ORDER_ITEMS : contains
+    PRODUCTS o|--o{ ORDER_ITEMS : legacy_reference
+    SHOP_ITEMS o|--o{ ORDER_ITEMS : target_reference
 ```
 
-`order_items.product_name` и `unit_price` — исторический снимок. Удаление работы не уничтожает историю заказа: `product_id` становится `NULL`.
+Особенность: Work может принадлежать либо Project, либо Series; schema CHECK запрещает одновременный `project_id` и `series_id`.
 
-## 7. Транзакционные границы
+## 6. Shop availability
 
-Service-слой владеет одной транзакцией в сценариях:
+Stored:
 
 ```text
-create_product_with_tags
-update_product_with_tags
-delete_product_with_image
-update_product_state_with_order_check
-archive_product_with_order_check
-restore_archived_product
-create_order_with_items
-update_order_with_items
-confirm_order
-complete_order
-cancel_order
-delete_canceled_order
-run_migrations — отдельная транзакция на каждую миграцию
+shop_items.stock_quantity
+shop_items.is_published
+shop_items.is_orderable
+shop_items.is_retired
 ```
 
-## 8. Главные инварианты
+Derived:
 
 ```text
-Недоступная работа не входит в заказ.
-Заказ и его позиции создаются целиком либо не создаются.
-Создание заказа резервирует каждую работу атомарно.
-Активный заказ удерживает работу в reserved.
-Отмена снимает резерв.
-Выполнение отмечает работу как sold.
-Активный заказ нельзя удалить.
-Работу активного заказа нельзя вывести из reserved, архивировать или удалить.
-Историческая позиция заказа переживает удаление работы.
-Частичный checkout требует явного согласия.
-Ошибка checkout не очищает корзину.
+reserved_quantity =
+SUM(order_items.quantity)
+для orders status IN ('new', 'confirmed')
+
+available_quantity =
+stock_quantity - reserved_quantity
 ```
 
-## 9. Тестовая инфраструктура
+`shop_availability_service.py` дополнительно выдаёт:
 
 ```text
-create_app(test_config)
-→ tmp_path/test_shop.db
-→ app_context
-→ db_connection fixture
-→ run_migrations(MIGRATIONS)
-→ тест
+stock_state:
+available
+fully_reserved
+out_of_stock
+
+can_order:
+published
+AND orderable
+AND not retired
+AND available_quantity > 0
 ```
 
-Тесты не используют локальную `shop.db` и проверяют как прикладные сценарии, так и сам migration runner.
+## 7. Migration chain
+
+```text
+v001 Product
+v002 Categories
+v003 Orders
+v004 Order status
+v005 Product expansion
+v006 Tags
+v007 normalized OrderItem
+v008 artistic core
+v009 artistic backfill + preflight
+v010 Shop core
+v011 Shop backfill + preflight
+v012 OrderItem.shop_item_id
+v013 active OrderItem → ShopItem bridge
+```
+
+Каждая pending migration выполняется в собственной явной транзакции `BEGIN → apply → record → commit`, с rollback на исключении.
+
+## 8. Frontend v2
+
+Shared:
+
+```text
+templates/public/base.html
+static/public/css/site.css
+static/public/js/site.js
+```
+
+Work-specific:
+
+```text
+templates/public/work.html
+static/public/css/work.css
+static/public/js/work.js
+```
+
+Project-specific:
+
+```text
+templates/public/project.html
+static/public/css/project.css
+```
+
+`site.js` усиливает mobile navigation через `is-enhanced/is-open`.
+
+`work.js` содержит два независимых enhancement-компонента:
+
+```text
+Story disclosure
+Work carousel
+```
+
+HTML остаётся источником контента; JS не строит страницы с нуля.
+
+## 9. Тестовая карта
+
+В `tests/` существуют отдельные группы для:
+
+```text
+connection / schema / migrations
+migration versions
+products / categories / tags
+works / projects / shop_items
+orders / order_items
+legacy services
+public home/work/project/shop services
+shop availability
+public routes
+app factory
+checkout integration
+validation
+```
+
+CI:
+
+```text
+Ruff lint
+Ruff format --check
+pytest -q
+```
+
+## 10. Главная граница разработки
+
+Сейчас нельзя говорить «старый код уже заменён».
+
+Правильнее:
+
+```text
+DATA MODEL: target уже построен
+PUBLIC READ-SIDE: частично переведён
+COMMERCE WRITE-SIDE: ещё legacy
+ADMIN: ещё legacy
+PRODUCTION: впереди
+```
+
+До окончательного cutover старая Product-ветка остаётся рабочим историческим runtime и одновременно эталоном поведения для части коммерческих сценариев.

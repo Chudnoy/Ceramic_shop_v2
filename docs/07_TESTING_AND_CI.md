@@ -1,210 +1,184 @@
 # Тестирование и CI
 
-## 1. Цель тестов
+## 1. Инструменты
 
-Тесты защищают не только функции, но и архитектурные обещания:
-
-- транзакция либо завершается целиком, либо откатывается;
-- неверный переход статуса не проходит;
-- история заказа сохраняется;
-- тесты не используют рабочую базу;
-- пустая база действительно строится миграциями;
-- приложение можно создать с тестовой конфигурацией.
-
-## 2. Фикстуры
-
-### `test_app`
-
-Создаёт базу:
+Development dependencies:
 
 ```text
-tmp_path / test_shop.db
+pytest
+pytest-cov
+ruff 0.16.1
 ```
 
-и передаёт `create_app()`:
+Runtime:
 
-- `TESTING=True`;
-- тестовый `SECRET_KEY`;
-- тестовый admin login;
-- тестовый hash;
-- временный `DATABASE`.
+```text
+Flask >=3,<4
+python-dotenv >=1,<2
+```
 
-### `client`
+## 2. Test database
 
-Flask test client.
+App factory принимает `test_config`.
 
-### `app_context`
+Тесты используют отдельные SQLite-файлы и настоящий migration runner вместо локальной `shop.db`.
 
-Активный контекст приложения для database-функций, использующих `current_app`.
+Это позволяет проверять:
 
-### `db_connection`
+```text
+пустая база
+↓
+migrations
+↓
+test scenario
+```
 
-Возвращает фабрику соединений.
+без влияния на developer database.
 
-### `empty_db`
+## 3. Основные группы тестов в репозитории
 
-Применяет настоящий `MIGRATIONS`, но не запускает seed. Название означает «пустая по данным, готовая по структуре».
+В текущем `tests/` присутствуют тесты:
 
-## 3. Уровни тестов
+- app factory;
+- DB connection;
+- schema;
+- migrations и migration versions;
+- Products;
+- Categories;
+- Tags;
+- Works;
+- Projects;
+- ShopItems;
+- Orders;
+- OrderItems;
+- Product service;
+- Order service;
+- Cart service;
+- Checkout integration;
+- Public routes;
+- Public Home service;
+- Public Work service;
+- Public Project service;
+- Public Shop service;
+- Shop availability service;
+- validation.
 
-### Database
+Это важный сигнал текущей архитектуры: тестовая база уже покрывает и legacy, и target ветки.
 
-Проверяются:
+## 4. Migration tests
 
-- SQL-вставки и обновления;
-- фильтры;
-- `rowcount`;
-- FK и каскады;
-- исторические позиции;
-- ожидаемые статусы.
+Migration tests должны проверять не только happy path.
 
-### Service
+Особенно для v009/v011/v013 важны:
 
-Проверяются:
+```text
+preflight rejects inconsistent old data
+target emptiness assumptions
+backfill mappings
+active order bridges
+transaction rollback
+deterministic result
+```
 
-- валидация;
-- бизнес-ветвления;
-- транзакции;
-- rollback;
-- координация заказа и работ;
-- файловая компенсация;
-- запреты active order.
+Preflight — часть контракта migration.
 
-### Route
+## 5. Public service tests
 
-Проверяются:
+Новые read-model services тестируются отдельно от HTML.
 
-- redirects;
-- flash/response;
-- авторизация;
-- CSRF;
-- формы;
-- public/admin доступ.
+Например Project tests проверяют:
 
-### Migrations
+- unpublished Project → `None`;
+- published Works only;
+- `project_position` ordering;
+- image roles by position;
+- cover image per Work;
+- paragraph split.
 
-Проверяются engine и каждая версия `v001–v007`.
+Shop tests проверяют visibility policy и linked/standalone media.
 
-### Schema initialization
+## 6. Availability tests
 
-`init_db()` вызывается дважды. Тест подтверждает:
+`shop_availability_service` должен покрывать как минимум:
 
-- семь записанных версий;
-- отсутствие повторного применения;
-- отсутствие дублирования seed.
+```text
+available
+fully_reserved
+out_of_stock
+reserved > stock → error
+publication/orderability/retired effects
+```
 
-## 4. Локальный запуск
+Особенно важно не заменять эти tests будущими template tests: это предметная логика.
+
+## 7. CI
+
+`.github/workflows/tests.yml` запускается на:
+
+```text
+push
+pull_request
+```
+
+Environment:
+
+```text
+ubuntu-latest
+Python 3.14
+```
+
+Steps:
+
+```bash
+pip install -r requirements-dev.txt
+python -m ruff check .
+python -m ruff format --check
+python -m pytest -q
+```
+
+## 8. Ruff config
+
+`pyproject.toml` содержит per-file ignores для blueprint `__init__.py`, потому что imports там регистрируют route modules побочным эффектом.
+
+Tests имеют отдельное исключение `PLR0402`.
+
+## 9. Что CI пока не проверяет
+
+В текущем workflow нет:
+
+- browser/e2e tests;
+- JavaScript unit tests;
+- CSS visual regression;
+- deployment;
+- security scanner;
+- production health check.
+
+Это не обязательно добавлять сейчас. Но перед production хотя бы небольшой browser smoke-test public/commerce flow будет полезен.
+
+## 10. Практическое правило
+
+Для новой бизнес-логики сначала формулируется контракт.
+
+Хороший порядок:
+
+```text
+test
+↓
+узкая реализация
+↓
+refactor
+```
+
+Для чисто визуальной CSS-настройки TDD не является самоцелью.
+
+## 11. Команды
 
 ```bash
 python -m pytest
-```
-
-Полезные варианты:
-
-```bash
 python -m pytest -q
-python -m pytest tests/test_migrations.py
-python -m pytest tests/test_migration_versions.py -x
-python -m pytest -k "cancel_order"
+python -m ruff check .
+python -m ruff format .
+python -m ruff format --check
 ```
 
-`-x` останавливает прогон после первой ошибки. `-k` выбирает тесты по имени.
-
-## 5. GitHub Actions
-
-Workflow запускается на:
-
-```yaml
-push:
-pull_request:
-```
-
-Шаги:
-
-1. checkout;
-2. Python 3.14;
-3. `pip install -r requirements-dev.txt`;
-4. `python -m pytest`.
-
-Это подтверждает, что проект работает не только в локальном окружении разработчика, но и в чистой Linux-среде.
-
-## 6. Зависимости
-
-`requirements.txt`:
-
-```text
-Flask>=3.0,<4.0
-python-dotenv>=1.0,<2.0
-```
-
-`requirements-dev.txt`:
-
-```text
--r requirements.txt
-pytest
-```
-
-## 7. Правило нового поведения
-
-Для любого нового сценария нужен тест хотя бы на:
-
-```text
-успешный путь
-невалидный ввод
-запрещённое состояние
-rollback или отсутствие частичного изменения
-```
-
-Для миграции дополнительно:
-
-```text
-схема до
-→ реальные старые данные
-→ apply
-→ схема после
-→ данные после
-→ constraints
-→ запись в schema_migrations
-```
-
-## 8. `pytest-cov` — планируемый инструмент
-
-`pytest-cov` пока не входит в зависимости. После подключения он покажет, какие строки выполнялись тестами.
-
-Планируемое диагностическое использование:
-
-```bash
-python -m pytest \
-  --cov=database \
-  --cov=services \
-  --cov=routes \
-  --cov-report=term-missing
-```
-
-На первом этапе покрытие не должно становиться искусственным жёстким порогом. Процент помогает искать пробелы, но не доказывает качество проверок.
-
-## 9. Ruff — планируемый инструмент
-
-Ruff пока не установлен и не включён в CI.
-
-Безопасная последовательность:
-
-```text
-установить
-→ ruff check .
-→ прочитать предупреждения
-→ настроить правила
-→ исправлять небольшими коммитами
-→ только потом добавить в Actions
-```
-
-Не следует начинать с массового `--fix` и форматирования всего репозитория: это создаст огромный косметический diff.
-
-## 10. Что тесты пока не заменяют
-
-- браузерный end-to-end прогон;
-- проверку реальной почты или оплаты;
-- нагрузочное тестирование;
-- проверку production-конфигурации;
-- backup/restore rehearsal;
-- визуальную проверку адаптивности.
+Не документировать точное количество зелёных тестов как постоянный факт: оно быстро устаревает.
