@@ -155,13 +155,8 @@ def test_get_public_project_page_data_returns_project_with_works(
     assert page_data["project"]["period"] == "2024-2026"
 
     assert page_data["cover_image"]["image_path"] == "static/project-cover.jpg"
-
-    assert [
-        (image["image_path"], image["position"]) for image in page_data["images"]
-    ] == [
-        ("static/project-cover.jpg", 1),
-        ("static/project-detail.jpg", 2),
-    ]
+    assert page_data["premise_image"]["image_path"] == "static/project-detail.jpg"
+    assert page_data["field_images"] == []
 
     assert page_data["project_works"] == [
         {

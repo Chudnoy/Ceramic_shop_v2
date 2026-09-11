@@ -14,6 +14,22 @@
 {% block content %}
 <main class="project-page">
     <section class="project-threshold" aria-labelledby="project-title">
+        <div class="project-threshold__aside">
+            <span class="project-threshold__aside-rule" aria-hidden="true"></span>
+            <p>
+                Керамика<br>
+                как дыхание<br>
+                материи
+            </p>
+        </div>
+        <div class="project-threshold__chapter">
+            <span class="project-thersold__chapter-number">01</span>
+            <p>
+                Пустоты<br>
+                тоже создают<br>
+                форму
+            </p>
+        </div>
         <p class="project-threshold__eyebrow">Проект / Керамика</p>
         <h1 class="project-threshold__title" id="project-title">{{ project.name }}</h1>
         
@@ -27,5 +43,47 @@
             </figure>
         {% endif %}
     </section>
+
+    <section class="project-premise" aria-labelledby="project-premise-title">
+        <div class="project-premise__copy">
+            <p class="project-premise__eyebrow" id="project-premise-title">
+                Предпосылка
+            </p>
+            {% if project.intro %}
+                <p class="project-premise__text">
+                    {{ project.intro }}
+                </p>
+            {% endif %}
+            <p class="project-premise__statement">
+                Пустота —<br>
+                тоже материал.
+            </p>
+        </div>
+        {% if premise_image %}
+            <figure class="project-premise__media">
+                <img src="{{ premise_image.image_path }}" alt="">
+            </figure>
+            <div class="project-premise__caption">
+                <p>Форма № 3</p>
+                <p>2024</p>
+                <p>Шамот, глазурь</p>
+            </div>
+            <div class="project-premise__aside">
+                <span aria-hidden="true"></span>
+                <p>
+                    В каждом<br>
+                    отверстии<br>
+                    есть пространство<br>
+                    для света
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if break_image %}
+        <section class="project-break">
+            <figure class="project-break__media"><img src="{{ break_image.image_path }}" alt=""></figure>
+        </section>
+    {% endif %}
 </main>
 {% endblock %}

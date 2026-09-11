@@ -6,38 +6,34 @@ def get_public_project_page_data(slug):
     conn = get_db_connection()
 
     try:
-        project = projects.get_published_project_by_slug(
-            conn,
-            slug,
-        )
+        project = projects.get_published_project_by_slug(conn, slug)
 
         if project is None:
             return None
 
         project_id = project["id"]
 
-        images = projects.get_project_images(
-            conn,
-            project_id,
-        )
+        project_images = [
+            dict(image) for image in projects.get_project_images(conn, project_id)
+        ]
 
-        cover_image = projects.get_project_cover_image(
-            conn,
-            project_id,
-        )
+        images_by_position = {image["position"]: image for image in project_images}
+
+        cover_image = images_by_position.get(1)
+        premise_image = images_by_position.get(2)
+        break_image = images_by_position.get(3)
+        process_image = images_by_position.get(4)
+
+        field_images = [image for image in project_images if image["position"] >= 5]
 
         published_project_works = works.get_published_works_by_project_id(
-            conn,
-            project_id,
+            conn, project_id
         )
 
         project_works_data = []
 
         for project_work in published_project_works:
-            project_work_cover = works.get_work_cover_image(
-                conn,
-                project_work["id"],
-            )
+            project_work_cover = works.get_work_cover_image(conn, project_work["id"])
 
             project_works_data.append(
                 {
@@ -56,8 +52,11 @@ def get_public_project_page_data(slug):
 
         return {
             "project": dict(project),
-            "images": [dict(image) for image in images],
-            "cover_image": (dict(cover_image) if cover_image is not None else None),
+            "cover_image": cover_image,
+            "premise_image": premise_image,
+            "break_image": break_image,
+            "process_image": process_image,
+            "field_images": field_images,
             "project_works": project_works_data,
         }
 

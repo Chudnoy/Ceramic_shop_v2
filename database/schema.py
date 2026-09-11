@@ -15,6 +15,20 @@ LONG_DEMO_DESCRIPTION = """
                     Voluptate minus molestias voluptatum, non vero nostrum voluptatem possimus dolorem tempore fugit soluta sunt doloremque fugiat, labore adipisci odit vitae libero numquam, eos aut consequuntur praesentium! Itaque ab a repellat.
                     """
 
+POROUS_FORMS_DEMO_TEXT = """
+Меня интересует граница между материей и пустотой. В этих формах нет сплошной поверхности — остаются отверстия, следы и задержки.
+
+Пористость становится способом увидеть внутреннее пространство объекта. Свет проходит сквозь материал и делает пустоту частью формы.
+
+Каждая работа меняется в огне. Температура, глазурь и случай оставляют на поверхности следы, которые невозможно полностью предсказать.
+
+Вместе эти объекты образуют не серию одинаковых вещей, а общее пространство — хрупкое, проницаемое и постоянно меняющееся.
+""".strip()
+
+POROUS_FORMS_DEMO_INTRO = (
+    "Пустота здесь становится не отсутствием материала, а одной из частей формы."
+)
+
 
 def seed_initial_data():
     conn = get_db_connection()
@@ -70,8 +84,8 @@ def seed_initial_data():
                 PORISTYE_FORMY_ID,
                 "Пористые формы",
                 "poristye-formy",
-                "Исследование пустоты, опоры и хрупкости формы",
-                LONG_DEMO_DESCRIPTION,
+                POROUS_FORMS_DEMO_INTRO,
+                POROUS_FORMS_DEMO_TEXT,
                 "2024-2026",
                 1,
             )

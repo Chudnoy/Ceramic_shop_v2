@@ -1,11 +1,17 @@
-def create_test_project(conn, project_id="project-1", name="Пористые формы", slug="poristye-formy", is_published=1):
+def create_test_project(
+    conn,
+    project_id="project-1",
+    name="Пористые формы",
+    slug="poristye-formy",
+    is_published=1,
+):
     conn.execute(
         """
         INSERT INTO projects
             (id, name, slug, is_published)
         VALUES (?, ?, ?, ?)
         """,
-        (project_id, name, slug, is_published)
+        (project_id, name, slug, is_published),
     )
 
 
@@ -148,20 +154,22 @@ def test_publick_work_detail_does_not_show_available_status_when_stock_is_reserv
     assert "Доступна" not in html
 
 
-def test_project_detail_returns_200_for_published_project(empty_db, db_connection, client):
+def test_project_detail_returns_200_for_published_project(
+    empty_db, db_connection, client
+):
     conn = db_connection()
-    
+
     create_test_project(conn)
-    
+
     conn.commit()
     conn.close()
-    
+
     response = client.get("/v2/projects/poristye-formy")
-    
+
     assert response.status_code == 200
-    
-    
+
+
 def test_project_detail_returns_404_for_missing_project(empty_db, client):
     response = client.get("/v2/projects/ne-sushchestvuet")
-    
+
     assert response.status_code == 404
