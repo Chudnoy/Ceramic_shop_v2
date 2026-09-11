@@ -15,6 +15,7 @@ def project_detail(slug):
     return render_template(
         "public/project.html",
         project=page_data["project"],
+        project_paragraphs=page_data["project_paragraphs"],
         cover_image=page_data["cover_image"],
         premise_image=page_data["premise_image"],
         break_image=page_data["break_image"],

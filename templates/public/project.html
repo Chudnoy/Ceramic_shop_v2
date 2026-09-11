@@ -13,30 +13,36 @@
 
 {% block content %}
 <main class="project-page">
-    <section class="project-threshold" aria-labelledby="project-title">
+    <section
+        class="project-threshold{% if not cover_image %} project-threshold--without-cover{% endif %}"
+        aria-labelledby="project-title"
+    >
         <div class="project-threshold__aside">
             <span class="project-threshold__aside-rule" aria-hidden="true"></span>
             <p>
-                Керамика<br>
-                как дыхание<br>
-                материи
+                Авторский<br>
+                керамический<br>
+                проект
             </p>
         </div>
         <div class="project-threshold__chapter">
             <span class="project-threshold__chapter-number">01</span>
             <p>
-                Пустоты<br>
-                тоже создают<br>
-                форму
+                Вход<br>
+                в проект
             </p>
         </div>
-        <p class="project-threshold__eyebrow">Проект / Керамика</p>
-        <h1 class="project-threshold__title" id="project-title">{{ project.name }}</h1>
-        
+        <p class="project-threshold__eyebrow">
+            Проект / Керамика
+        </p>
+        <h1 class="project-threshold__title" id="project-title">
+            {{ project.name }}
+        </h1>
         {% if project.period %}
-            <p class="project-threshold__period">{{ project.period }}</p>
+            <p class="project-threshold__period">
+                {{ project.period }}
+            </p>
         {% endif %}
-        
         {% if cover_image %}
             <figure class="project-threshold__media">
                 <img src="{{ cover_image.image_path }}" alt="{{ project.name }}">
@@ -44,45 +50,79 @@
         {% endif %}
     </section>
 
-    <section class="project-premise" aria-labelledby="project-premise-title">
-        <div class="project-premise__copy">
-            <p class="project-premise__eyebrow" id="project-premise-title">
-                Предпосылка
-            </p>
-            {% if project.intro %}
-                <p class="project-premise__text">
-                    {{ project.intro }}
+    {% if project.intro or premise_image %}
+        <section
+            class="project-premise{% if not premise_image %} project-premise--without-image{% endif %}"
+            aria-labelledby="project-premise-title"
+        >
+            <div class="project-premise__copy">
+                <p class="project-premise__eyebrow" id="project-premise-title">
+                    Предпосылка
                 </p>
-            {% endif %}
-            <p class="project-premise__statement">
-                Пустота —<br>
-                тоже материал.
-            </p>
-        </div>
-        {% if premise_image %}
-            <figure class="project-premise__media">
-                <img src="{{ premise_image.image_path }}" alt="">
-            </figure>
-            <div class="project-premise__caption">
-                <p>Форма № 3</p>
-                <p>2024</p>
-                <p>Шамот, глазурь</p>
+                {% if project.intro %}
+                    <p class="project-premise__text">
+                        {{ project.intro }}
+                    </p>
+                {% endif %}
             </div>
-            <div class="project-premise__aside">
-                <span aria-hidden="true"></span>
-                <p>
-                    В каждом<br>
-                    отверстии<br>
-                    есть пространство<br>
-                    для света
-                </p>
-            </div>
-        {% endif %}
-    </section>
 
-    {% if break_image %}
-        <section class="project-break">
-            <figure class="project-break__media"><img src="{{ break_image.image_path }}" alt=""></figure>
+            {% if premise_image %}
+                <figure class="project-premise__media">
+                    <img src="{{ premise_image.image_path }}" alt="Изображение проекта {{ project.name }}">
+                </figure>
+                <div class="project-premise__caption">
+                    <p>Из проекта</p>
+                    {% if project.period %}
+                        <p>{{ project.period }}</p>
+                    {% endif %}
+                </div>
+                <div class="project-premise__aside">
+                    <span aria-hidden="true"></span>
+                    <p>
+                        02<br>
+                        Контекст<br>
+                        проекта
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if project_paragraphs or project_works %}
+        <section class="project-first-movement">
+            <div class="project-first-movement__chapter">
+                <span>03</span>
+                <p>
+                    Первое<br>
+                    произведение
+                </p>
+            </div>
+
+            {% if project_paragraphs %}
+                <div class="project-first-movement__copy">
+                    <p>{{ project_paragraphs[0]}}</p>
+                </div>
+            {% endif %}
+
+            {% if project_works %}
+                {% set first_work = project_works[0] %}
+                <a 
+                    href="{{ url_for('public.work_detail', slug=first_work.slug) }}"
+                    class="project-first-movement__work"
+                >
+                    {% if first_work.cover_image_path %}
+                        <figure class="project-first-movement__media">
+                            <img src="{{ first_work.cover_image_path }}" alt="{{ first_work.name }}">
+                        </figure>
+                    {% endif %}
+                    <div class="project-first-movement__work-meta">
+                        <h2>{{ first_work.name }}</h2>
+                        {% if first_work.year %}
+                            <p>{{ first_work.year }}</p>
+                        {% endif %}
+                    </div>
+                </a>
+            {% endif %}
         </section>
     {% endif %}
 </main>

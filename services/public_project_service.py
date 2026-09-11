@@ -13,6 +13,14 @@ def get_public_project_page_data(slug):
 
         project_id = project["id"]
 
+        project_text = (project["text"] or "").replace("\r\n", "\n")
+
+        project_paragraphs = [
+            paragraph.strip()
+            for paragraph in project_text.split("\n\n")
+            if paragraph.strip()
+        ]
+
         project_images = [
             dict(image) for image in projects.get_project_images(conn, project_id)
         ]
@@ -52,6 +60,7 @@ def get_public_project_page_data(slug):
 
         return {
             "project": dict(project),
+            "project_paragraphs": project_paragraphs,
             "cover_image": cover_image,
             "premise_image": premise_image,
             "break_image": break_image,
