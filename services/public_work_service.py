@@ -3,6 +3,27 @@ from database.connection import get_db_connection
 from services.shop_availability_service import get_shop_item_availability
 
 
+def get_public_works_page_data(sort="name_asc"):
+    conn = get_db_connection()
+    
+    try:
+        published_works = works.get_published_works(conn, sort=sort)
+        
+        works_data = []
+        
+        for work in published_works:
+            cover_image = works.get_work_cover_image(conn, work["id"])
+            
+            work_data = dict(work)
+            work_data["cover_image_path"] = cover_image["image_path"] if cover_image is not None else None
+            
+            works_data.append(work_data)
+        
+        return {"works": works_data}
+    finally:
+        conn.close()
+
+
 def get_public_work_page_data(slug):
     conn = get_db_connection()
 

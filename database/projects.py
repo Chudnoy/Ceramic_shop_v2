@@ -1,3 +1,22 @@
+def get_published_projects(conn, sort="name_asc"):
+    order_by = {
+        "name_asc": "name ASC",
+        "name_desc": "name DESC"
+    }
+    
+    order_clause = order_by.get(sort, order_by["name_asc"])
+    
+    return conn.execute(
+        f"""
+        SELECT
+            id, name, slug, intro, period
+        FROM projects
+        WHERE is_published = 1
+        ORDER BY {order_clause}
+        """
+    ).fetchall()
+
+
 def get_published_project_by_id(conn, project_id):
     return conn.execute(
         """
