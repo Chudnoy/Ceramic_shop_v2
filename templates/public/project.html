@@ -193,5 +193,98 @@
             {% endif %}
         </section>
     {% endif %}
+
+    {% set process_paragraphs = project_paragraphs[3:] %}
+    {% if process_image or process_paragraphs %}
+        <section 
+            class="project-process{% if not process_image %} project-process--without-image{% endif %}{% if not project__paragraphs %} project-process--without-text{% endif %}"
+        >
+            <div class="project-process__chapter">
+                <span>06</span>
+                <p>
+                    Процесс<br>
+                    и материал
+                </p>
+            </div>
+            {% if process_image %}
+                <figure class="project-process__media">
+                    <img src="{{ process_image.image_path }}" alt="Процесс работы над проектом {{ project.name }}">
+                </figure>
+            {% endif %}
+            {% if process_paragraphs %}
+                <div class="project-process__copy">
+                    {% for paragraph in process_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if project_works %}
+        <section class="project-quiet-break" aria-label="Работы проекта">
+            <p class="project-quiet-break__count" aria-hidden="true">
+                {{ "%02d"|format(project_works|length) }}
+            </p>
+            <div class="project-quiet-break__meta">
+                <span class="project-quiet-break__rule" aria-hidden="true"></span>
+                <p>
+                    Работы<br>
+                    проекта
+                </p>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if project_works %}
+        <section class="project-index" aria-labelledby="project-index-title">
+
+            <div class="project-index__chapter">
+                <span>07</span>
+
+                <h2 id="project-index-title">
+                    Индекс<br>
+                    работ
+                </h2>
+            </div>
+
+            <div class="project-index__list">
+                {% for work in project_works %}
+                    <a
+                        class="project-index__item"
+                        href="{{ url_for('public.work_detail', slug=work.slug) }}"
+                    >
+                        <span class="project-index__number">
+                            {{ "%02d"|format(loop.index) }}
+                        </span>
+
+                        <div class="project-index__thumb">
+                            {% if work.cover_image_path %}
+                                <img
+                                    src="{{ work.cover_image_path }}"
+                                    alt=""
+                                >
+                            {% endif %}
+                        </div>
+
+                        <span class="project-index__name">
+                            {{ work.name }}
+                        </span>
+
+                        {% if work.year %}
+                            <span class="project-index__year">
+                                {{ work.year }}
+                            </span>
+                        {% endif %}
+
+                        <span class="project-index__arrow" aria-hidden="true">
+                            ↗
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+
+        </section>
+    {% endif %}
 </main>
 {% endblock %}
