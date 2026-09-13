@@ -126,3 +126,21 @@ def test_get_published_project_by_slug_filters_unpublished_project(
     assert published_project["name"] == "Пористые формы"
 
     assert unpublished_project is None
+
+
+def test_get_published_projects_filters_and_supports_sorting(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_project(conn, project_id="project-1", name="Пористые формы", slug="poristye-formy")
+    create_test_project(conn, project_id="project-2", name="Архитектура памяти", slug="arkhitektura-pamyati")
+    create_test_project(conn,project_id="project-3", name="Черновик", slug="draft", is_published=0)
+    
+    conn.commit()
+    
+    name_asc = projects.get_published_projects(conn, sort="name_asc")
+    name_desc = projects.get_published_projects(conn, sort="name_desc")
+    
+    conn.close()
+    
+    assert [project["name"] for project in name_asc] == ["Архитектура памяти", "Пористые формы"]
+    assert [project["name"] for project in name_desc] == ["Пористые формы", "Архитектура памяти"]

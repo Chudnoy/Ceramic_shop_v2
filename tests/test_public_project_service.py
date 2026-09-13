@@ -1,4 +1,4 @@
-from services.public_project_service import get_public_project_page_data
+from services.public_project_service import get_public_project_page_data, get_public_projects_page_data
 
 
 def create_test_project(
@@ -272,3 +272,40 @@ def test_get_public_project_page_data_excludes_unpublished_works(
             "cover_image_path": "static/kaplya-cover.jpg",
         }
     ]
+
+
+def test_get_public_projects_page_data_adds_cover_images(empty_db, db_connection):
+    conn = db_connection()
+    
+    create_test_project(
+        conn,
+        project_id="project-1",
+        name="Пористые формы",
+        slug="poristye-formy",
+    )
+
+    create_test_project(
+        conn,
+        project_id="project-2",
+        name="Архитектура памяти",
+        slug="arkhitektura-pamyati",
+    )
+
+    create_test_project_image(
+        conn,
+        project_id="project-1",
+        image_path="static/project-cover.jpg",
+        position=1,
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    page_data = get_public_projects_page_data()
+    
+    assert len(page_data["projects"]) == 2
+    
+    projects_by_id = {project["id"]: project for project in page_data["projects"]}
+    
+    assert projects_by_id["project-1"]["cover_image_path"] == "static/project-cover.jpg"
+    assert projects_by_id["project-2"]["cover_image_path"] is None

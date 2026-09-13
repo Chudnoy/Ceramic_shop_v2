@@ -1,6 +1,6 @@
-from flask import abort, render_template
+from flask import abort, render_template, request
 
-from services.public_project_service import get_public_project_page_data
+from services.public_project_service import get_public_project_page_data,get_public_projects_page_data
 
 from . import public_bp
 
@@ -23,3 +23,12 @@ def project_detail(slug):
         field_images=page_data["field_images"],
         project_works=page_data["project_works"],
     )
+
+
+@public_bp.route("/projects")
+def projects_index():
+    sort = request.args.get("sort", "name_asc")
+    
+    page_data = get_public_projects_page_data(sort)
+    
+    return render_template("public/projects.html", projects=page_data["projects"], sort=sort)

@@ -71,3 +71,25 @@ def get_public_project_page_data(slug):
 
     finally:
         conn.close()
+
+
+def get_public_projects_page_data(sort="name_asc"):
+    conn = get_db_connection()
+    
+    try:
+        published_projects = projects.get_published_projects(conn, sort)
+        
+        projects_data = []
+        
+        for project in published_projects:
+            cover_image = projects.get_project_cover_image(conn, project["id"])
+            
+            project_data = dict(project)
+            
+            project_data["cover_image_path"] = cover_image["image_path"] if cover_image is not None else None
+            
+            projects_data.append(project_data)
+            
+        return {"projects": projects_data}
+    finally:
+        conn.close()
