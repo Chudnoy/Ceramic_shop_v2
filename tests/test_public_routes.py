@@ -173,3 +173,15 @@ def test_project_detail_returns_404_for_missing_project(empty_db, client):
     response = client.get("/v2/projects/ne-sushchestvuet")
 
     assert response.status_code == 404
+
+
+def test_public_works_index_opens(client, empty_db):
+    response = client.get("/v2/works")
+    
+    assert response.status_code == 200
+    
+    
+def test_public_projects_index_opens(client, empty_db):
+    response = client.get("/v2/projects")
+    
+    assert response.status_code == 200
