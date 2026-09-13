@@ -390,9 +390,9 @@ PROJECT FIRST MOVEMENT
 }
 
 
-/* ==============================
+/* ==================================
 PROJECT BREAK
-============================== */
+================================== */
 
 .project-break {
     background: var(--color-background);
@@ -415,14 +415,187 @@ PROJECT BREAK
     block-size: calc(100svh - var(--site-header-height));
     margin: 0;
     overflow: hidden;
+    background: var(--color-background);
 }
 
-.project-break__media img {
+.project-break__media > img {
+    position: relative;
     display: block;
     inline-size: 100%;
     block-size: 100%;
     object-fit: cover;
     object-position: center;
+    z-index: 0;
+}
+
+.project-break__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(241, 236, 228, 0.04),
+            rgba(241, 236, 228, 0.18)
+        );
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.project-break__works {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.project-break__work {
+    position: absolute;
+    display: block;
+    padding: clamp(0.4rem, 0.6vw, 0.6rem);
+    background: rgba(241, 236, 228, 0.88);
+    border: 1px solid rgba(241, 236, 228, 0.45);
+    box-shadow: 0 0.8rem 2rem rgba(20, 14, 10, 0.18);
+    color: inherit;
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+.project-break__work img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+}
+
+.project-break__work--1 {
+    inset-inline-end: 7%;
+    inset-block-end: 8%;
+    inline-size: clamp(7rem, 9vw, 10rem);
+
+    --exit-x: 26vw;
+    --exit-y: 5vh;
+}
+
+.project-break__work--2 {
+    inset-inline-start: 7%;
+    inset-block-start: 9%;
+    inline-size: clamp(6rem, 8vw, 9rem);
+
+    --exit-x: -25vw;
+    --exit-y: -5vh;
+}
+
+.project-break__work--3 {
+    inset-inline-end: 10%;
+    inset-block-start: 12%;
+    inline-size: clamp(5.5rem, 7vw, 8rem);
+
+    --exit-x: 25vw;
+    --exit-y: -4vh;
+}
+
+.project-break__work--4 {
+    inset-inline-start: 10%;
+    inset-block-end: 10%;
+    inline-size: clamp(7rem, 9.5vw, 10.5rem);
+
+    --exit-x: -26vw;
+    --exit-y: 5vh;
+}
+
+.project-break__work--5 {
+    inset-inline-start: 26%;
+    inset-block-start: 42%;
+    inline-size: clamp(5.5rem, 7vw, 8rem);
+
+    --exit-x: -22vw;
+    --exit-y: 2vh;
+}
+
+.project-break__work--6 {
+    inset-inline-end: 25%;
+    inset-block-start: 37%;
+    inline-size: clamp(6rem, 8vw, 9rem);
+
+    --exit-x: 22vw;
+    --exit-y: -2vh;
+}
+
+.project-break__work--7 {
+    inset-inline-start: 47%;
+    inset-block-start: 12%;
+    inline-size: clamp(5rem, 6.5vw, 7.5rem);
+
+    --exit-x: 3vw;
+    --exit-y: -24vh;
+}
+
+
+.project-break__works--count-1 .project-break__work--1 {
+    inset-inline-start: auto;
+    inset-inline-end: 10%;
+    inset-block-start: auto;
+    inset-block-end: 12%;
+    inline-size: clamp(10rem, 12vw, 13rem);
+
+    --exit-x: 28vw;
+    --exit-y: 6vh;
+}
+
+.project-break__works--count-2 .project-break__work--1 {
+    inset-inline-start: 12%;
+    inset-inline-end: auto;
+    inset-block-start: 18%;
+    inset-block-end: auto;
+    inline-size: clamp(8rem, 10vw, 11rem);
+
+    --exit-x: -27vw;
+    --exit-y: -5vh;
+}
+
+.project-break__works--count-2 .project-break__work--2 {
+    inset-inline-start: auto;
+    inset-inline-end: 12%;
+    inset-block-start: auto;
+    inset-block-end: 14%;
+    inline-size: clamp(9rem, 11vw, 12rem);
+
+    --exit-x: 27vw;
+    --exit-y: 6vh;
+}
+
+.project-break__works--count-3 .project-break__work--1 {
+    inset-inline-start: 11%;
+    inset-inline-end: auto;
+    inset-block-start: 17%;
+    inset-block-end: auto;
+    inline-size: clamp(10rem, 12vw, 13rem);
+
+    --exit-x: -28vw;
+    --exit-y: -5vh;
+}
+
+.project-break__works--count-3 .project-break__work--2 {
+    inset-inline-start: auto;
+    inset-inline-end: 11%;
+    inset-block-start: 20%;
+    inset-block-end: auto;
+    inline-size: clamp(10rem, 12vw, 13rem);
+
+    --exit-x: 28vw;
+    --exit-y: -4vh;
+}
+
+.project-break__works--count-3 .project-break__work--3 {
+    inset-inline-start: auto;
+    inset-inline-end: 15%;
+    inset-block-start: auto;
+    inset-block-end: 9%;
+    inline-size: clamp(11rem, 13vw, 14rem);
+
+    --exit-x: 30vw;
+    --exit-y: 6vh;
 }
 
 .project-break__afterword {
@@ -434,7 +607,7 @@ PROJECT BREAK
 }
 
 .project-break__chapter {
-    grid-column: 2/4;
+    grid-column: 2 / 4;
     align-self: start;
     display: grid;
     grid-template-columns: auto 1fr;
@@ -452,7 +625,7 @@ PROJECT BREAK
 }
 
 .project-break__text {
-    grid-column: 5/9;
+    grid-column: 5 / 9;
     align-self: center;
     max-inline-size: 34ch;
     margin: 0;
@@ -463,92 +636,153 @@ PROJECT BREAK
     text-wrap: pretty;
 }
 
-.project-break__work {
-    position: absolute;
-    inset-inline-end: clamp(3rem, 8vw, 8rem);
-    inset-block-end: clamp(3rem, 8vw, 6rem);
-    inline-size: clamp(8rem, 12vw, 11rem);
-    padding: 0.5rem;
-    color: var(--color-text);
-    text-decoration: none;
-    background: var(--color-background);
-    z-index: 3;
-}
-
-.project-break__work-image {
-    display: block;
-    inline-size: 100%;
-    block-size: auto;
-}
-
-.project-break__work-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block-start: 0.5rem;
-    color: var(--color-muted);
-    font-size: 0.6rem;
-    line-height: 1.2;
-    letter-spacing: 0.05em;
-}
 
 @keyframes project-break-expand {
     0% {
-        clip-path: inset(10% 12%);
+        clip-path: inset(49.99% 0);
         transform: scale(1);
     }
 
-    45% {
-        clip-path: inset(3% 4%);
-        transform: scale(1.025);
+    15% {
+        clip-path: inset(38% 0);
+        transform: scale(1.01);
     }
 
-    75% {
+    43% {
+        clip-path: inset(10% 0);
+        transform: scale(1.03);
+    }
+
+    58% {
         clip-path: inset(0);
         transform: scale(1.05);
     }
 
+    78% {
+        clip-path: inset(0);
+        transform: scale(1.07);
+    }
+
     100% {
         clip-path: inset(0);
-        transform: scale(1.07)
+        transform: scale(1.11);
     }
 }
 
-@keyframes project-break-work-reveal {
+
+@keyframes project-break-veil {
     0% {
         opacity: 0;
-        transform: translateY(2rem) scale(0.82);
-    }
-
-    45% {
-        opacity: 1;
     }
 
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
     }
 }
 
+
+@keyframes project-break-work-life {
+    0% {
+        opacity: 0;
+
+        transform:
+            translateY(2rem)
+            scale(0.88);
+    }
+
+    16% {
+        opacity: 1;
+    }
+
+    28% {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+    42% {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+    88% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(
+                var(--exit-x),
+                var(--exit-y)
+            )
+            scale(1);
+    }
+}
+
+
 @supports (animation-timeline: view()) {
-    .project-break__media img {
+    .project-break__media > img {
         animation-name: project-break-expand;
         animation-duration: auto;
         animation-timing-function: linear;
         animation-fill-mode: both;
 
         animation-timeline: --project-break;
-        animation-range: contain 0% contain 80%;
+        animation-range: contain 0% exit 35%;
     }
 
-    .project-break__work {
-        animation-name: project-break-work-reveal;
+    .project-break__media::after {
+        animation-name: project-break-veil;
         animation-duration: auto;
         animation-timing-function: linear;
         animation-fill-mode: both;
 
         animation-timeline: --project-break;
-        animation-range: contain 58% contain 82%
+        animation-range: contain 52% contain 70%;
+    }
+
+    .project-break__work {
+        animation-name: project-break-work-life;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --project-break;
+    }
+
+    .project-break__work--1 {
+        animation-range: contain 58% exit 94%;
+    }
+
+    .project-break__work--2 {
+        animation-range: contain 62% exit 96%;
+    }
+
+    .project-break__work--3 {
+        animation-range: contain 66% exit 92%;
+    }
+
+    .project-break__work--4 {
+        animation-range: contain 68% exit 97%;
+    }
+
+    .project-break__work--5 {
+        animation-range: contain 71% exit 93%;
+    }
+
+    .project-break__work--6 {
+        animation-range: contain 74% exit 98%;
+    }
+
+    .project-break__work--7 {
+        animation-range: contain 77% exit 95%;
     }
 }
 
@@ -727,6 +961,46 @@ PROJECT WORKS MOVEMENT
 }
 
 
+/* ==============================
+PROJECT ENDING
+============================== */
+
+.project-ending {
+    position: relative;
+    timeline-scope: --process-expand;
+    background: var(--color-background);
+}
+
+.project-ending__process-sticky {
+    position: sticky;
+    inset-block-start: var(--site-header-height);
+    inline-size: 100%;
+    block-size: calc(100svh - var(--site-header-height));
+    overflow: hidden;
+    background: var(--color-background);
+    z-index: 0;
+}
+
+.project-ending .project-process {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 72%;
+}
+
+.project-ending__process-expansion-track {
+    block-size: 28svh;
+    view-timeline-name: --process-expand;
+    view-timeline-axis: block;
+    pointer-events: none;
+}
+
+.project-closing-sheet {
+    position: relative;
+    background: var(--color-background);
+    z-index: 2;
+}
+
 /* ==================================
 PROJECT PROCESS
 ================================== */
@@ -815,6 +1089,28 @@ PROJECT PROCESS
 }
 
 
+@keyframes project-process-expand {
+    from {
+        block-size: 72%;
+    }
+
+    to {
+        block-size: 100%;
+    }
+}
+
+@supports (animation-timeline: view()) {
+    .project-ending .project-process {
+        animation-name: project-process-expand;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --process-expand;
+        animation-range: entry 0% entry 100%
+    }
+}
+
 /* =================================
 PROJECT QUIET BREAK
 ================================= */
@@ -824,7 +1120,7 @@ PROJECT QUIET BREAK
     isolation: isolate;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    block-size: clamp(18rem, 38svh, 26rem);
+    block-size: clamp(15rem, 30svh, 20rem);
     overflow: hidden;
     background: var(--color-background);
 }
@@ -832,7 +1128,7 @@ PROJECT QUIET BREAK
 .project-quiet-break__count {
     grid-column: 1/9;
     grid-row: 1;
-    align-self: center;
+    align-self: start;
     margin: 0 0 0 calc((var(--page-start) * -0.4));
     color: var(--color-text);
     font-family: var(--font-serif);
@@ -871,6 +1167,72 @@ PROJECT QUIET BREAK
     line-height: 1.35;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+}
+
+
+/* ==================================
+QUIET BREAK MOTION
+================================== */
+
+.project-quiet-break {
+    view-timeline-name: --quiet-break;
+    view-timeline-axis: block;
+}
+
+.project-quiet-break__count {
+    will-change: transform;
+}
+
+.project-quiet-break__rule {
+    transform-origin: left center;
+    will-change: transform;
+}
+
+
+@keyframes project-quiet-count-drift {
+    from {
+        transform: translateX(-3vw);
+    }
+
+    to {
+        transform: translateX(2vw);
+    }
+}
+
+
+@keyframes project-quiet-rule-grow {
+    from {
+        transform: scaleX(0.18);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+
+@supports (animation-timeline: view()) {
+
+    .project-quiet-break__count {
+        animation-name: project-quiet-count-drift;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --quiet-break;
+        animation-range: entry 0% contain 35%;
+    }
+
+
+    .project-quiet-break__rule {
+        animation-name: project-quiet-rule-grow;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --quiet-break;
+        animation-range: entry 15% contain 20%;
+    }
 }
 
 
