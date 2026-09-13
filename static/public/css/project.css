@@ -400,14 +400,19 @@ PROJECT BREAK
 
 .project-break__stage {
     inline-size: 100%;
-    block-size: clamp(36rem, 78svh, 54rem);
-    overflow: hidden;
-    background: #1d1916;
+    block-size: 180svh;
+    background: var(--color-background);
+
+    view-timeline-name: --project-break;
+    view-timeline-axis: block;
+    view-timeline-inset: var(--site-header-height) 0;
 }
 
 .project-break__media {
+    position: sticky;
+    inset-block-start: var(--site-header-height);
     inline-size: 100%;
-    block-size: 100%;
+    block-size: calc(100svh - var(--site-header-height));
     margin: 0;
     overflow: hidden;
 }
@@ -456,6 +461,95 @@ PROJECT BREAK
     font-size: clamp(1.05rem, 1.45vw, 1.35rem);
     line-height: 1.55;
     text-wrap: pretty;
+}
+
+.project-break__work {
+    position: absolute;
+    inset-inline-end: clamp(3rem, 8vw, 8rem);
+    inset-block-end: clamp(3rem, 8vw, 6rem);
+    inline-size: clamp(8rem, 12vw, 11rem);
+    padding: 0.5rem;
+    color: var(--color-text);
+    text-decoration: none;
+    background: var(--color-background);
+    z-index: 3;
+}
+
+.project-break__work-image {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+}
+
+.project-break__work-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block-start: 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.6rem;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+}
+
+@keyframes project-break-expand {
+    0% {
+        clip-path: inset(10% 12%);
+        transform: scale(1);
+    }
+
+    45% {
+        clip-path: inset(3% 4%);
+        transform: scale(1.025);
+    }
+
+    75% {
+        clip-path: inset(0);
+        transform: scale(1.05);
+    }
+
+    100% {
+        clip-path: inset(0);
+        transform: scale(1.07)
+    }
+}
+
+@keyframes project-break-work-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(2rem) scale(0.82);
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@supports (animation-timeline: view()) {
+    .project-break__media img {
+        animation-name: project-break-expand;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --project-break;
+        animation-range: contain 0% contain 80%;
+    }
+
+    .project-break__work {
+        animation-name: project-break-work-reveal;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+
+        animation-timeline: --project-break;
+        animation-range: contain 58% contain 82%
+    }
 }
 
 

@@ -1,4 +1,7 @@
-from services.public_work_service import get_public_work_page_data, get_public_works_page_data
+from services.public_work_service import (
+    get_public_work_page_data,
+    get_public_works_page_data,
+)
 
 
 def create_test_work(
@@ -317,15 +320,17 @@ def test_get_public_work_page_data_keeps_available_stock_when_ordering_disabled(
 
 def test_get_public_works_page_data_adds_cover_images(empty_db, db_connection):
     conn = db_connection()
-    
+
     create_test_work(conn, work_id="work-1", slug="bashnya", name="Башня")
-    create_test_work_image(conn, work_id="work-1", image_path="img/bashnya.jpg", position=1)
-    
+    create_test_work_image(
+        conn, work_id="work-1", image_path="img/bashnya.jpg", position=1
+    )
+
     conn.commit()
     conn.close()
-    
+
     page_data = get_public_works_page_data()
-    
+
     assert len(page_data["works"]) == 1
     assert page_data["works"][0]["name"] == "Башня"
     assert page_data["works"][0]["cover_image_path"] == "img/bashnya.jpg"

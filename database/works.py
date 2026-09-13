@@ -3,11 +3,11 @@ def get_published_works(conn, limit=None, sort="name_asc"):
         "name_asc": "name ASC",
         "name_desc": "name DESC",
         "year_asc": "year IS NULL, year ASC, name ASC",
-        "year_desc": "year IS NULL, year DESC, name ASC"
+        "year_desc": "year IS NULL, year DESC, name ASC",
     }
-    
+
     order_clause = order_by.get(sort, order_by["name_asc"])
-    
+
     query = f"""
         SELECT
             id, slug, name, description, year, dimensions, project_id
@@ -15,9 +15,9 @@ def get_published_works(conn, limit=None, sort="name_asc"):
         WHERE is_published = 1
         ORDER BY {order_clause}
         """
-        
+
     params = ()
-    
+
     if limit is not None:
         query += "\nLIMIT ?"
         params = (limit,)

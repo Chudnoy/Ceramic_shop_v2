@@ -446,20 +446,20 @@ def test_get_work_materials_returns_correct_and_ordered_materials(
 
 def test_get_published_works_supports_sorting(empty_db, db_connection):
     conn = db_connection()
-    
+
     create_test_work(conn, work_id="work-1", name="Башня", slug="bashnya", year=2024)
     create_test_work(conn, work_id="work-2", name="Арка", slug="arka", year=2026)
     create_test_work(conn, work_id="work-3", name="Чаша", slug="chasha", year=2025)
-    
+
     conn.commit()
-    
+
     name_asc = works.get_published_works(conn, sort="name_asc")
     name_desc = works.get_published_works(conn, sort="name_desc")
     year_asc = works.get_published_works(conn, sort="year_asc")
     year_desc = works.get_published_works(conn, sort="year_desc")
-    
+
     conn.close()
-    
+
     assert [work["name"] for work in name_asc] == ["Арка", "Башня", "Чаша"]
     assert [work["name"] for work in name_desc] == ["Чаша", "Башня", "Арка"]
     assert [work["year"] for work in year_asc] == [2024, 2025, 2026]

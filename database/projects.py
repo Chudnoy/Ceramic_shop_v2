@@ -1,11 +1,8 @@
 def get_published_projects(conn, sort="name_asc"):
-    order_by = {
-        "name_asc": "name ASC",
-        "name_desc": "name DESC"
-    }
-    
+    order_by = {"name_asc": "name ASC", "name_desc": "name DESC"}
+
     order_clause = order_by.get(sort, order_by["name_asc"])
-    
+
     return conn.execute(
         f"""
         SELECT
