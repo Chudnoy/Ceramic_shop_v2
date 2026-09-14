@@ -400,25 +400,20 @@ PROJECT BREAK
 
 .project-break__stage {
     inline-size: 100%;
-    block-size: 180svh;
-    background: var(--color-background);
-
-    view-timeline-name: --project-break;
-    view-timeline-axis: block;
-    view-timeline-inset: var(--site-header-height) 0;
+    block-size: clamp(36rem, 78svh, 54rem);
+    overflow: hidden;
+    background: #1d1916;
 }
 
 .project-break__media {
-    position: sticky;
-    inset-block-start: var(--site-header-height);
     inline-size: 100%;
-    block-size: calc(100svh - var(--site-header-height));
+    block-size: 100%;
     margin: 0;
     overflow: hidden;
     background: var(--color-background);
 }
 
-.project-break__media > img {
+.project-break__media img {
     position: relative;
     display: block;
     inline-size: 100%;
@@ -432,15 +427,18 @@ PROJECT BREAK
     content: "";
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(
-            to bottom,
-            rgba(241, 236, 228, 0.04),
-            rgba(241, 236, 228, 0.18)
-        );
+    background: linear-gradient(
+        to bottom,
+        rgba(241, 236, 228, 0.04),
+        rgba(241, 236, 228, 0.18)
+    );
     opacity: 0;
     pointer-events: none;
     z-index: 1;
+}
+
+.project-break__works {
+    display: none;
 }
 
 .project-break__works {
@@ -727,62 +725,90 @@ PROJECT BREAK
 }
 
 
-@supports (animation-timeline: view()) {
-    .project-break__media > img {
-        animation-name: project-break-expand;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+@media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .project-break__stage {
+            block-size: 180svh;
+            overflow: visible;
+            background: var(--color-background);
 
-        animation-timeline: --project-break;
-        animation-range: contain 0% exit 35%;
-    }
+            view-timeline-name: --project-break;
+            view-timeline-axis: block;
+            view-timeline-inset: var(--site-header-height) 0;
+        }
 
-    .project-break__media::after {
-        animation-name: project-break-veil;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+        .project-break__media {
+            position: sticky;
+            inset-block-start: var(--site-header-height);
+            inline-size: 100%;
+            block-size: calc(100svh - var(--site-header-height));
+            overflow: hidden;
+        }
 
-        animation-timeline: --project-break;
-        animation-range: contain 52% contain 70%;
-    }
+        .project-break__works {
+            position: absolute;
+            inset: 0;
+            display: block;
+            pointer-events: none;
+            z-index: 2;
+        }
 
-    .project-break__work {
-        animation-name: project-break-work-life;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+        .project-break__media > img {
+            animation-name: project-break-expand;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
 
-        animation-timeline: --project-break;
-    }
+            animation-timeline: --project-break;
+            animation-range: contain 0% exit 35%;
+        }
 
-    .project-break__work--1 {
-        animation-range: contain 58% exit 94%;
-    }
+        .project-break__media::after {
+            animation-name: project-break-veil;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
 
-    .project-break__work--2 {
-        animation-range: contain 62% exit 96%;
-    }
+            animation-timeline: --project-break;
+            animation-range: contain 52% contain 70%;
+        }
 
-    .project-break__work--3 {
-        animation-range: contain 66% exit 92%;
-    }
+        .project-break__work {
+            animation-name: project-break-work-life;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
 
-    .project-break__work--4 {
-        animation-range: contain 68% exit 97%;
-    }
+            animation-timeline: --project-break;
+        }
 
-    .project-break__work--5 {
-        animation-range: contain 71% exit 93%;
-    }
+        .project-break__work--1 {
+            animation-range: contain 58% exit 94%;
+        }
 
-    .project-break__work--6 {
-        animation-range: contain 74% exit 98%;
-    }
+        .project-break__work--2 {
+            animation-range: contain 62% exit 96%;
+        }
 
-    .project-break__work--7 {
-        animation-range: contain 77% exit 95%;
+        .project-break__work--3 {
+            animation-range: contain 66% exit 92%;
+        }
+
+        .project-break__work--4 {
+            animation-range: contain 68% exit 97%;
+        }
+
+        .project-break__work--5 {
+            animation-range: contain 71% exit 93%;
+        }
+
+        .project-break__work--6 {
+            animation-range: contain 74% exit 98%;
+        }
+
+        .project-break__work--7 {
+            animation-range: contain 77% exit 95%;
+        }
     }
 }
 
@@ -967,32 +993,16 @@ PROJECT ENDING
 
 .project-ending {
     position: relative;
-    timeline-scope: --process-expand;
     background: var(--color-background);
 }
 
 .project-ending__process-sticky {
-    position: sticky;
-    inset-block-start: var(--site-header-height);
     inline-size: 100%;
-    block-size: calc(100svh - var(--site-header-height));
-    overflow: hidden;
-    background: var(--color-background);
-    z-index: 0;
-}
-
-.project-ending .project-process {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    block-size: 72%;
 }
 
 .project-ending__process-expansion-track {
-    block-size: 28svh;
-    view-timeline-name: --process-expand;
-    view-timeline-axis: block;
-    pointer-events: none;
+    display: none;
+    pointer-events: none
 }
 
 .project-closing-sheet {
@@ -1099,15 +1109,44 @@ PROJECT PROCESS
     }
 }
 
-@supports (animation-timeline: view()) {
-    .project-ending .project-process {
-        animation-name: project-process-expand;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+@media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .project-ending {
+            timeline-scope: --process-expand;
+        }
 
-        animation-timeline: --process-expand;
-        animation-range: entry 0% entry 100%
+        .project-ending__process-sticky {
+            position: sticky;
+            inset-block-start: var(--site-header-height);
+            inline-size: 100%;
+            block-size: calc(100svh - var(--site-header-height));
+            overflow: hidden;
+            background: var(--color-background);
+            z-index: 0;
+        }
+
+        .project-ending .project-process {
+            position: absolute;
+            inset-inline: 0;
+            inset-block-start: 0;
+            block-size: 72%;
+
+            animation-name: project-process-expand;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+
+            animation-timeline: --process-expand;
+            animation-range: entry 0% entry 100%;
+        }
+
+        .project-ending__process-expansion-track {
+            display: block;
+            block-size: 28svh;
+
+            view-timeline-name: --process-expand;
+            view-timeline-axis: block;
+        }
     }
 }
 
@@ -1120,7 +1159,7 @@ PROJECT QUIET BREAK
     isolation: isolate;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    block-size: clamp(15rem, 30svh, 20rem);
+    block-size: clamp(18rem, 38svh, 26rem);
     overflow: hidden;
     background: var(--color-background);
 }
@@ -1128,7 +1167,7 @@ PROJECT QUIET BREAK
 .project-quiet-break__count {
     grid-column: 1/9;
     grid-row: 1;
-    align-self: start;
+    align-self: center;
     margin: 0 0 0 calc((var(--page-start) * -0.4));
     color: var(--color-text);
     font-family: var(--font-serif);
@@ -1170,25 +1209,6 @@ PROJECT QUIET BREAK
 }
 
 
-/* ==================================
-QUIET BREAK MOTION
-================================== */
-
-.project-quiet-break {
-    view-timeline-name: --quiet-break;
-    view-timeline-axis: block;
-}
-
-.project-quiet-break__count {
-    will-change: transform;
-}
-
-.project-quiet-break__rule {
-    transform-origin: left center;
-    will-change: transform;
-}
-
-
 @keyframes project-quiet-count-drift {
     from {
         transform: translateX(-3vw);
@@ -1211,27 +1231,41 @@ QUIET BREAK MOTION
 }
 
 
-@supports (animation-timeline: view()) {
+@media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .project-quiet-break {
+            block-size: clamp(15rem, 30svh, 20rem);
 
-    .project-quiet-break__count {
-        animation-name: project-quiet-count-drift;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+            view-timeline-name: --quiet-break;
+            view-timeline-axis: block;
+        }
 
-        animation-timeline: --quiet-break;
-        animation-range: entry 0% contain 35%;
-    }
+        .project-quiet-break__count {
+            align-self: start;
+            will-change: transform;
+
+            animation-name: project-quiet-count-drift;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+
+            animation-timeline: --quiet-break;
+            animation-range: entry 0% contain 35%;
+        }
 
 
-    .project-quiet-break__rule {
-        animation-name: project-quiet-rule-grow;
-        animation-duration: auto;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
+        .project-quiet-break__rule {
+            transform-origin: left center;
+            will-change: transform;
+            
+            animation-name: project-quiet-rule-grow;
+            animation-duration: auto;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
 
-        animation-timeline: --quiet-break;
-        animation-range: entry 15% contain 20%;
+            animation-timeline: --quiet-break;
+            animation-range: entry 15% contain 20%;
+        }
     }
 }
 
