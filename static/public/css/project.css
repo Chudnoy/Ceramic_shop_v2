@@ -439,9 +439,6 @@ PROJECT BREAK
 
 .project-break__works {
     display: none;
-}
-
-.project-break__works {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -682,30 +679,23 @@ PROJECT BREAK
 @keyframes project-break-work-life {
     0% {
         opacity: 0;
-
-        transform:
-            translateY(2rem)
-            scale(0.88);
+        visibility: hidden;
+        transform: translateY(2rem) scale(0.88);
     }
 
     16% {
         opacity: 1;
+        visibility: visible;
     }
 
     28% {
         opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
+        transform: translateY(0) scale(1);
     }
 
     42% {
         opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
+        transform: translateY(0) scale(1);
     }
 
     88% {
@@ -714,7 +704,7 @@ PROJECT BREAK
 
     100% {
         opacity: 0;
-
+        visibility: hidden;
         transform:
             translate(
                 var(--exit-x),
@@ -920,7 +910,6 @@ PROJECT WORKS MOVEMENT
 .project-works-movement--works-3 .project-works-movement__work--3 {
     grid-column: 2 / 6;
     grid-row: 6 / 9;
-
     z-index: 2;
 }
 
@@ -1002,7 +991,7 @@ PROJECT ENDING
 
 .project-ending__process-expansion-track {
     display: none;
-    pointer-events: none
+    pointer-events: none;
 }
 
 .project-closing-sheet {
@@ -1099,57 +1088,6 @@ PROJECT PROCESS
 }
 
 
-@keyframes project-process-expand {
-    from {
-        block-size: 72%;
-    }
-
-    to {
-        block-size: 100%;
-    }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-        .project-ending {
-            timeline-scope: --process-expand;
-        }
-
-        .project-ending__process-sticky {
-            position: sticky;
-            inset-block-start: var(--site-header-height);
-            inline-size: 100%;
-            block-size: calc(100svh - var(--site-header-height));
-            overflow: hidden;
-            background: var(--color-background);
-            z-index: 0;
-        }
-
-        .project-ending .project-process {
-            position: absolute;
-            inset-inline: 0;
-            inset-block-start: 0;
-            block-size: 72%;
-
-            animation-name: project-process-expand;
-            animation-duration: auto;
-            animation-timing-function: linear;
-            animation-fill-mode: both;
-
-            animation-timeline: --process-expand;
-            animation-range: entry 0% entry 100%;
-        }
-
-        .project-ending__process-expansion-track {
-            display: block;
-            block-size: 28svh;
-
-            view-timeline-name: --process-expand;
-            view-timeline-axis: block;
-        }
-    }
-}
-
 /* =================================
 PROJECT QUIET BREAK
 ================================= */
@@ -1242,7 +1180,6 @@ PROJECT QUIET BREAK
 
         .project-quiet-break__count {
             align-self: start;
-            will-change: transform;
 
             animation-name: project-quiet-count-drift;
             animation-duration: auto;
@@ -1256,7 +1193,6 @@ PROJECT QUIET BREAK
 
         .project-quiet-break__rule {
             transform-origin: left center;
-            will-change: transform;
             
             animation-name: project-quiet-rule-grow;
             animation-duration: auto;
@@ -1376,4 +1312,417 @@ PROJECT INDEX
 .project-index__item:hover .project-index__arrow {
     opacity: 1;
     transform: translateX(0);
+}
+
+/* Append after the desktop styles in project.css. */
+@media (max-width: 900px) {
+    .project-threshold {
+        block-size: clamp(32rem, 76vw, 42rem);
+        min-block-size: 0;
+    }
+
+    .project-threshold__title {
+        max-inline-size: 70vw;
+        font-size: clamp(5rem, 14vw, 8rem);
+        overflow-wrap: anywhere;
+    }
+
+    .project-threshold__chapter {
+        grid-column: 1 / 5;
+        gap: 1rem;
+    }
+
+    .project-threshold__aside {
+        grid-column: 10 / 13;
+    }
+
+    .project-premise {
+        block-size: auto;
+        min-block-size: 0;
+        grid-template-rows: auto;
+        column-gap: 1rem;
+    }
+
+    .project-premise__copy {
+        grid-column: 1 / 5;
+        gap: 2rem;
+    }
+
+    .project-premise__media {
+        grid-column: 5 / 13;
+        align-self: center;
+        aspect-ratio: 4 / 3;
+    }
+
+    .project-premise__caption {
+        grid-column: 10 / 13;
+        min-block-size: 0;
+        padding: 0.75rem;
+    }
+
+    .project-premise__aside {
+        display: none;
+    }
+
+    .project-premise--without-image .project-premise__copy {
+        grid-column: 2 / 12;
+    }
+
+    .project-premise--without-image .project-premise__text {
+        max-inline-size: 55ch;
+    }
+
+    .project-first-movement {
+        block-size: auto;
+        grid-template-rows: auto 1fr;
+        gap: 1.5rem;
+    }
+
+    .project-first-movement__chapter {
+        grid-column: 8 / 13;
+        gap: 1rem;
+    }
+
+    .project-first-movement__copy {
+        margin-inline-start: 0;
+        padding-block-end: 0;
+    }
+
+    .project-first-movement__work {
+        block-size: clamp(24rem, 52vw, 30rem);
+        min-block-size: 0;
+    }
+
+    .project-first-movement__work-meta {
+        grid-column: 1 / 6;
+    }
+
+    .project-break__stage {
+        --tablet-break-size: min(70vw, calc(100svh - var(--site-header-height)));
+        block-size: var(--tablet-break-size);
+    }
+
+    .project-break__afterword {
+        min-block-size: 0;
+        padding-block: 3rem;
+        column-gap: 1rem;
+    }
+
+    .project-break__chapter {
+        grid-column: 1 / 5;
+        gap: 1rem;
+    }
+
+    .project-break__text {
+        grid-column: 5 / 12;
+    }
+
+    .project-works-movement {
+        block-size: auto;
+        grid-template-rows: auto auto;
+        gap: 1.5rem 1rem;
+    }
+
+    .project-works-movement__chapter {
+        grid-column: 1 / 5;
+        gap: 1rem;
+    }
+
+    .project-works-movement__text {
+        grid-column: 5 / 13;
+        grid-row: 1;
+        max-inline-size: 40ch;
+    }
+
+    .project-works-movement__works {
+        grid-column: 1 / 13;
+        grid-row: 2;
+        block-size: clamp(26rem, 65vw, 35rem);
+    }
+
+    .project-works-movement--works-0 {
+        grid-template-rows: auto;
+    }
+
+    .project-process__chapter {
+        grid-column: 1 / 13;
+        gap: 1rem;
+    }
+
+    .project-process__media {
+        grid-column: 1 / 8;
+        align-self: center;
+        aspect-ratio: 4 / 3;
+        margin: 0;
+    }
+
+    .project-process__copy {
+        grid-column: 8 / 13;
+        margin: 0;
+        padding: 0;
+    }
+
+    .project-process--without-image .project-process__copy {
+        grid-column: 2 / 12;
+        justify-self: start;
+        margin: 0;
+    }
+
+    .project-process--without-image .project-process__copy p {
+        max-inline-size: 55ch;
+    }
+
+    .project-process--without-text .project-process__media {
+        grid-column: 1 / 13;
+        aspect-ratio: 16 / 9;
+    }
+
+    .project-closing-sheet {
+        min-block-size: 0;
+    }
+
+    .project-quiet-break {
+        block-size: clamp(11rem, 24vw, 14rem);
+    }
+
+    .project-quiet-break__count {
+        align-self: center;
+        font-size: clamp(9rem, 21vw, 12rem);
+    }
+
+    .project-quiet-break__meta {
+        grid-column: 8 / 13;
+        gap: 1rem;
+        padding-inline-end: var(--page-end);
+    }
+
+    .project-quiet-break__rule {
+        flex-shrink: 0;
+    }
+
+    .project-index {
+        padding-block: 2rem 3rem;
+    }
+
+    .project-index__chapter {
+        gap: 1rem;
+        margin-block-end: 1.5rem;
+    }
+
+    .project-index__item {
+        grid-template-columns: 1.5rem 3.75rem minmax(0, 1fr) auto 1rem;
+        column-gap: 1rem;
+    }
+
+    .project-index__name {
+        overflow-wrap: anywhere;
+    }
+
+    .project-index__year {
+        grid-column: 4;
+    }
+
+    .project-index__arrow {
+        grid-column: 5;
+        opacity: 1;
+        transform: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        @supports (animation-timeline: view()) {
+            .project-break__stage {
+                block-size: calc(var(--tablet-break-size) + clamp(20rem, 60vw, 32rem));
+                view-timeline-inset: var(--site-header-height)
+                    calc(100% - var(--site-header-height) - var(--tablet-break-size));
+            }
+
+            .project-break__media {
+                block-size: var(--tablet-break-size);
+            }
+
+            .project-break__media > img {
+                animation-range: contain 0% contain 100%;
+            }
+
+            .project-break__work {
+                animation-range: contain 15% contain 100%;
+            }
+        }
+    }
+}
+
+/* ==================================
+CONTENT SAFETY / INPUT
+================================== */
+.project-page {
+    display: flow-root;
+    overflow: clip;
+}
+.project-page a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+.project-premise__text,
+.project-first-movement__copy,
+.project-works-movement__text,
+.project-process__copy { 
+    overflow-wrap: anywhere;
+}
+.project-process__copy { 
+    min-inline-size: 0;
+}
+.project-quiet-break__count {
+    align-self: center;
+}
+.project-quiet-break__count {
+    line-height: 1;
+
+}
+@media (min-width: 901px) {
+    .project-quiet-break {
+        block-size: clamp(15rem, 25vw, 20rem);
+    }
+    .project-quiet-break__count {
+        font-size: clamp(9rem, 19vw, 17rem);
+    }
+}
+
+@media (max-width: 900px) {
+    .project-ending .project-process {
+        gap: 1.5rem; padding-block: 2rem;
+    }
+}
+
+.project-break__work img {
+    max-block-size: 22svh;
+    object-fit: contain;
+}
+
+@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .project-break__stage {
+            --break-frame: min(64vw, calc(100svh - var(--site-header-height)));
+            block-size: calc(var(--break-frame) + clamp(24rem, 55vw, 48rem));
+            view-timeline-inset: var(--site-header-height)
+                calc(100% - var(--site-header-height) - var(--break-frame));
+        }
+        .project-break__media {
+            block-size: var(--break-frame);
+        }
+        .project-break__media > img {
+            animation-range: contain 0% contain 100%;
+        }
+        .project-break__work {
+            animation-range: contain 15% contain 100%;
+        }
+    }
+}
+
+/* ==================================
+ENDING: EXPAND → HOLD → COVER
+
+project-motion.js measures content and the actual header only on resize.
+Without JS the full static composition remains available.
+================================== */
+.project-ending {
+    --process-content-min: 0px;
+    --process-frame: min(clamp(22rem, 64vw, 54rem), calc(100svh - var(--site-header-height)));
+    --process-end: max(var(--process-frame), var(--process-content-min));
+    --process-start: max(calc(var(--process-frame) * 0.78), var(--process-content-min));
+    --process-top: min(var(--site-header-height), calc(100svh - var(--process-end)));
+    --process-travel: clamp(10rem, 22vw, 20rem);
+    isolation: isolate;
+}
+.project-ending .project-process {
+    position: relative;
+    block-size: auto;
+    min-block-size: var(--process-start);
+}
+.project-process__media {
+    position: relative;
+    min-block-size: 12rem;
+}
+.project-process__media img {
+    position: absolute;
+    inset: 0;
+}
+.project-ending__process-expansion-track {
+    display: none;
+}
+.project-closing-sheet {
+    min-block-size: 0;
+}
+.project-page + .site-footer {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes project-process-expand {
+    from {
+        min-block-size: var(--process-start);
+    }
+    to {
+        min-block-size: var(--process-end);
+    }
+}
+
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .project-ending[data-motion-ready]:has(.project-closing-sheet):not(.project-ending--without-process) {
+            timeline-scope: --process-expand;
+            /* Extend sticky containment underneath subsequent content, not the visible sheet. */
+            padding-block-end: var(--process-end);
+            margin-block-end: calc(-1 * var(--process-end));
+        }
+        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-sticky {
+            position: sticky;
+            inset-block-start: var(--process-top);
+            display: grid;
+            z-index: 0;
+        }
+        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-sticky::before {
+            content: "";
+            grid-area: 1 / 1;
+            min-block-size: var(--process-end);
+            pointer-events: none;
+        }
+        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-process {
+            grid-area: 1 / 1;
+            align-self: start;
+            animation: project-process-expand auto linear both;
+            animation-timeline: --process-expand;
+            animation-range: entry 0% entry 100%;
+        }
+        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-expansion-track {
+            display: block;
+            block-size: var(--process-travel);
+            view-timeline: --process-expand block;
+            view-timeline-inset: var(--process-top)
+                calc(100% - var(--process-top) - var(--process-end));
+        }
+        .project-break__work {
+            visibility: visible;
+        }
+        .project-break__media:focus-within .project-break__work {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .project-first-movement__media img,
+    .project-works-movement__media img,
+    .project-index__name,
+    .project-index__arrow {
+        transition: none;
+        transform: none;
+    }
+    .project-first-movement__work:hover .project-first-movement__media img,
+    .project-works-movement__work:hover .project-works-movement__media img,
+    .project-index__item:hover .project-index__name,
+    .project-index__item:hover .project-index__arrow {
+        transform: none;
+    }
 }
