@@ -3,7 +3,14 @@ PROJECT PAGE
 ================================== */
 
 .project-page {
+    display: flow-root;
+    overflow: clip;
     background: var(--color-background);
+}
+
+.project-page a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
 }
 
 
@@ -147,7 +154,11 @@ PROJECT PREMISE
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-rows: 1fr;
     block-size: clamp(29rem, 32vw, 34rem);
-    padding: clamp(1.5rem, 2.5vw, 2.5rem) var(--page-end) clamp(1.5rem, 2.5vw, 2.5rem) var(--page-start);
+    padding:
+        clamp(1.5rem, 2.5vw, 2.5rem)
+        var(--page-end)
+        clamp(1.5rem, 2.5vw, 2.5rem)
+        var(--page-start);
     background: var(--color-background);
 }
 
@@ -189,6 +200,7 @@ PROJECT PREMISE
     font-family: var(--font-serif);
     font-size: clamp(0.95rem, 1.15vw, 1.1rem);
     line-height: 1.55;
+    overflow-wrap: anywhere;
     text-wrap: pretty;
 }
 
@@ -285,7 +297,7 @@ PROJECT FIRST MOVEMENT
 }
 
 .project-first-movement__chapter {
-    grid-column: 9/13;
+    grid-column: 9 / 13;
     grid-row: 1;
     align-self: start;
     display: grid;
@@ -305,12 +317,14 @@ PROJECT FIRST MOVEMENT
 }
 
 .project-first-movement__copy {
-    grid-column: 8/13;
+    grid-column: 8 / 13;
     grid-row: 2;
     align-self: end;
     justify-self: start;
+    min-inline-size: 0;
     margin-inline-start: 3rem;
     padding-block-end: clamp(0.5rem, 2vw, 1.5rem);
+    overflow-wrap: anywhere;
     z-index: 3;
 }
 
@@ -325,7 +339,7 @@ PROJECT FIRST MOVEMENT
 }
 
 .project-first-movement__work {
-    grid-column: 1/8;
+    grid-column: 1 / 8;
     grid-row: 1 / 3;
     position: relative;
     display: grid;
@@ -413,7 +427,7 @@ PROJECT BREAK
     background: var(--color-background);
 }
 
-.project-break__media img {
+.project-break__media > img {
     position: relative;
     display: block;
     inline-size: 100%;
@@ -427,20 +441,21 @@ PROJECT BREAK
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        to bottom,
-        rgba(241, 236, 228, 0.04),
-        rgba(241, 236, 228, 0.18)
-    );
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(241, 236, 228, 0.04),
+            rgba(241, 236, 228, 0.18)
+        );
     opacity: 0;
     pointer-events: none;
     z-index: 1;
 }
 
 .project-break__works {
-    display: none;
     position: absolute;
     inset: 0;
+    display: none;
     pointer-events: none;
     z-index: 2;
 }
@@ -526,7 +541,6 @@ PROJECT BREAK
     --exit-y: -24vh;
 }
 
-
 .project-break__works--count-1 .project-break__work--1 {
     inset-inline-start: auto;
     inset-inline-end: 10%;
@@ -597,7 +611,11 @@ PROJECT BREAK
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     min-block-size: clamp(20rem, 38svh, 28rem);
-    padding: clamp(2rem, 5vw, 5rem) var(--page-end) clamp(3rem, 6vw, 6rem) var(--page-start);
+    padding:
+        clamp(2rem, 5vw, 5rem)
+        var(--page-end)
+        clamp(3rem, 6vw, 6rem)
+        var(--page-start);
     background: var(--color-background);
 }
 
@@ -628,9 +646,14 @@ PROJECT BREAK
     font-family: var(--font-serif);
     font-size: clamp(1.05rem, 1.45vw, 1.35rem);
     line-height: 1.55;
+    overflow-wrap: anywhere;
     text-wrap: pretty;
 }
 
+
+/* ==================================
+PROJECT BREAK MOTION
+================================== */
 
 @keyframes project-break-expand {
     0% {
@@ -664,7 +687,6 @@ PROJECT BREAK
     }
 }
 
-
 @keyframes project-break-veil {
     0% {
         opacity: 0;
@@ -675,27 +697,33 @@ PROJECT BREAK
     }
 }
 
-
 @keyframes project-break-work-life {
     0% {
         opacity: 0;
-        visibility: hidden;
-        transform: translateY(2rem) scale(0.88);
+
+        transform:
+            translateY(2rem)
+            scale(0.88);
     }
 
     16% {
         opacity: 1;
-        visibility: visible;
     }
 
     28% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+
+        transform:
+            translateY(0)
+            scale(1);
     }
 
     42% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+
+        transform:
+            translateY(0)
+            scale(1);
     }
 
     88% {
@@ -704,7 +732,7 @@ PROJECT BREAK
 
     100% {
         opacity: 0;
-        visibility: hidden;
+
         transform:
             translate(
                 var(--exit-x),
@@ -713,7 +741,6 @@ PROJECT BREAK
             scale(1);
     }
 }
-
 
 @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
@@ -736,11 +763,7 @@ PROJECT BREAK
         }
 
         .project-break__works {
-            position: absolute;
-            inset: 0;
             display: block;
-            pointer-events: none;
-            z-index: 2;
         }
 
         .project-break__media > img {
@@ -803,9 +826,9 @@ PROJECT BREAK
 }
 
 
-/* =================================
+/* ==================================
 PROJECT WORKS MOVEMENT
-================================= */
+================================== */
 
 .project-works-movement {
     isolation: isolate;
@@ -813,12 +836,16 @@ PROJECT WORKS MOVEMENT
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-rows: auto 1fr;
     block-size: clamp(34rem, 68svh, 46rem);
-    padding: clamp(2.5rem, 4vw, 4rem) var(--page-end) clamp(2.5rem, 4vw, 4rem) var(--page-start);
+    padding:
+        clamp(2.5rem, 4vw, 4rem)
+        var(--page-end)
+        clamp(2.5rem, 4vw, 4rem)
+        var(--page-start);
     background: var(--color-background);
 }
 
 .project-works-movement__chapter {
-    grid-column: 1/4;
+    grid-column: 1 / 4;
     grid-row: 1;
     display: grid;
     grid-template-columns: auto 1fr;
@@ -838,7 +865,7 @@ PROJECT WORKS MOVEMENT
 }
 
 .project-works-movement__text {
-    grid-column: 2/5;
+    grid-column: 2 / 5;
     grid-row: 2;
     align-self: center;
     max-inline-size: 32ch;
@@ -847,13 +874,14 @@ PROJECT WORKS MOVEMENT
     font-family: var(--font-serif);
     font-size: clamp(1rem, 1.3vw, 1.25rem);
     line-height: 1.5;
+    overflow-wrap: anywhere;
     text-wrap: pretty;
     z-index: 2;
 }
 
 .project-works-movement__works {
-    grid-column: 5/13;
-    grid-row: 1/3;
+    grid-column: 5 / 13;
+    grid-row: 1 / 3;
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     grid-template-rows: repeat(8, minmax(0, 1fr));
@@ -873,6 +901,7 @@ PROJECT WORKS MOVEMENT
     text-decoration: none;
     background: var(--color-background);
 }
+
 
 /* ONE WORK */
 
@@ -921,7 +950,6 @@ PROJECT WORKS MOVEMENT
     margin: 0;
     overflow: hidden;
 }
-
 
 .project-works-movement__media img {
     display: block;
@@ -976,9 +1004,9 @@ PROJECT WORKS MOVEMENT
 }
 
 
-/* ==============================
+/* ==================================
 PROJECT ENDING
-============================== */
+================================== */
 
 .project-ending {
     position: relative;
@@ -1000,6 +1028,7 @@ PROJECT ENDING
     z-index: 2;
 }
 
+
 /* ==================================
 PROJECT PROCESS
 ================================== */
@@ -1008,14 +1037,18 @@ PROJECT PROCESS
     isolation: isolate;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto 1fr;
-    block-size: clamp(36rem, 72svh, 50rem);
-    padding: clamp(2rem, 3vw, 3rem) var(--page-end) clamp(2.5rem, 4vw, 4rem) var(--page-start);
+    grid-template-rows: auto auto;
+    block-size: auto;
+    padding:
+        clamp(2rem, 3vw, 3rem)
+        var(--page-end)
+        clamp(2.5rem, 4vw, 4rem)
+        var(--page-start);
     background: #211c18;
 }
 
 .project-process__chapter {
-    grid-column: 1/4;
+    grid-column: 1 / 4;
     grid-row: 1;
     display: grid;
     grid-template-columns: auto 1fr;
@@ -1035,17 +1068,21 @@ PROJECT PROCESS
 }
 
 .project-process__media {
-    grid-column: 1/9;
+    position: relative;
+    grid-column: 1 / 9;
     grid-row: 2;
-    align-self: stretch;
+    align-self: center;
     min-inline-size: 0;
     min-block-size: 0;
+    aspect-ratio: 3 / 2;
     margin: clamp(1.5rem, 3vw, 2.5rem) 0 0;
     overflow: hidden;
     z-index: 1;
 }
 
 .project-process__media img {
+    position: absolute;
+    inset: 0;
     display: block;
     inline-size: 100%;
     block-size: 100%;
@@ -1054,11 +1091,15 @@ PROJECT PROCESS
 }
 
 .project-process__copy {
-    grid-column: 8/13;
+    grid-column: 8 / 13;
     grid-row: 2;
     align-self: center;
+    min-inline-size: 0;
     margin-block-start: clamp(2rem, 4vw, 3.5rem);
-    padding: clamp(2rem, 4vw, 3.5rem) clamp(2rem, 3vw, 3rem);
+    padding:
+        clamp(2rem, 4vw, 3.5rem)
+        clamp(2rem, 3vw, 3rem);
+    overflow-wrap: anywhere;
     background: #211c18;
     z-index: 2;
 }
@@ -1078,19 +1119,20 @@ PROJECT PROCESS
 }
 
 .project-process--without-image .project-process__copy {
-    grid-column: 4/10;
+    grid-column: 4 / 10;
     justify-self: center;
     margin-block-start: clamp(4rem, 8vw, 7rem);
 }
 
 .project-process--without-text .project-process__media {
-    grid-column: 2/12;
+    grid-column: 2 / 12;
+    aspect-ratio: 2 / 1;
 }
 
 
-/* =================================
+/* ==================================
 PROJECT QUIET BREAK
-================================= */
+================================== */
 
 .project-quiet-break {
     position: relative;
@@ -1103,15 +1145,15 @@ PROJECT QUIET BREAK
 }
 
 .project-quiet-break__count {
-    grid-column: 1/9;
+    grid-column: 1 / 9;
     grid-row: 1;
     align-self: center;
-    margin: 0 0 0 calc((var(--page-start) * -0.4));
+    margin: 0 0 0 calc(var(--page-start) * -0.4);
     color: var(--color-text);
     font-family: var(--font-serif);
     font-size: clamp(9rem, 21vw, 19rem);
     font-weight: 400;
-    line-height: 0.72;
+    line-height: 1;
     letter-spacing: -0.07em;
     opacity: 0.09;
     user-select: none;
@@ -1119,7 +1161,7 @@ PROJECT QUIET BREAK
 }
 
 .project-quiet-break__meta {
-    grid-column: 9/12;
+    grid-column: 9 / 12;
     grid-row: 1;
     align-self: center;
     justify-self: start;
@@ -1147,6 +1189,10 @@ PROJECT QUIET BREAK
 }
 
 
+/* ==================================
+PROJECT QUIET BREAK MOTION
+================================== */
+
 @keyframes project-quiet-count-drift {
     from {
         transform: translateX(-3vw);
@@ -1156,7 +1202,6 @@ PROJECT QUIET BREAK
         transform: translateX(2vw);
     }
 }
-
 
 @keyframes project-quiet-rule-grow {
     from {
@@ -1168,12 +1213,9 @@ PROJECT QUIET BREAK
     }
 }
 
-
 @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
         .project-quiet-break {
-            block-size: clamp(15rem, 30svh, 20rem);
-
             view-timeline-name: --quiet-break;
             view-timeline-axis: block;
         }
@@ -1190,10 +1232,9 @@ PROJECT QUIET BREAK
             animation-range: entry 0% contain 35%;
         }
 
-
         .project-quiet-break__rule {
             transform-origin: left center;
-            
+
             animation-name: project-quiet-rule-grow;
             animation-duration: auto;
             animation-timing-function: linear;
@@ -1302,7 +1343,9 @@ PROJECT INDEX
     line-height: 1;
     opacity: 0;
     transform: translateX(-0.3rem);
-    transition: opacity 200ms ease, transform 200ms ease;
+    transition:
+        opacity 200ms ease,
+        transform 200ms ease;
 }
 
 .project-index__item:hover .project-index__name {
@@ -1314,8 +1357,15 @@ PROJECT INDEX
     transform: translateX(0);
 }
 
-/* Append after the desktop styles in project.css. */
+
+/* ==================================
+PROJECT TABLET
+================================== */
+
 @media (max-width: 900px) {
+
+    /* PROJECT THRESHOLD */
+
     .project-threshold {
         block-size: clamp(32rem, 76vw, 42rem);
         min-block-size: 0;
@@ -1336,10 +1386,13 @@ PROJECT INDEX
         grid-column: 10 / 13;
     }
 
+
+    /* PROJECT PREMISE */
+
     .project-premise {
+        grid-template-rows: auto;
         block-size: auto;
         min-block-size: 0;
-        grid-template-rows: auto;
         column-gap: 1rem;
     }
 
@@ -1372,9 +1425,12 @@ PROJECT INDEX
         max-inline-size: 55ch;
     }
 
+
+    /* PROJECT FIRST MOVEMENT */
+
     .project-first-movement {
-        block-size: auto;
         grid-template-rows: auto 1fr;
+        block-size: auto;
         gap: 1.5rem;
     }
 
@@ -1397,8 +1453,16 @@ PROJECT INDEX
         grid-column: 1 / 6;
     }
 
+
+    /* PROJECT BREAK */
+
     .project-break__stage {
-        --tablet-break-size: min(70vw, calc(100svh - var(--site-header-height)));
+        --tablet-break-size:
+            min(
+                70vw,
+                calc(100svh - var(--site-header-height))
+            );
+
         block-size: var(--tablet-break-size);
     }
 
@@ -1417,9 +1481,12 @@ PROJECT INDEX
         grid-column: 5 / 12;
     }
 
+
+    /* PROJECT WORKS MOVEMENT */
+
     .project-works-movement {
-        block-size: auto;
         grid-template-rows: auto auto;
+        block-size: auto;
         gap: 1.5rem 1rem;
     }
 
@@ -1442,6 +1509,14 @@ PROJECT INDEX
 
     .project-works-movement--works-0 {
         grid-template-rows: auto;
+    }
+
+
+    /* PROJECT PROCESS */
+
+    .project-ending .project-process {
+        gap: 1.5rem;
+        padding-block: 2rem;
     }
 
     .project-process__chapter {
@@ -1477,9 +1552,8 @@ PROJECT INDEX
         aspect-ratio: 16 / 9;
     }
 
-    .project-closing-sheet {
-        min-block-size: 0;
-    }
+
+    /* PROJECT QUIET BREAK */
 
     .project-quiet-break {
         block-size: clamp(11rem, 24vw, 14rem);
@@ -1500,6 +1574,9 @@ PROJECT INDEX
         flex-shrink: 0;
     }
 
+
+    /* PROJECT INDEX */
+
     .project-index {
         padding-block: 2rem 3rem;
     }
@@ -1510,7 +1587,12 @@ PROJECT INDEX
     }
 
     .project-index__item {
-        grid-template-columns: 1.5rem 3.75rem minmax(0, 1fr) auto 1rem;
+        grid-template-columns:
+            1.5rem
+            3.75rem
+            minmax(0, 1fr)
+            auto
+            1rem;
         column-gap: 1rem;
     }
 
@@ -1528,12 +1610,25 @@ PROJECT INDEX
         transform: none;
     }
 
+
+    /* PROJECT BREAK — TABLET MOTION */
+
     @media (prefers-reduced-motion: no-preference) {
         @supports (animation-timeline: view()) {
             .project-break__stage {
-                block-size: calc(var(--tablet-break-size) + clamp(20rem, 60vw, 32rem));
-                view-timeline-inset: var(--site-header-height)
-                    calc(100% - var(--site-header-height) - var(--tablet-break-size));
+                block-size:
+                    calc(
+                        var(--tablet-break-size)
+                        + clamp(20rem, 60vw, 32rem)
+                    );
+
+                view-timeline-inset:
+                    var(--site-header-height)
+                    calc(
+                        100%
+                        - var(--site-header-height)
+                        - var(--tablet-break-size)
+                    );
             }
 
             .project-break__media {
@@ -1541,168 +1636,62 @@ PROJECT INDEX
             }
 
             .project-break__media > img {
-                animation-range: contain 0% contain 100%;
+                animation-range: entry 70% contain 100%;
             }
 
             .project-break__work {
-                animation-range: contain 15% contain 100%;
+                animation-range: contain 15% exit 30%;
             }
         }
     }
 }
 
-/* ==================================
-CONTENT SAFETY / INPUT
-================================== */
-.project-page {
-    display: flow-root;
-    overflow: clip;
-}
-.project-page a:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 4px;
-}
-.project-premise__text,
-.project-first-movement__copy,
-.project-works-movement__text,
-.project-process__copy { 
-    overflow-wrap: anywhere;
-}
-.project-process__copy { 
-    min-inline-size: 0;
-}
-.project-quiet-break__count {
-    align-self: center;
-}
-.project-quiet-break__count {
-    line-height: 1;
 
-}
+/* ==================================
+PROJECT DESKTOP CLOSING RHYTHM
+================================== */
+
 @media (min-width: 901px) {
     .project-quiet-break {
         block-size: clamp(15rem, 25vw, 20rem);
     }
+
     .project-quiet-break__count {
         font-size: clamp(9rem, 19vw, 17rem);
     }
 }
 
-@media (max-width: 900px) {
-    .project-ending .project-process {
-        gap: 1.5rem; padding-block: 2rem;
-    }
-}
-
-.project-break__work img {
-    max-block-size: 22svh;
-    object-fit: contain;
-}
-
-@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-        .project-break__stage {
-            --break-frame: min(64vw, calc(100svh - var(--site-header-height)));
-            block-size: calc(var(--break-frame) + clamp(24rem, 55vw, 48rem));
-            view-timeline-inset: var(--site-header-height)
-                calc(100% - var(--site-header-height) - var(--break-frame));
-        }
-        .project-break__media {
-            block-size: var(--break-frame);
-        }
-        .project-break__media > img {
-            animation-range: contain 0% contain 100%;
-        }
-        .project-break__work {
-            animation-range: contain 15% contain 100%;
-        }
-    }
-}
 
 /* ==================================
-ENDING: EXPAND → HOLD → COVER
-
-project-motion.js measures content and the actual header only on resize.
-Without JS the full static composition remains available.
+PROJECT ENDING MOTION
 ================================== */
-.project-ending {
-    --process-content-min: 0px;
-    --process-frame: min(clamp(22rem, 64vw, 54rem), calc(100svh - var(--site-header-height)));
-    --process-end: max(var(--process-frame), var(--process-content-min));
-    --process-start: max(calc(var(--process-frame) * 0.78), var(--process-content-min));
-    --process-top: min(var(--site-header-height), calc(100svh - var(--process-end)));
-    --process-travel: clamp(10rem, 22vw, 20rem);
-    isolation: isolate;
-}
-.project-ending .project-process {
-    position: relative;
-    block-size: auto;
-    min-block-size: var(--process-start);
-}
-.project-process__media {
-    position: relative;
-    min-block-size: 12rem;
-}
-.project-process__media img {
-    position: absolute;
-    inset: 0;
-}
-.project-ending__process-expansion-track {
-    display: none;
-}
-.project-closing-sheet {
-    min-block-size: 0;
-}
-.project-page + .site-footer {
-    position: relative;
-    z-index: 1;
-}
 
-@keyframes project-process-expand {
+@keyframes project-ending-overlap {
     from {
-        min-block-size: var(--process-start);
+        transform: translateY(0);
     }
+
     to {
-        min-block-size: var(--process-end);
+        transform: translateY(2rem);
     }
 }
 
 @media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
-        .project-ending[data-motion-ready]:has(.project-closing-sheet):not(.project-ending--without-process) {
-            timeline-scope: --process-expand;
-            /* Extend sticky containment underneath subsequent content, not the visible sheet. */
-            padding-block-end: var(--process-end);
-            margin-block-end: calc(-1 * var(--process-end));
+        .project-ending:has(.project-closing-sheet)
+        .project-ending__process-sticky {
+            view-timeline: --project-ending block;
         }
-        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-sticky {
-            position: sticky;
-            inset-block-start: var(--process-top);
-            display: grid;
-            z-index: 0;
+
+        .project-ending:has(.project-closing-sheet)
+        .project-process {
+            padding-block-end: 5rem;
+
+            animation: project-ending-overlap auto linear both;
+            animation-timeline: --project-ending;
+            animation-range: exit 0% exit 100%;
         }
-        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-sticky::before {
-            content: "";
-            grid-area: 1 / 1;
-            min-block-size: var(--process-end);
-            pointer-events: none;
-        }
-        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-process {
-            grid-area: 1 / 1;
-            align-self: start;
-            animation: project-process-expand auto linear both;
-            animation-timeline: --process-expand;
-            animation-range: entry 0% entry 100%;
-        }
-        .project-ending[data-motion-ready]:has(.project-closing-sheet) .project-ending__process-expansion-track {
-            display: block;
-            block-size: var(--process-travel);
-            view-timeline: --process-expand block;
-            view-timeline-inset: var(--process-top)
-                calc(100% - var(--process-top) - var(--process-end));
-        }
-        .project-break__work {
-            visibility: visible;
-        }
+
         .project-break__media:focus-within .project-break__work {
             animation: none;
             opacity: 1;
@@ -1711,18 +1700,26 @@ Without JS the full static composition remains available.
     }
 }
 
+
+/* ==================================
+REDUCED MOTION
+================================== */
+
 @media (prefers-reduced-motion: reduce) {
+    .project-first-movement__work:hover
     .project-first-movement__media img,
+    .project-works-movement__work:hover
     .project-works-movement__media img,
+    .project-index__item:hover
+    .project-index__name,
+    .project-index__item:hover
+    .project-index__arrow {
+        transform: none;
+    }
+
+    .project-page img,
     .project-index__name,
     .project-index__arrow {
         transition: none;
-        transform: none;
-    }
-    .project-first-movement__work:hover .project-first-movement__media img,
-    .project-works-movement__work:hover .project-works-movement__media img,
-    .project-index__item:hover .project-index__name,
-    .project-index__item:hover .project-index__arrow {
-        transform: none;
     }
 }
