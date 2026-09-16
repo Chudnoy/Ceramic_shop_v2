@@ -742,7 +742,7 @@ PROJECT BREAK MOTION
     }
 }
 
-@media (prefers-reduced-motion: no-preference) {
+@media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
         .project-break__stage {
             block-size: 180svh;
@@ -1845,7 +1845,7 @@ PROJECT MOBILE
 
     .project-first-movement__work-meta {
         position: absolute;
-        inset-block-start: 0;
+        inset-block-start: auto;
         inset-block-end: 0;
         inline-size: min(65%, 13rem);
         padding: 0.9rem 1rem;
@@ -1940,37 +1940,6 @@ PROJECT MOBILE
         line-height: 1.55;
     }
 
-    
-
-    /* BREAK - MOBILE STATIC BASE */
-
-    @media (prefers-reduced-motion: no-preference) {
-        @supports (animation-timeline: view()) {
-
-            .project-break__stage {
-                block-size: clamp(24rem, 112vw, 30rem);
-                overflow: hidden;
-
-                view-timeline-name: none
-            }
-
-            .project-break__media {
-                position: relative;
-                inset-block-start: auto;
-                block-size: 100%;
-            }
-
-            .project-break__media > img,
-            .project-break__media::after,
-            .project-break__work {
-                animation: none
-            }
-
-            .project-break__works {
-                display: none;
-            }
-        }
-    }
     
     /* PROJECT BREAK — MOBILE MOTION */
 
@@ -2176,7 +2145,7 @@ PROJECT MOBILE
     }
 
 
-    /* PROJECTS WORKS MOVEMENT */
+    /* PROJECT WORKS MOVEMENT */
 
     .project-works-movement {
         grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2265,7 +2234,7 @@ PROJECT MOBILE
         margin-block-start: -1rem;
     }
 
-    .project-works-movement--works-3 .project-works-movement__works--3 {
+    .project-works-movement--works-3 .project-works-movement__work--3 {
         grid-column: 2/7;
         grid-row: 3;
     }
@@ -2299,7 +2268,7 @@ PROJECT MOBILE
         border: 1px solid rgba(36, 29, 24, 0.15);
     }
 
-    .project-works-movement__work--without-image .project-works-movement__media {
+    .project-works-movement__work--without-image .project-works-movement__meta {
         padding: 0;
     }
 
@@ -2374,7 +2343,7 @@ PROJECT MOBILE
     }
 
     .project-quiet-break__count {
-        grid-column: 1.5;
+        grid-column: 1/5;
         grid-row: 1;
         align-self: center;
         margin-inline-start: calc(var(--page-start) * -0.35);
@@ -2448,7 +2417,7 @@ PROJECT MOBILE
     }
 
     .project-index__arrow {
-        grid-column: 4px;
+        grid-column: 4;
         grid-row: 1/3;
         align-self: center;
         justify-self: end;
@@ -2456,28 +2425,26 @@ PROJECT MOBILE
         transform: none;
     }
 
-    @media (max-width: 640px) {
-        @media (prefers-reduced-motion: no-preference) {
-            @supports (animation-timeline: view()) {
-                .project-ending:not(.project-ending--without-process)
-                .project-closing-sheet {
-                    view-timeline-name: --mobile-closing;
-                    view-timeline-axis: block;
+    @media (prefers-reduced-motion: no-preference) {
+        @supports (animation-timeline: view()) {
+            .project-ending:not(.project-ending--without-process)
+            .project-closing-sheet {
+                view-timeline-name: --mobile-closing;
+                view-timeline-axis: block;
 
-                    animation-name: project-mobile-closing-overlap;
-                    animation-duration: auto;
-                    animation-timing-function: linear;
-                    animation-fill-mode: both;
+                animation-name: project-mobile-closing-overlap;
+                animation-duration: auto;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
 
-                    animation-timeline: --mobile-closing;
-                    animation-range:
-                        entry 0%
-                        entry 100%;
-                }
+                animation-timeline: --mobile-closing;
+                animation-range:
+                entry 0%
+                entry 100%;
+           }
 
-                .project-index {
-                    padding-block-end: 0;
-                }
+           .project-index {
+               padding-block-end: 0;
             }
         }
     }
