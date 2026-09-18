@@ -3,7 +3,12 @@ WORKS INDEX
 ================================ */
 
 .works-index {
-    padding: clamp(2rem, 3vw, 3rem) var(--page-end) clamp(3rem, 5vw, 5rem) var(--page-start);
+    padding:
+        clamp(2rem, 3vw, 3rem)
+        var(--page-end)
+        0
+        var(--page-start);
+
     background: var(--color-background);
 }
 
@@ -97,10 +102,10 @@ ARCHIVE
 }
 
 .works-sort__link {
-    transition: color 180ms ease opacity 180ms ease;
+    transition: color 180ms ease, opacity 180ms ease;
 }
 
-.works-card__link.is-active {
+.works-sort__link.is-active {
     color: var(--color-text);
     text-decoration: underline;
     text-underline-offset: 0.2em;
@@ -114,25 +119,28 @@ WORKS GRID
 .works-archive__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-
+    align-items: start;
     position: relative;
+}
 
-    padding-block-end: var(--works-tail-space, 0px);
+.works-archive__grid::after {
+    content: "";
+    grid-column: 1 / -1;
+    block-size: var(--works-tail-space, 0px);
+    pointer-events: none;
 }
 
 .works-card {
     position: sticky;
-    top: var(--site-header-height);
-
+    top: var(--works-sticky-top, var(--site-header-height));
+    align-self: start;
     background: var(--color-background);
 }
 
 .works-card__media {
     position: relative;
-
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    
     background: var(--color-background);
 }
 
@@ -140,19 +148,14 @@ WORKS GRID
     position: absolute;
     inset-inline: 0;
     inset-block-end: 0;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     padding: 0.8rem 1rem;
-
     background: var(--color-background);
-
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-
     transform: translateY(100%);
     transition: transform 220ms ease;
 }
@@ -188,4 +191,97 @@ WORKS GRID
     flex: 0 0 auto;
     color: var(--color-muted);
     font-size: 0.75rem;
+}
+
+
+/* ==============================
+TABLET
+============================== */
+
+@media (max-width: 900px) {
+    .works-archive__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .works-index__title {
+        grid-column: 3/9;
+    }
+
+    .works-index__description {
+        grid-column: 9/13;
+    }
+}
+
+
+/* ============================
+MOBILE
+============================ */
+
+@media (max-width: 640px) {
+    .works-index {
+        padding: clamp(1.5rem, 6vw, 2rem) var(--page-end) 0 var(--page-start);
+    }
+
+    .works-index__intro {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        row-gap: 1rem;
+        padding-block-end: 2rem;
+    }
+
+    .works-index__eyebrow {
+        grid-column: 1/2;
+        grid-row: 1;
+        padding-block-start: 0;
+    }
+
+    .works-index__title {
+        grid-column: 1/-1;
+        grid-row: 2;
+        font-size: clamp(4rem, 20vw, 6rem);
+        line-height: 0.9;
+    }
+
+    .works-index__description {
+        grid-column: 2/-1;
+        grid-row: 3;
+        padding-block-end: 0;
+        font-size: 1.05rem;
+        line-height: 1.35;
+    }
+
+    .works-archive__header {
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .works-sort {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.6rem 1rem;
+    }
+
+    .works-sort__label {
+        flex-basis: 100%;
+        text-align: end;
+    }
+
+    .works-archive__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.works-card__link:focus-visible .works-card__hover {
+    transform: translateY(0);
+}
+
+@media (hover: hover) {
+    .works-card__link:hover .works-card__hover {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .works-card__hover {
+        transition: none;
+    }
 }

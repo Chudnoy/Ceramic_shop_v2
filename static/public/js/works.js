@@ -2,7 +2,9 @@ const worksGrid = document.querySelector("[data-works-grid]");
 const siteHeader = document.querySelector(".site-header");
 
 if (worksGrid && siteHeader) {
-    const workCards = [...worksGrid.querySelectorAll(".works-card")];
+    const workCards = [
+        ...worksGrid.querySelectorAll(".works-card"),
+    ];
 
     function updateWorksGeometry() {
         if (!workCards.length) {
@@ -12,31 +14,27 @@ if (worksGrid && siteHeader) {
         const headerHeight =
             siteHeader.getBoundingClientRect().height;
 
-        /*
-         * offsetTop — положение карточки в обычном layout.
-         * Sticky на него не влияет.
-         *
-         * Максимальный offsetTop принадлежит карточкам
-         * последнего визуального ряда.
-         */
         const lastRowTop = Math.max(
             ...workCards.map((card) => card.offsetTop)
         );
 
         const lastRowCards = workCards.filter(
-            (card) => Math.abs(card.offsetTop - lastRowTop) < 1
+            (card) =>
+                Math.abs(card.offsetTop - lastRowTop) < 1
         );
 
         const lastRowHeight = Math.max(
-            ...lastRowCards.map((card) => card.offsetHeight)
+            ...lastRowCards.map(
+                (card) =>
+                    card.getBoundingClientRect().height
+            )
         );
-
-        const availableHeight =
-            window.innerHeight - headerHeight;
 
         const tailSpace = Math.max(
             0,
-            availableHeight - lastRowHeight
+            window.innerHeight
+                - headerHeight
+                - lastRowHeight
         );
 
         worksGrid.style.setProperty(
@@ -52,9 +50,14 @@ if (worksGrid && siteHeader) {
 
     updateWorksGeometry();
 
-    window.addEventListener("resize", updateWorksGeometry);
+    window.addEventListener(
+        "resize",
+        updateWorksGeometry
+    );
 
     if (document.fonts) {
-        document.fonts.ready.then(updateWorksGeometry);
+        document.fonts.ready.then(
+            updateWorksGeometry
+        );
     }
 }

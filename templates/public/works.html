@@ -22,7 +22,7 @@
                 <nav class="works-sort" aria-label="Сортировка работ">
                     <span class="works-sort__label">Сортировка</span>
                     <div class="works-sort__group">
-                        <span class="work-sort__name">Название</span>
+                        <span class="works-sort__name">Название</span>
                         <a
                             class="works-sort__link{% if sort == 'name_asc' %} is-active{% endif %}"
                             href="{{ url_for('public.works_index', sort='name_asc') }}"
