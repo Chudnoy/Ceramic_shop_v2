@@ -9,6 +9,8 @@ KRUZHKA_ID = "ab37a435-afb9-4dea-b8a9-4ce47e5e268f"
 
 PORISTYE_FORMY_ID = "d3c91fd6-55bf-4f8c-b8e7-2bb644a97d01"
 
+POVSEDNEVNYE_FORMY_ID = "6f6c0c2d-47c0-4f34-a6fe-2c4687152f02"
+
 LONG_DEMO_DESCRIPTION = """
                     Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel facilis provident eum quae ipsam odit quas non fugit. Magni beatae error nesciunt officiis, sequi accusantium atque quo nisi reiciendis vitae.
                     Et architecto nesciunt officia. Aliquam voluptatem voluptatum asperiores quidem, dolorem harum facere amet ratione ut. Accusamus vitae dignissimos laudantium dolorum eius placeat sapiente voluptas exercitationem molestias nesciunt, laborum delectus! Blanditiis.
@@ -27,6 +29,21 @@ POROUS_FORMS_DEMO_TEXT = """
 
 POROUS_FORMS_DEMO_INTRO = (
     "Пустота здесь становится не отсутствием материала, а одной из частей формы."
+)
+
+EVERYDAY_FORMS_DEMO_TEXT = """
+Эти работы возникают из простых повседневных форм — чаши, кружки, сосуда. Меня интересует момент, когда привычный предмет перестаёт быть только утилитарным.
+
+Ручная работа оставляет форму немного неровной и живой. Следы прикосновения, толщина края и поверхность становятся такой же частью предмета, как его функция.
+
+В этих объектах нет стремления к полной одинаковости. Каждый из них сохраняет небольшие различия, возникающие в процессе лепки, глазурования и обжига.
+
+Повседневная вещь здесь становится способом говорить о доме, привычке и телесном опыте — о предметах, которые мы почти перестаём замечать.
+""".strip()
+
+EVERYDAY_FORMS_DEMO_INTRO = (
+    "Привычные предметы становятся пространством для небольших отклонений, "
+    "следов руки и материальной случайности."
 )
 
 
@@ -88,7 +105,16 @@ def seed_initial_data():
                 POROUS_FORMS_DEMO_TEXT,
                 "2024-2026",
                 1,
-            )
+            ),
+            (
+                POVSEDNEVNYE_FORMY_ID,
+                "Повседневные формы",
+                "povsednevnye-formy",
+                EVERYDAY_FORMS_DEMO_INTRO,
+                EVERYDAY_FORMS_DEMO_TEXT,
+                "2025-2026",
+                1,
+            ),
         ]
 
         conn.executemany(
@@ -122,9 +148,9 @@ def seed_initial_data():
                 (LONG_DEMO_DESCRIPTION),
                 2025,
                 "20 × 15 × 10 см",
+                POVSEDNEVNYE_FORMY_ID,
                 None,
-                None,
-                None,
+                1,
                 1,
                 0,
                 None,
@@ -164,9 +190,9 @@ def seed_initial_data():
                 (LONG_DEMO_DESCRIPTION),
                 2025,
                 "12 × 9 × 9 см",
+                POVSEDNEVNYE_FORMY_ID,
                 None,
-                None,
-                None,
+                2,
                 1,
                 0,
                 None,
@@ -354,6 +380,26 @@ def seed_initial_data():
                 PORISTYE_FORMY_ID,
                 "/static/public/img/projects/porous-forms/10-surface-detail-sunlit-vertical.png",
                 10,
+            ),
+            (
+                POVSEDNEVNYE_FORMY_ID,
+                "/static/uploads/works/work-02/01-cover.png",
+                1,
+            ),
+            (
+                POVSEDNEVNYE_FORMY_ID,
+                "/static/uploads/works/work-05/01-cover.png",
+                2,
+            ),
+            (
+                POVSEDNEVNYE_FORMY_ID,
+                "/static/uploads/works/work-02/03-alt.png",
+                3,
+            ),
+            (
+                POVSEDNEVNYE_FORMY_ID,
+                "/static/uploads/works/work-05/03-alt.png",
+                4,
             ),
         ]
 
