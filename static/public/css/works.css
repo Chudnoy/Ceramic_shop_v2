@@ -160,11 +160,6 @@ WORKS GRID
     transition: transform 220ms ease;
 }
 
-.works-card__link:hover .works-card__hover,
-.works-card__link:focus-visible .works-card__hover {
-    transform: translateY(0);
-}
-
 .works-card__media img {
     display: block;
     padding: clamp(0.75rem, 1.2vw, 1.25rem);

@@ -46,7 +46,7 @@
             id="site-navigation"
             aria-label="Основная навигация"
         >
-            <a href="{{ url_for('public.home') }}#projects">Проекты</a>
+            <a href="{{ url_for('public.projects_index') }}">Проекты</a>
             <a href="{{ url_for('public.works_index') }}">Работы</a>
             <a href="{{ url_for('public.home') }}#shop">Магазин</a>
             <a href="{{ url_for('public.home') }}#about">О мастерской</a>
@@ -62,7 +62,7 @@
             <p class="site-footer__description">Керамика ручной работы</p>
         </div>
         <nav class="site-footer__navigation" aria-label="Навигация в подвале">
-            <a href="{{ url_for('public.home') }}#projects">Проекты</a>
+            <a href="{{ url_for('public.projects_index') }}">Проекты</a>
             <a href="{{ url_for('public.works_index') }}">Работы</a>
             <a href="{{ url_for('public.home') }}#shop">Магазин</a>
             <a href="{{ url_for('public.home') }}#about">О мастерской</a>

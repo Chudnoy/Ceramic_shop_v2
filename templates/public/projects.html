@@ -1,6 +1,70 @@
 {% extends "public/base.html" %}
 
-{% block title %}Проекты{% endblock %}
+{% block title %}Проекты - Полина Яланская{% endblock %}
+
+{% block styles %}
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='public/css/projects.css') }}"
+    >
+{% endblock %}
 
 {% block content %}
+<main class="projects-index">
+    <div class="projects-track" data-projects-track>
+        <section class="projects-intro" aria-labelledby="projects-title">
+            <p class="projects-intro-eyebrow">Художественные проекты</p>
+            <h1 class="projects-intro__title" id="prjects-title">Проекты</h1>
+            <p class="projects-intro__description">Исследования, серии и самостоятельные художественные высказывания</p>
+            <span class="projects-intro__direction" aria-hidden="true">→</span>
+        </section>
+
+        {% for project in projects %}
+            <article class="project-entry" id="{{ project.slug }}">
+                <a href="{{ url_for('public.project_detail', slug=project.slug) }}" class="project-entry__link">
+                    <figure class="project-entry__media">
+                        {% if project.cover_image_path %}
+                            <img src="{{ project.cover_image_path }}" alt="">
+                        {% endif %}
+                    </figure>
+                    <div class="project-entry__veil" aria-hidden="true"></div>
+                    <div class="project-entry__content">
+                        <div class="project-entry__meta">
+                            <span>
+                                {{ "%02d"|format(loop.index) }}
+                            </span>
+                            <span>
+                                /
+                                {{ "%02d"|format(projects|length) }}
+                            </span>
+                        </div>
+
+                        {% if project.period %}
+                            <p class="project-entry__period">
+                                {{ project.period }}
+                            </p>
+                        {% endif %}
+                        <h2 class="project-entry__title">
+                            {{ project.name }}
+                        </h2>
+                        {% if project.intro %}
+                            <p class="project-entry__description">
+                                {{ project.intro }}
+                            </p>
+                        {% endif %}
+                        <span class="project-entry__cta">Смотреть проект
+                            <span aria-hidden="true">→</span>
+                        </span>
+                    </div>
+                </a>
+            </article>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+    <script
+        src="{{ url_for('static', filename='public/js/projects.js') }}"
+    ></script>
 {% endblock %}
