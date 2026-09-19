@@ -76,19 +76,18 @@ def test_init_db_runs_migrations_and_seeds_initial_data(db_connection):
         """
     ).fetchall()
 
-    project_count = conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
-
-    project = conn.execute(
+    projects = conn.execute(
         """
         SELECT
             id, name, slug, period, is_published
         FROM projects
-        WHERE slug = ?
-        """,
-        ("poristye-formy",),
-    ).fetchone()
+        ORDER BY name
+        """
+    ).fetchall()
 
-    project_works = conn.execute(
+    projects_by_slug = {project["slug"]: project for project in projects}
+
+    poristye_formy_works = conn.execute(
         """
         SELECT
             name, project_position
@@ -96,7 +95,18 @@ def test_init_db_runs_migrations_and_seeds_initial_data(db_connection):
         WHERE project_id = ?
         ORDER BY project_position
         """,
-        (project["id"],),
+        (projects_by_slug["poristye-formy"]["id"],),
+    ).fetchall()
+
+    povsednevnye_formy_works = conn.execute(
+        """
+        SELECT
+            name, project_position
+        FROM works
+        WHERE project_id = ?
+        ORDER BY project_position
+        """,
+        (projects_by_slug["povsednevnye-formy"]["id"],),
     ).fetchall()
 
     conn.close()
@@ -167,15 +177,36 @@ def test_init_db_runs_migrations_and_seeds_initial_data(db_connection):
     assert shop_states_by_name["Кружка"]["inventory_type"] == "stock"
     assert shop_states_by_name["Кружка"]["stock_quantity"] == 6
 
-    assert project_count == 1
+    assert len(projects) == 2
 
-    assert project["name"] == "Пористые формы"
-    assert project["slug"] == "poristye-formy"
-    assert project["period"] == "2024-2026"
-    assert project["is_published"] == 1
+    assert set(projects_by_slug) == {
+        "poristye-formy",
+        "povsednevnye-formy",
+    }
 
-    assert [(work["name"], work["project_position"]) for work in project_works] == [
+    poristye_formy = projects_by_slug["poristye-formy"]
+
+    assert poristye_formy["name"] == "Пористые формы"
+    assert poristye_formy["period"] == "2024-2026"
+    assert poristye_formy["is_published"] == 1
+
+    assert [
+        (work["name"], work["project_position"]) for work in poristye_formy_works
+    ] == [
         ("Капля", 1),
         ("Колонна", 2),
         ("Белая чаша", 3),
+    ]
+
+    povsednevnye_formy = projects_by_slug["povsednevnye-formy"]
+
+    assert povsednevnye_formy["name"] == "Повседневные формы"
+    assert povsednevnye_formy["period"] == "2025-2026"
+    assert povsednevnye_formy["is_published"] == 1
+
+    assert [
+        (work["name"], work["project_position"]) for work in povsednevnye_formy_works
+    ] == [
+        ("Низкая чаша", 1),
+        ("Кружка", 2),
     ]
