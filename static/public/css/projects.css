@@ -15,7 +15,6 @@ HORIZONTAL TRACK
 
 .projects-track {
     display: flex;
-
     inline-size: 100%;
     block-size: 100%;
 
@@ -23,8 +22,10 @@ HORIZONTAL TRACK
     overflow-y: hidden;
 
     overscroll-behavior-inline: contain;
-
     scrollbar-width: none;
+
+    scroll-snap-type: none;
+    scroll-behavior: auto;
 }
 
 .projects-track::-webkit-scrollbar {
@@ -37,12 +38,13 @@ INTRO
 ========================================== */
 
 .projects-intro {
-    flex: 0 0 48vw;
+    flex: 0 0 45vw;
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-template-rows: auto 1fr auto;
     padding: clamp(3rem, 6vw, 6rem) var(--page-end) clamp(2rem, 4vw, 4rem) var(--page-start);
     border-inline-end: 1px solid rgba(36, 29, 24, 0.14);
+    scroll-snap-align: start;
 }
 
 .projects-intro__eyebrow {
@@ -56,17 +58,18 @@ INTRO
     grid-column: 1 / -1;
     align-self: center;
     font-family: var(--font-serif);
-    font-size: clamp(5rem, 10vw, 10rem);
+    font-size: clamp(4rem, 7vw, 7rem);
     font-weight: 400;
     line-height: 0.85;
 }
 
 .projects-intro__description {
     grid-column: 3 / -1;
-    max-inline-size: 28rem;
+    align-self: end;
+    max-inline-size: 22rem;
     font-family: var(--font-serif);
-    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
-    line-height: 1.4;
+    font-size: clamp(1.1rem, 1.3vw, 1.3rem);
+    line-height: 1.35;
 }
 
 .projects-intro__direction {
@@ -82,13 +85,16 @@ PROJECT ENTRY
 ========================================== */
 
 .project-entry {
-    flex: 0 0 88vw;
+    flex: 0 0 92vw;
     block-size: 100%;
+    border-inline-end: 0.5rem solid var(--color-background);
+    scroll-snap-align: start;
 }
 
 .project-entry__link {
     position: relative;
-    display: block;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     inline-size: 100%;
     block-size: 100%;
     overflow: hidden;
@@ -118,10 +124,10 @@ VEIL
     background:
         linear-gradient(
             90deg,
-            rgba(20, 16, 14, 0.62) 0%,
-            rgba(20, 16, 14, 0.42) 30%,
-            rgba(20, 16, 14, 0.08) 62%,
-            transparent 100%
+            rgba(20, 16, 14, 0.68) 0%,
+            rgba(20, 16, 14, 0.48) 24%,
+            rgba(20, 16, 14, 0.12) 48%,
+            transparent 70%
         );
     pointer-events: none;
 }
@@ -134,9 +140,10 @@ PROJECT CONTENT
 .project-entry__content {
     position: relative;
     z-index: 1;
+    grid-column: 1/6;
     display: flex;
     flex-direction: column;
-    inline-size: min(34rem, 42%);
+    inline-size: auto;
     block-size: 100%;
     padding: clamp(2.5rem, 5vw, 5rem) clamp(2rem, 4vw, 4rem);
     text-shadow: 0 1px 16px rgba(20, 16, 14, 0.14);
@@ -144,10 +151,20 @@ PROJECT CONTENT
 
 .project-entry__meta {
     display: flex;
-    gap: 0.4rem;
-    margin-block-end: 1.5rem;
+    align-items: center;
+    gap: 0.6rem;
+    margin-block-end:
+        clamp(3rem, 8vh, 7rem);
     font-size: 0.7rem;
     letter-spacing: 0.08em;
+}
+
+.project-entry__meta::after {
+    content: "";
+    inline-size: clamp(2.5rem, 5vw, 5rem);
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.45;
 }
 
 .project-entry__period {
@@ -159,16 +176,18 @@ PROJECT CONTENT
 .project-entry__title {
     margin-block-end: 1.5rem;
     font-family: var(--font-serif);
-    font-size: clamp(3rem, 6vw, 7rem);
+    font-size: clamp(3rem, 5.6vw, 6.5rem);
     font-weight: 400;
     line-height: 0.9;
 }
 
-.project-entry__description {
-    max-inline-size: 30rem;
+.project-entry__title {
+    max-inline-size: 8ch;
     font-family: var(--font-serif);
-    font-size: clamp(1rem, 1.3vw, 1.25rem);
-    line-height: 1.4;
+    font-size: clamp(3.5rem, 5.6vw, 6.5rem);
+    font-weight: 400;
+    line-height: 0.88;
+    margin-block-end: 1.5rem;
 }
 
 .project-entry__cta {
