@@ -1,190 +1,343 @@
-const projectsTrack = document.querySelector("[data-projects-track]");
+const projectsTrack =
+    document.querySelector("[data-projects-track]");
 
 if (projectsTrack) {
-    const snapDelay = 260;
-    const snapDuration = 600;
+    const snapIdleDelayMs = 260;
+    const snapAnimationDurationMs = 600;
 
-    const reducedMotion = window.matchMedia(
+    const reducedMotionQuery = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     );
 
-    let snapTimer = null;
-    let animationId = null;
-    let wheelAxis = null;
-    let lastWheelTime = 0;
-    let pointerDown = false;
+    let snapTimerId = null;
+    let animationFrameId = null;
+    let activeWheelAxis = null;
+    let lastWheelEventTime = 0;
+    let isPointerDown = false;
+
 
     function stopSnap() {
-        clearTimeout(snapTimer);
-        cancelAnimationFrame(animationId);
-        animationId = null;
+        clearTimeout(snapTimerId);
+        cancelAnimationFrame(animationFrameId);
+
+        animationFrameId = null;
     }
 
-    function scheduleSnap() {
-        clearTimeout(snapTimer);
 
-        if (pointerDown || animationId !== null) {
+    function scheduleSnap() {
+        clearTimeout(snapTimerId);
+
+        if (
+            isPointerDown
+            || animationFrameId !== null
+        ) {
             return;
         }
 
-        snapTimer = setTimeout(snapToNearest, snapDelay);
+        snapTimerId = setTimeout(
+            snapToNearest,
+            snapIdleDelayMs
+        );
     }
 
+
     function snapToNearest() {
-        const start = projectsTrack.scrollLeft;
-        const maxScroll = Math.max(
+        const startScrollLeft =
+            projectsTrack.scrollLeft;
+
+        const maxScrollLeft = Math.max(
             0,
-            projectsTrack.scrollWidth - projectsTrack.clientWidth
+            projectsTrack.scrollWidth
+                - projectsTrack.clientWidth
         );
 
-        const trackLeft =
-            projectsTrack.getBoundingClientRect().left
+        const trackViewportLeft =
+            projectsTrack
+                .getBoundingClientRect()
+                .left
             + projectsTrack.clientLeft;
 
-        let target = 0;
-        let shortestDistance = Infinity;
+        let targetScrollLeft = 0;
+        let nearestSnapDistance = Infinity;
 
-        for (const card of projectsTrack.children) {
-            const cardLeft =
-                start + card.getBoundingClientRect().left - trackLeft;
 
-            const position = Math.max(
+        for (
+            const slide
+            of projectsTrack.children
+        ) {
+            const slideScrollLeft =
+                startScrollLeft
+                + slide
+                    .getBoundingClientRect()
+                    .left
+                - trackViewportLeft;
+
+            const snapPosition = Math.max(
                 0,
-                Math.min(cardLeft, maxScroll)
+                Math.min(
+                    slideScrollLeft,
+                    maxScrollLeft
+                )
             );
 
-            const distance = Math.abs(position - start);
+            const candidateDistance =
+                Math.abs(
+                    snapPosition
+                    - startScrollLeft
+                );
 
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                target = position;
+            if (
+                candidateDistance
+                < nearestSnapDistance
+            ) {
+                nearestSnapDistance =
+                    candidateDistance;
+
+                targetScrollLeft =
+                    snapPosition;
             }
         }
 
-        const distance = target - start;
 
-        if (Math.abs(distance) < 1) {
+        const travelDistance =
+            targetScrollLeft
+            - startScrollLeft;
+
+        if (
+            Math.abs(travelDistance) < 1
+        ) {
             return;
         }
 
-        if (reducedMotion.matches) {
-            projectsTrack.scrollLeft = target;
+
+        if (reducedMotionQuery.matches) {
+            projectsTrack.scrollLeft =
+                targetScrollLeft;
+
             return;
         }
 
-        const startTime = performance.now();
 
-        function animate(time) {
-            const progress = Math.min(
-                (time - startTime) / snapDuration,
+        const animationStartTime =
+            performance.now();
+
+
+        function animate(frameTime) {
+            const timeProgress = Math.min(
+                (
+                    frameTime
+                    - animationStartTime
+                )
+                / snapAnimationDurationMs,
                 1
             );
 
-            // Мягкий разгон и мягкая остановка.
-            const eased = (1 - Math.cos(Math.PI * progress)) / 2;
+            // Превращаем линейный прогресс
+            // времени в мягкий разгон
+            // и мягкую остановку.
+            const easedProgress =
+                (
+                    1
+                    - Math.cos(
+                        Math.PI
+                        * timeProgress
+                    )
+                )
+                / 2;
 
-            projectsTrack.scrollLeft = start + distance * eased;
+            projectsTrack.scrollLeft =
+                startScrollLeft
+                + travelDistance
+                * easedProgress;
 
-            if (progress < 1) {
-                animationId = requestAnimationFrame(animate);
+            if (timeProgress < 1) {
+                animationFrameId =
+                    requestAnimationFrame(
+                        animate
+                    );
             } else {
-                animationId = null;
+                animationFrameId = null;
             }
         }
 
-        animationId = requestAnimationFrame(animate);
+
+        animationFrameId =
+            requestAnimationFrame(
+                animate
+            );
     }
 
-    projectsTrack.addEventListener("wheel", (event) => {
-        stopSnap();
 
-        if (event.ctrlKey) {
-            wheelAxis = null;
-            return;
-        }
+    projectsTrack.addEventListener(
+        "wheel",
+        (event) => {
+            stopSnap();
 
-        const maxScroll =
-                projectsTrack.scrollWidth - projectsTrack.clientWidth;
+            if (event.ctrlKey) {
+                activeWheelAxis = null;
+                return;
+            }
 
-        if (maxScroll <= 0) {
-            return;
-        }
 
-        const now = performance.now();
+            const maxScrollLeft =
+                projectsTrack.scrollWidth
+                - projectsTrack.clientWidth;
 
-        // Выбираем ось один раз в начале жеста.
-        if (wheelAxis === null || now - lastWheelTime > snapDelay) {
-            wheelAxis =
-                Math.abs(event.deltaX) > Math.abs(event.deltaY)
-                    ? "x"
-                    : "y";
-        }
+            if (maxScrollLeft <= 0) {
+                return;
+            }
 
-        lastWheelTime = now;
 
-        let delta =
-                wheelAxis === "x" ? event.deltaX : event.deltaY;
+            const currentWheelTime =
+                performance.now();
 
-        if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
-            delta *= 16;
-        } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
-            delta *= projectsTrack.clientWidth;
-        }
+            // Выбираем главную ось один раз
+            // в начале нового жеста.
+            if (
+                activeWheelAxis === null
+                || currentWheelTime
+                    - lastWheelEventTime
+                    > snapIdleDelayMs
+            ) {
+                activeWheelAxis =
+                    Math.abs(event.deltaX)
+                    > Math.abs(event.deltaY)
+                        ? "x"
+                        : "y";
+            }
 
-        // Не добавляем своё движение, если браузер нельзя остановить.
-        if (!event.cancelable) {
+            lastWheelEventTime =
+                currentWheelTime;
+
+
+            let scrollDelta =
+                activeWheelAxis === "x"
+                    ? event.deltaX
+                    : event.deltaY;
+
+
+            if (
+                event.deltaMode
+                === WheelEvent.DOM_DELTA_LINE
+            ) {
+                scrollDelta *= 16;
+            } else if (
+                event.deltaMode
+                === WheelEvent.DOM_DELTA_PAGE
+            ) {
+                scrollDelta *=
+                    projectsTrack.clientWidth;
+            }
+
+
+            // Не добавляем собственное движение,
+            // если браузер не позволяет отменить
+            // стандартное поведение события.
+            if (!event.cancelable) {
+                scheduleSnap();
+                return;
+            }
+
+            event.preventDefault();
+
+
+            projectsTrack.scrollLeft =
+                Math.max(
+                    0,
+                    Math.min(
+                        projectsTrack.scrollLeft
+                            + scrollDelta,
+                        maxScrollLeft
+                    )
+                );
+
+            // Даже маленькие события инерции
+            // откладывают доводчик.
             scheduleSnap();
-            return;
+        },
+        {
+            passive: false,
         }
+    );
 
-        event.preventDefault();
 
-        projectsTrack.scrollLeft = Math.max(
-            0,
-            Math.min(projectsTrack.scrollLeft + delta, maxScroll)
-        );
+    projectsTrack.addEventListener(
+        "scroll",
+        () => {
+            scheduleSnap();
+        },
+        {
+            passive: true,
+        }
+    );
 
-        // Даже маленькие события инерции откладывают доводчик.
-        scheduleSnap();
-    }, { passive: false });
 
-    projectsTrack.addEventListener("scroll", () => {
-        scheduleSnap();
-    }, { passive: true });
+    projectsTrack.addEventListener(
+        "pointerdown",
+        () => {
+            isPointerDown = true;
+            activeWheelAxis = null;
 
-    projectsTrack.addEventListener("pointerdown", () => {
-        pointerDown = true;
-        wheelAxis = null;
-        stopSnap();
-    });
+            stopSnap();
+        }
+    );
+
 
     function releasePointer() {
-        if (!pointerDown) {
+        if (!isPointerDown) {
             return;
         }
 
-        pointerDown = false;
+        isPointerDown = false;
+
         scheduleSnap();
     }
 
-    window.addEventListener("pointerup", releasePointer);
-    window.addEventListener("pointercancel", releasePointer);
 
-    projectsTrack.addEventListener("keydown", (event) => {
-        const scrollKeys = [
-            "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
-            "PageUp", "PageDown", "Home", "End", " "
-        ];
+    window.addEventListener(
+        "pointerup",
+        releasePointer
+    );
 
-        if (scrollKeys.includes(event.key)) {
+    window.addEventListener(
+        "pointercancel",
+        releasePointer
+    );
+
+
+    projectsTrack.addEventListener(
+        "keydown",
+        (event) => {
+            const scrollKeys = [
+                "ArrowLeft",
+                "ArrowRight",
+                "ArrowUp",
+                "ArrowDown",
+                "PageUp",
+                "PageDown",
+                "Home",
+                "End",
+                " ",
+            ];
+
+            if (
+                scrollKeys.includes(event.key)
+            ) {
+                stopSnap();
+                scheduleSnap();
+            }
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        () => {
             stopSnap();
+
+            activeWheelAxis = null;
+
             scheduleSnap();
         }
-    });
-
-    window.addEventListener("resize", () => {
-        stopSnap();
-        wheelAxis = null;
-        scheduleSnap();
-    });
+    );
 }
